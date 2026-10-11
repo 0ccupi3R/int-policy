@@ -1,0 +1,39 @@
+{
+  "displayName": "CustomerName",
+  "organization": "cust01",
+  "policyPrefix": "cust01-naming",
+  "subscriptionCode": "con",
+  "regions": {
+    "canadacentral": "cc",
+    "canadaeast": "ce"
+  },
+  "purposes": [
+    "hub",
+    "core",
+    "monitoring",
+    "infrafw",
+    "apps"
+  ],
+  "typePurposes": {
+    "kv": [
+      "core",
+      "apps"
+    ]
+  },
+  "vmRoles": [
+    "dc",
+    "web"
+  ],
+  "serverNames": [
+    "dc01",
+    "dc02",
+    "web01"
+  ],
+  "storageComponents": [
+    "diag",
+    "files"
+  ],
+  "effect": "Audit",
+  "enforcementMode": "Default",
+  "notScopes": []
+}

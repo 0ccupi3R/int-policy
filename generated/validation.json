@@ -1,0 +1,18 @@
+{
+  "localAssertions": 1764,
+  "definitions": 25,
+  "deploymentResources": 27,
+  "status": "passed",
+  "configuration": {
+    "displayName": "CustomerName",
+    "organization": "cust01",
+    "effect": "Audit",
+    "enforcementMode": "Default"
+  },
+  "bicepCompiled": false,
+  "azureValidated": false,
+  "azureDeployed": false,
+  "note": "Tests evaluate generated condition trees locally, not the Azure Policy engine.",
+  "regressionChecks": 15,
+  "regressionStatus": "passed"
+}

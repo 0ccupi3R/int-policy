@@ -1,0 +1,1203 @@
+[
+  {
+    "key": "rg",
+    "resourceType": "Microsoft.Resources/subscriptions/resourceGroups",
+    "abbreviation": "rg",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 90,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-rg"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-rg"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-rg"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-rg"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-rg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-rg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-rg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-rg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-rg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-rg"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "vm",
+    "resourceType": "Microsoft.Compute/virtualMachines",
+    "abbreviation": "vm",
+    "style": "vm",
+    "minLength": 1,
+    "maxLength": 64,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-dc##-vm"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-web##-vm"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-dc##-vm"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-web##-vm"
+      }
+    ],
+    "forbiddenPatterns": [
+      "cust01-con-cc-dc00-vm",
+      "cust01-con-cc-web00-vm",
+      "cust01-con-ce-dc00-vm",
+      "cust01-con-ce-web00-vm"
+    ]
+  },
+  {
+    "key": "vnet",
+    "resourceType": "Microsoft.Network/virtualNetworks",
+    "abbreviation": "vnet",
+    "style": "purpose",
+    "minLength": 2,
+    "maxLength": 64,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-vnet"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-vnet"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-vnet"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-vnet"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-vnet"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-vnet"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-vnet"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-vnet"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-vnet"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-vnet"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "nsg",
+    "resourceType": "Microsoft.Network/networkSecurityGroups",
+    "abbreviation": "nsg",
+    "style": "nsg",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-vnet-nsg-hub"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-vnet-nsg-core"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-vnet-nsg-monitoring"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-vnet-nsg-infrafw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-vnet-nsg-apps"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-vnet-nsg-hub"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-vnet-nsg-core"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-vnet-nsg-monitoring"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-vnet-nsg-infrafw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-vnet-nsg-apps"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "nic",
+    "resourceType": "Microsoft.Network/networkInterfaces",
+    "abbreviation": "nic",
+    "style": "server",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-dc01-nic"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-dc02-nic"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-web01-nic"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-dc01-nic"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-dc02-nic"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-web01-nic"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "lb",
+    "resourceType": "Microsoft.Network/loadBalancers",
+    "abbreviation": "lbi/lbe",
+    "style": "lb",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-dc01-lbi"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-dc01-lbe"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-dc02-lbi"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-dc02-lbe"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-web01-lbi"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-web01-lbe"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-dc01-lbi"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-dc01-lbe"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-dc02-lbi"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-dc02-lbe"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-web01-lbi"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-web01-lbe"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "vng",
+    "resourceType": "Microsoft.Network/virtualNetworkGateways",
+    "abbreviation": "vng",
+    "style": "gateway",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-vng-vpn"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-vng-er"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-vng-vpn"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-vng-er"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "storage",
+    "resourceType": "Microsoft.Storage/storageAccounts",
+    "abbreviation": "sa",
+    "style": "storage",
+    "minLength": 3,
+    "maxLength": 24,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01conccdiagsa"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01conccfilessa"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01concediagsa"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01concefilessa"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "rt",
+    "resourceType": "Microsoft.Network/routeTables",
+    "abbreviation": "rt",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-rt"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-rt"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-rt"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-rt"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-rt"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-rt"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-rt"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-rt"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-rt"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-rt"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "agw",
+    "resourceType": "Microsoft.Network/applicationGateways",
+    "abbreviation": "agw",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-agw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-agw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-agw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-agw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-agw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-agw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-agw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-agw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-agw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-agw"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "kv",
+    "resourceType": "Microsoft.KeyVault/vaults",
+    "abbreviation": "kv",
+    "style": "purpose",
+    "minLength": 3,
+    "maxLength": 24,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-kv"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-kv"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-kv"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-kv"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "pgsql",
+    "resourceType": "Microsoft.DBforPostgreSQL/flexibleServers",
+    "abbreviation": "pgsql",
+    "style": "purpose",
+    "minLength": 3,
+    "maxLength": 63,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-pgsql"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-pgsql"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-pgsql"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-pgsql"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-pgsql"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-pgsql"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-pgsql"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-pgsql"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-pgsql"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-pgsql"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "redis",
+    "resourceType": "Microsoft.Cache/redisEnterprise",
+    "abbreviation": "rc",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 60,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-rc"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-rc"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-rc"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-rc"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-rc"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-rc"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-rc"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-rc"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-rc"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-rc"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "fp",
+    "resourceType": "Microsoft.Network/firewallPolicies",
+    "abbreviation": "Firewall-Policy",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-Firewall-Policy"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-Firewall-Policy"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-Firewall-Policy"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-Firewall-Policy"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-Firewall-Policy"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-Firewall-Policy"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-Firewall-Policy"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-Firewall-Policy"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-Firewall-Policy"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-Firewall-Policy"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "afw",
+    "resourceType": "Microsoft.Network/azureFirewalls",
+    "abbreviation": "afw",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-afw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-afw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-afw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-afw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-afw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-afw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-afw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-afw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-afw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-afw"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "bas",
+    "resourceType": "Microsoft.Network/bastionHosts",
+    "abbreviation": "bas",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-bas"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-bas"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-bas"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-bas"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-bas"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-bas"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-bas"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-bas"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-bas"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-bas"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "pip",
+    "resourceType": "Microsoft.Network/publicIPAddresses",
+    "abbreviation": "pip",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-pip"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-pip"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-pip"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-pip"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-pip"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-pip"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-pip"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-pip"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-pip"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-pip"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "ng",
+    "resourceType": "Microsoft.Network/natGateways",
+    "abbreviation": "ng",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-ng"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-ng"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-ng"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-ng"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-ng"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-ng"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-ng"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-ng"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-ng"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-ng"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "pep",
+    "resourceType": "Microsoft.Network/privateEndpoints",
+    "abbreviation": "pep",
+    "style": "purpose",
+    "minLength": 2,
+    "maxLength": 64,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-pep"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-pep"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-pep"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-pep"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-pep"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-pep"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-pep"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-pep"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-pep"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-pep"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "ipg",
+    "resourceType": "Microsoft.Network/ipGroups",
+    "abbreviation": "ipg",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-ipg"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-ipg"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-ipg"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-ipg"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-ipg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-ipg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-ipg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-ipg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-ipg"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-ipg"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "nw",
+    "resourceType": "Microsoft.Network/networkWatchers",
+    "abbreviation": "nw",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-nw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-nw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-nw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-nw"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-nw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-nw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-nw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-nw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-nw"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-nw"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "log",
+    "resourceType": "Microsoft.OperationalInsights/workspaces",
+    "abbreviation": "log",
+    "style": "purpose",
+    "minLength": 4,
+    "maxLength": 63,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-log"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-log"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-log"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-log"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-log"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-log"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-log"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-log"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-log"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-log"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "aa",
+    "resourceType": "Microsoft.Automation/automationAccounts",
+    "abbreviation": "aa",
+    "style": "purpose",
+    "minLength": 6,
+    "maxLength": 50,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-aa"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-aa"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-aa"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-aa"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-aa"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-aa"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-aa"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-aa"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-aa"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-aa"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "id",
+    "resourceType": "Microsoft.ManagedIdentity/userAssignedIdentities",
+    "abbreviation": "id",
+    "style": "purpose",
+    "minLength": 3,
+    "maxLength": 128,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-hub-id"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-core-id"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-monitoring-id"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-infrafw-id"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01-con-cc-apps-id"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-hub-id"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-core-id"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-monitoring-id"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-infrafw-id"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01-con-ce-apps-id"
+      }
+    ],
+    "forbiddenPatterns": []
+  },
+  {
+    "key": "cr",
+    "resourceType": "Microsoft.ContainerRegistry/registries",
+    "abbreviation": "cr",
+    "style": "compact",
+    "minLength": 5,
+    "maxLength": 50,
+    "source": "Microsoft CAF keyword; proposed full pattern",
+    "rules": [
+      {
+        "location": "canadacentral",
+        "pattern": "cust01concchubcr"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01concccorecr"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01conccmonitoringcr"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01conccinfrafwcr"
+      },
+      {
+        "location": "canadacentral",
+        "pattern": "cust01conccappscr"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01concehubcr"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01concecorecr"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01concemonitoringcr"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01conceinfrafwcr"
+      },
+      {
+        "location": "canadaeast",
+        "pattern": "cust01conceappscr"
+      }
+    ],
+    "forbiddenPatterns": []
+  }
+]

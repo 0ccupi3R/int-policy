@@ -1,0 +1,227 @@
+[
+  {
+    "key": "rg",
+    "resourceType": "Microsoft.Resources/subscriptions/resourceGroups",
+    "abbreviation": "rg",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 90,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "vm",
+    "resourceType": "Microsoft.Compute/virtualMachines",
+    "abbreviation": "vm",
+    "style": "vm",
+    "minLength": 1,
+    "maxLength": 64,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "vnet",
+    "resourceType": "Microsoft.Network/virtualNetworks",
+    "abbreviation": "vnet",
+    "style": "purpose",
+    "minLength": 2,
+    "maxLength": 64,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "nsg",
+    "resourceType": "Microsoft.Network/networkSecurityGroups",
+    "abbreviation": "nsg",
+    "style": "nsg",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "nic",
+    "resourceType": "Microsoft.Network/networkInterfaces",
+    "abbreviation": "nic",
+    "style": "server",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "lb",
+    "resourceType": "Microsoft.Network/loadBalancers",
+    "abbreviation": "lbi/lbe",
+    "style": "lb",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "vng",
+    "resourceType": "Microsoft.Network/virtualNetworkGateways",
+    "abbreviation": "vng",
+    "style": "gateway",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "storage",
+    "resourceType": "Microsoft.Storage/storageAccounts",
+    "abbreviation": "sa",
+    "style": "storage",
+    "minLength": 3,
+    "maxLength": 24,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "rt",
+    "resourceType": "Microsoft.Network/routeTables",
+    "abbreviation": "rt",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "agw",
+    "resourceType": "Microsoft.Network/applicationGateways",
+    "abbreviation": "agw",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "kv",
+    "resourceType": "Microsoft.KeyVault/vaults",
+    "abbreviation": "kv",
+    "style": "purpose",
+    "minLength": 3,
+    "maxLength": 24,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "pgsql",
+    "resourceType": "Microsoft.DBforPostgreSQL/flexibleServers",
+    "abbreviation": "pgsql",
+    "style": "purpose",
+    "minLength": 3,
+    "maxLength": 63,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "redis",
+    "resourceType": "Microsoft.Cache/redisEnterprise",
+    "abbreviation": "rc",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 60,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "fp",
+    "resourceType": "Microsoft.Network/firewallPolicies",
+    "abbreviation": "Firewall-Policy",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "afw",
+    "resourceType": "Microsoft.Network/azureFirewalls",
+    "abbreviation": "afw",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  },
+  {
+    "key": "bas",
+    "resourceType": "Microsoft.Network/bastionHosts",
+    "abbreviation": "bas",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  },
+  {
+    "key": "pip",
+    "resourceType": "Microsoft.Network/publicIPAddresses",
+    "abbreviation": "pip",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "AirGate document keyword; core/example pattern or proposed extension"
+  },
+  {
+    "key": "ng",
+    "resourceType": "Microsoft.Network/natGateways",
+    "abbreviation": "ng",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  },
+  {
+    "key": "pep",
+    "resourceType": "Microsoft.Network/privateEndpoints",
+    "abbreviation": "pep",
+    "style": "purpose",
+    "minLength": 2,
+    "maxLength": 64,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  },
+  {
+    "key": "ipg",
+    "resourceType": "Microsoft.Network/ipGroups",
+    "abbreviation": "ipg",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  },
+  {
+    "key": "nw",
+    "resourceType": "Microsoft.Network/networkWatchers",
+    "abbreviation": "nw",
+    "style": "purpose",
+    "minLength": 1,
+    "maxLength": 80,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  },
+  {
+    "key": "log",
+    "resourceType": "Microsoft.OperationalInsights/workspaces",
+    "abbreviation": "log",
+    "style": "purpose",
+    "minLength": 4,
+    "maxLength": 63,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  },
+  {
+    "key": "aa",
+    "resourceType": "Microsoft.Automation/automationAccounts",
+    "abbreviation": "aa",
+    "style": "purpose",
+    "minLength": 6,
+    "maxLength": 50,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  },
+  {
+    "key": "id",
+    "resourceType": "Microsoft.ManagedIdentity/userAssignedIdentities",
+    "abbreviation": "id",
+    "style": "purpose",
+    "minLength": 3,
+    "maxLength": 128,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  },
+  {
+    "key": "cr",
+    "resourceType": "Microsoft.ContainerRegistry/registries",
+    "abbreviation": "cr",
+    "style": "compact",
+    "minLength": 5,
+    "maxLength": 50,
+    "source": "Microsoft CAF keyword; proposed full pattern"
+  }
+]

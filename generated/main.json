@@ -1,0 +1,4235 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "2.0.0.0",
+  "parameters": {
+    "effect": {
+      "type": "string",
+      "defaultValue": "Audit",
+      "allowedValues": [
+        "Audit",
+        "Deny",
+        "Disabled"
+      ]
+    },
+    "enforcementMode": {
+      "type": "string",
+      "defaultValue": "Default",
+      "allowedValues": [
+        "Default",
+        "DoNotEnforce"
+      ]
+    },
+    "notScopes": {
+      "type": "array",
+      "defaultValue": []
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-rg",
+      "properties": {
+        "displayName": "CustomerName naming - rg",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Resources/subscriptions/resourceGroups"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-rg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-rg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-rg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-rg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-rg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-rg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-rg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-rg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-rg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-rg"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-vm",
+      "properties": {
+        "displayName": "CustomerName naming - vm",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Compute/virtualMachines"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-dc##-vm"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-web##-vm"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-dc##-vm"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-web##-vm"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "field": "name",
+                        "matchInsensitively": "cust01-con-cc-dc00-vm"
+                      },
+                      {
+                        "field": "name",
+                        "matchInsensitively": "cust01-con-cc-web00-vm"
+                      },
+                      {
+                        "field": "name",
+                        "matchInsensitively": "cust01-con-ce-dc00-vm"
+                      },
+                      {
+                        "field": "name",
+                        "matchInsensitively": "cust01-con-ce-web00-vm"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-vnet",
+      "properties": {
+        "displayName": "CustomerName naming - vnet",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/virtualNetworks"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-vnet"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-vnet"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-vnet"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-vnet"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-vnet"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-vnet"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-vnet"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-vnet"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-vnet"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-vnet"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-nsg",
+      "properties": {
+        "displayName": "CustomerName naming - nsg",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/networkSecurityGroups"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-hub"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-core"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-monitoring"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-infrafw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-apps"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-hub"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-core"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-monitoring"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-infrafw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-apps"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-nic",
+      "properties": {
+        "displayName": "CustomerName naming - nic",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/networkInterfaces"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-dc01-nic"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-dc02-nic"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-web01-nic"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-dc01-nic"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-dc02-nic"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-web01-nic"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-lb",
+      "properties": {
+        "displayName": "CustomerName naming - lb",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/loadBalancers"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-dc01-lbi"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-dc01-lbe"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-dc02-lbi"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-dc02-lbe"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-web01-lbi"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-web01-lbe"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-dc01-lbi"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-dc01-lbe"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-dc02-lbi"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-dc02-lbe"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-web01-lbi"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-web01-lbe"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-vng",
+      "properties": {
+        "displayName": "CustomerName naming - vng",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/virtualNetworkGateways"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-vng-vpn"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-vng-er"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-vng-vpn"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-vng-er"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-storage",
+      "properties": {
+        "displayName": "CustomerName naming - storage",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Storage/storageAccounts"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01conccdiagsa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01conccfilessa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01concediagsa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01concefilessa"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-rt",
+      "properties": {
+        "displayName": "CustomerName naming - rt",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/routeTables"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-rt"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-rt"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-rt"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-rt"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-rt"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-rt"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-rt"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-rt"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-rt"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-rt"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-agw",
+      "properties": {
+        "displayName": "CustomerName naming - agw",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/applicationGateways"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-agw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-agw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-agw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-agw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-agw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-agw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-agw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-agw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-agw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-agw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-kv",
+      "properties": {
+        "displayName": "CustomerName naming - kv",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.KeyVault/vaults"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-kv"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-kv"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-kv"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-kv"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-pgsql",
+      "properties": {
+        "displayName": "CustomerName naming - pgsql",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.DBforPostgreSQL/flexibleServers"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-pgsql"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-pgsql"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-pgsql"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-pgsql"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-pgsql"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-pgsql"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-pgsql"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-pgsql"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-pgsql"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-pgsql"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-redis",
+      "properties": {
+        "displayName": "CustomerName naming - redis",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Cache/redisEnterprise"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-rc"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-rc"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-rc"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-rc"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-rc"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-rc"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-rc"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-rc"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-rc"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-rc"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-fp",
+      "properties": {
+        "displayName": "CustomerName naming - fp",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/firewallPolicies"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-Firewall-Policy"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-Firewall-Policy"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-Firewall-Policy"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-Firewall-Policy"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-Firewall-Policy"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-Firewall-Policy"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-Firewall-Policy"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-Firewall-Policy"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-Firewall-Policy"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-Firewall-Policy"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-afw",
+      "properties": {
+        "displayName": "CustomerName naming - afw",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/azureFirewalls"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-afw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-afw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-afw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-afw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-afw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-afw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-afw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-afw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-afw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-afw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-bas",
+      "properties": {
+        "displayName": "CustomerName naming - bas",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/bastionHosts"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-bas"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-bas"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-bas"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-bas"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-bas"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-bas"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-bas"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-bas"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-bas"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-bas"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-pip",
+      "properties": {
+        "displayName": "CustomerName naming - pip",
+        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/publicIPAddresses"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-pip"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-pip"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-pip"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-pip"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-pip"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-pip"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-pip"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-pip"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-pip"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-pip"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-ng",
+      "properties": {
+        "displayName": "CustomerName naming - ng",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/natGateways"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-ng"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-ng"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-ng"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-ng"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-ng"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-ng"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-ng"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-ng"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-ng"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-ng"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-pep",
+      "properties": {
+        "displayName": "CustomerName naming - pep",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/privateEndpoints"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-pep"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-pep"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-pep"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-pep"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-pep"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-pep"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-pep"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-pep"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-pep"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-pep"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-ipg",
+      "properties": {
+        "displayName": "CustomerName naming - ipg",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/ipGroups"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-ipg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-ipg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-ipg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-ipg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-ipg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-ipg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-ipg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-ipg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-ipg"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-ipg"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-nw",
+      "properties": {
+        "displayName": "CustomerName naming - nw",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/networkWatchers"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-nw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-nw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-nw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-nw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-nw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-nw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-nw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-nw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-nw"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-nw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-log",
+      "properties": {
+        "displayName": "CustomerName naming - log",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.OperationalInsights/workspaces"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-log"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-log"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-log"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-log"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-log"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-log"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-log"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-log"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-log"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-log"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-aa",
+      "properties": {
+        "displayName": "CustomerName naming - aa",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Automation/automationAccounts"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-aa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-aa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-aa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-aa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-aa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-aa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-aa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-aa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-aa"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-aa"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-id",
+      "properties": {
+        "displayName": "CustomerName naming - id",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.ManagedIdentity/userAssignedIdentities"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-hub-id"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-core-id"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-monitoring-id"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-infrafw-id"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-cc-apps-id"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-hub-id"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-core-id"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-monitoring-id"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-infrafw-id"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01-con-ce-apps-id"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-cr",
+      "properties": {
+        "displayName": "CustomerName naming - cr",
+        "description": "Microsoft CAF keyword; proposed full pattern",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.0.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.ContainerRegistry/registries"
+              },
+              {
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01concchubcr"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01concccorecr"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01conccmonitoringcr"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01conccinfrafwcr"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadacentral"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01conccappscr"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01concehubcr"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01concecorecr"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01concemonitoringcr"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01conceinfrafwcr"
+                            }
+                          ]
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "location",
+                              "equals": "canadaeast"
+                            },
+                            {
+                              "field": "name",
+                              "matchInsensitively": "cust01conceappscr"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policySetDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-initiative",
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-rg')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vm')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vnet')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nsg')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nic')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-lb')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vng')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-storage')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-rt')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-agw')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-kv')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pgsql')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-redis')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-fp')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-afw')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-bas')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pip')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-ng')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pep')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-ipg')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nw')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-log')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-aa')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-id')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-cr')]"
+      ],
+      "properties": {
+        "displayName": "CustomerName naming initiative",
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyDefinitions": [
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-rg')]",
+            "policyDefinitionReferenceId": "rg",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vm')]",
+            "policyDefinitionReferenceId": "vm",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vnet')]",
+            "policyDefinitionReferenceId": "vnet",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nsg')]",
+            "policyDefinitionReferenceId": "nsg",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nic')]",
+            "policyDefinitionReferenceId": "nic",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-lb')]",
+            "policyDefinitionReferenceId": "lb",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vng')]",
+            "policyDefinitionReferenceId": "vng",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-storage')]",
+            "policyDefinitionReferenceId": "storage",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-rt')]",
+            "policyDefinitionReferenceId": "rt",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-agw')]",
+            "policyDefinitionReferenceId": "agw",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-kv')]",
+            "policyDefinitionReferenceId": "kv",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pgsql')]",
+            "policyDefinitionReferenceId": "pgsql",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-redis')]",
+            "policyDefinitionReferenceId": "redis",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-fp')]",
+            "policyDefinitionReferenceId": "fp",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-afw')]",
+            "policyDefinitionReferenceId": "afw",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-bas')]",
+            "policyDefinitionReferenceId": "bas",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pip')]",
+            "policyDefinitionReferenceId": "pip",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-ng')]",
+            "policyDefinitionReferenceId": "ng",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pep')]",
+            "policyDefinitionReferenceId": "pep",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-ipg')]",
+            "policyDefinitionReferenceId": "ipg",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nw')]",
+            "policyDefinitionReferenceId": "nw",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-log')]",
+            "policyDefinitionReferenceId": "log",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-aa')]",
+            "policyDefinitionReferenceId": "aa",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-id')]",
+            "policyDefinitionReferenceId": "id",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-cr')]",
+            "policyDefinitionReferenceId": "cr",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('effect')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyAssignments",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-test",
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', 'cust01-naming-initiative')]"
+      ],
+      "properties": {
+        "displayName": "CustomerName naming audit",
+        "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', 'cust01-naming-initiative')]",
+        "enforcementMode": "[parameters('enforcementMode')]",
+        "notScopes": "[parameters('notScopes')]",
+        "parameters": {
+          "effect": {
+            "value": "[parameters('effect')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "assignmentId": {
+      "type": "string",
+      "value": "[subscriptionResourceId('Microsoft.Authorization/policyAssignments', 'cust01-naming-test')]"
+    }
+  }
+}

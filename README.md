@@ -1,62 +1,96 @@
-# CustomerName naming policies v2
+# CustomerName naming policies v2.1
 
-This is a complete replacement package, not a search-and-replace patch. Default organization is cust01; displayName is CustomerName; policyPrefix is cust01-naming. Change those values only in config/customer.json. Do not replace strings throughout source files. Source labels still identify AirGate documentation and Microsoft CAF as provenance, not customer identity.
+Clean replacement package using CustomerName/cust01 test values. It contains 25 existing type-specific naming definitions plus one integrated subnet definition, one initiative, and one subscription assignment.
 
-## Fixes
-- Key Vault uses its own purpose list: core and apps. With cust01/con/cc these generate 21-character names. General monitoring purpose is not silently shortened or removed from other types.
-- Failure invalidates generated outputs; tests require matching config, generator, type-catalog and artifact hashes. No stale pass after a failed generation.
-- Tests derive prefixes, subscription codes and roles from config, not hard-coded names.
-- Literal allOf/anyOf/not conditions replace runtime count/current expressions. Only effect remains a Policy expression; it is escaped for ARM deployment.
-- Audit and Default are the shipped settings. No automatic Deny activation script is included.
-- ARM JSON is generated directly; it is not claimed to be Bicep compiler output. This permits deployment without Bicep CLI. Bicep wrapper is included separately.
+## Safety defaults
+- Existing rules: Audit
+- Subnet rule: Audit
+- Assignment enforcementMode: Default
 
-## Run locally
-From the extracted folder:
-```
+Audit reports non-compliance but does not block requests. To enforce Deny after review, pass `effect=Deny`. Keep `subnetEffect=Audit` until inline and standalone subnet behavior has been tested in Azure.
+
+## Structure
+Only these maintained inputs should be edited:
+- `config/customer.json`: customer tokens, effect values, subnet allowlist.
+- `config/types.json`: normal type catalogue.
+- `tools/generate.py`: generator logic.
+- `tests/offline.py` and `tests/regression.py`: validation.
+
+Never manually edit `generated/*`. Regenerate it.
+
+## Generate and test
+```bash
+chmod u+w . config generated tests tools
 python3 tools/generate.py && python3 tests/offline.py
 python3 tests/regression.py
 ```
-After configuration changes, regenerate before any deployment. Do not deploy old main.json files from the prior package. The generator checks a selected set of type-specific name length limits, plus compact storage/registry and Key Vault characters. It does not validate global name availability, reserved names, every provider constraint or guest VM computerName.
+Generation removes prior output first. Tests compare hashes and reject stale or modified output.
 
-## PowerShell deployment, no Azure CLI/Bicep compiler
-Install/import Az modules using your approved process, then:
+## Subnet naming
+The integrated subnet policy has reference ID `subnet`. It checks:
+1. standalone `Microsoft.Network/virtualNetworks/subnets` requests; and
+2. subnet names submitted inside a `Microsoft.Network/virtualNetworks` request.
+
+Allowed names are maintained at `config/customer.json -> subnetNaming.allowedNames`. The supplied names are sample/proposed values plus required Azure service subnet names. Review the list before Deny.
+
+Subnet is not automatically added to the existing VM/NIC/PIP exemption. Add reference ID `subnet` only if the approved waiver genuinely includes subnet naming.
+
+## Azure CLI validation and deployment
+```bash
+SUBSCRIPTION_ID="YOUR-SUBSCRIPTION-ID"
+az account set --subscription "$SUBSCRIPTION_ID"
+
+az deployment sub validate \
+  --subscription "$SUBSCRIPTION_ID" \
+  --location canadacentral \
+  --template-file generated/main.json \
+  --parameters @generated/parameters.json \
+  effect=Audit subnetEffect=Audit enforcementMode=Default
 ```
-./Deploy-Audit.ps1 -SubscriptionId YOUR-SUBSCRIPTION-ID
+
+Deploy only after validation succeeds:
+```bash
+az deployment sub create \
+  --subscription "$SUBSCRIPTION_ID" \
+  --name cust01-naming-v2-1 \
+  --location canadacentral \
+  --template-file generated/main.json \
+  --parameters @generated/parameters.json \
+  effect=Audit subnetEffect=Audit enforcementMode=Default
 ```
-The script requires Python under python3, signs in, sets context, runs local generation/tests, validates the generated ARM template, and deploys with explicit Audit/Default overrides. If Python is installed under python on Windows, replace python3 with python in this script only. PowerShell was not available for execution here; cmdlet calls require validation in your environment.
 
-Manual equivalent after successful local generation/tests:
+For existing rules in Deny while subnet remains Audit:
+```bash
+az deployment sub create \
+  --subscription "$SUBSCRIPTION_ID" \
+  --name cust01-naming-v2-1 \
+  --location canadacentral \
+  --template-file generated/main.json \
+  --parameters @generated/parameters.json \
+  effect=Deny subnetEffect=Audit enforcementMode=Default
 ```
-Connect-AzAccount
-Set-AzContext -SubscriptionId YOUR-SUBSCRIPTION-ID
-Test-AzDeployment -Location canadacentral -TemplateFile ./generated/main.json -TemplateParameterFile ./generated/parameters.json -effect Audit -enforcementMode Default
-New-AzSubscriptionDeployment -Name naming-audit-v2 -Location canadacentral -TemplateFile ./generated/main.json -TemplateParameterFile ./generated/parameters.json -effect Audit -enforcementMode Default
+
+## Verify
+```bash
+SCOPE="/subscriptions/$SUBSCRIPTION_ID"
+az policy assignment show \
+  --name cust01-naming-test \
+  --scope "$SCOPE" \
+  --query "{Effect:parameters.effect.value,SubnetEffect:parameters.subnetEffect.value,Enforcement:enforcementMode}" \
+  --output json
 ```
-Stop if validation returns errors. Policy assignment name is cust01-naming-test by default. Use Get-AzPolicyAssignment with this name and subscription scope. Use Start-AzPolicyComplianceScan and Get-AzPolicyState to inspect compliance. Microsoft.PolicyInsights must be registered for compliance reporting. Permissions must cover policy definitions, initiatives, assignments and deployments.
 
-## Azure CLI / Cloud Shell Bash alternative
-```
-python3 tools/generate.py && python3 tests/offline.py
-az account set --subscription YOUR-SUBSCRIPTION-ID
-az deployment sub validate --location canadacentral --template-file generated/main.json --parameters @generated/parameters.json effect=Audit enforcementMode=Default
-az deployment sub create --name naming-audit-v2 --location canadacentral --template-file generated/main.json --parameters @generated/parameters.json effect=Audit enforcementMode=Default
-```
-Stop on validation failure. The JSON path does not require Bicep compilation. For Bicep path compile main.bicep using your installed Bicep compiler and validate it before deployment.
+## Existing exemption
+The package doesn't delete or replace exemptions. Your existing RG exemption for references `vm`, `nic`, and `pip` remains an Azure child resource. It is not stored in this generic customer-neutral package.
 
-## Migration warning
-New cust01-prefixed policies do NOT replace or disable previously deployed aig-prefixed policies. Review existing assignments in the subscription. If an old Deny assignment exists it can still block requests. No old assignments are deleted by this package. Resource names themselves are not renamed.
+## Limits
+Unknown types are unaffected. ENV is excluded. Subnet uses an explicit allowlist rather than a generated `{purpose}` pattern. Disk naming isn't covered. The VM portal still requires networking; subnet policy does not create a VNet or subnet. VM SKU/capacity errors are unrelated to naming policy. Global name availability and all provider-specific reserved-name conditions aren't checked locally.
 
-## Coverage and unresolved decisions
-25 selected resource types, one initiative, one subscription assignment. Unknown resource types are unaffected. One subscription code is fixed per generated package. Regions cc/ce bind to actual resource location. Purpose values are controlled lists. VM 01-99 uses ## and explicit 00 exclusion. Case-insensitive matching is deliberate. ENV is excluded. Compact VM/dashless exception is deferred. Subnets, peering, DNS, ARO, local gateway typo, management groups and subscription display names are not enforced. Gateway suffix is not tied to gatewayType, and LB i/e is not tied to frontend IP configuration. Platform-generated names may appear non-compliant; review exclusions before any Deny change. All non-core full patterns are proposals, not universal AirGate/Microsoft rules. Storage prd/prda semantics remain unresolved.
+## Validation status
+Local generator, condition-tree tests, stale-output tests, configuration regression tests, and package structure checks were executed during creation. Azure Resource Manager validation, Azure Policy engine behavior, PowerShell execution, and Bicep compilation must be performed in your environment.
 
-## Validation honesty
-Python generation, local condition-tree tests, regression tests and JSON structure checks were run. No Azure account connection, Azure Policy engine test, ARM service validation, PowerShell execution or Bicep compilation was possible here. Do not interpret local passed tests as cloud deployment certification. See generated/validation.json.
-
-## Sources
-Microsoft Policy operators: https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule
-Provider restrictions: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules
-Audit: https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effect-audit
-PowerShell deployment: https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-powershell
-
-## Cleanup
-Remove/disable the assignment before deleting the initiative and definitions. Removing deployment history does not remove policies. No workload test resources are automatically created or deleted.
+## Microsoft references
+- Azure Policy rule structure: https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule
+- Array policy authoring: https://learn.microsoft.com/en-us/azure/governance/policy/how-to/author-policies-for-arrays
+- Azure Policy exemptions: https://learn.microsoft.com/en-us/azure/governance/policy/concepts/exemption-structure
+- Azure resource name restrictions: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules

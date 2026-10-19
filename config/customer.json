@@ -33,6 +33,18 @@
     "diag",
     "files"
   ],
+  "subnetNaming": {
+    "effect": "Audit",
+    "allowedNames": [
+      "snet-apps",
+      "snet-core",
+      "snet-management",
+      "GatewaySubnet",
+      "AzureBastionSubnet",
+      "AzureFirewallSubnet",
+      "AzureFirewallManagementSubnet"
+    ]
+  },
   "effect": "Audit",
   "enforcementMode": "Default",
   "notScopes": []

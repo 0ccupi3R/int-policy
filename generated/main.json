@@ -1,8 +1,17 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
-  "contentVersion": "2.0.0.0",
+  "contentVersion": "2.1.0.0",
   "parameters": {
     "effect": {
+      "type": "string",
+      "defaultValue": "Audit",
+      "allowedValues": [
+        "Audit",
+        "Deny",
+        "Disabled"
+      ]
+    },
+    "subnetEffect": {
       "type": "string",
       "defaultValue": "Audit",
       "allowedValues": [
@@ -35,7 +44,7 @@
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -199,11 +208,11 @@
       "name": "cust01-naming-vm",
       "properties": {
         "displayName": "CustomerName naming - vm",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate document keyword; confirmed VM numbering 01-99",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -315,11 +324,11 @@
       "name": "cust01-naming-vnet",
       "properties": {
         "displayName": "CustomerName naming - vnet",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate document keyword; proposed extension beyond hub",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -483,11 +492,11 @@
       "name": "cust01-naming-nsg",
       "properties": {
         "displayName": "CustomerName naming - nsg",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate document keyword and type-specific pattern",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -651,11 +660,11 @@
       "name": "cust01-naming-nic",
       "properties": {
         "displayName": "CustomerName naming - nic",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate document keyword and server-name pattern",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -771,11 +780,11 @@
       "name": "cust01-naming-lb",
       "properties": {
         "displayName": "CustomerName naming - lb",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate document internal/external keywords",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -963,11 +972,11 @@
       "name": "cust01-naming-vng",
       "properties": {
         "displayName": "CustomerName naming - vng",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate document VPN and ExpressRoute gateway patterns",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -1059,11 +1068,11 @@
       "name": "cust01-naming-storage",
       "properties": {
         "displayName": "CustomerName naming - storage",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate document keyword; compact lowercase pattern",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -1155,11 +1164,11 @@
       "name": "cust01-naming-rt",
       "properties": {
         "displayName": "CustomerName naming - rt",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate observed suffix; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -1323,11 +1332,11 @@
       "name": "cust01-naming-agw",
       "properties": {
         "displayName": "CustomerName naming - agw",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate observed suffix; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -1491,11 +1500,11 @@
       "name": "cust01-naming-kv",
       "properties": {
         "displayName": "CustomerName naming - kv",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate observed suffix; type-specific short purposes",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -1587,11 +1596,11 @@
       "name": "cust01-naming-pgsql",
       "properties": {
         "displayName": "CustomerName naming - pgsql",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate suffix; Microsoft CAF resource-type mapping",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -1755,11 +1764,11 @@
       "name": "cust01-naming-redis",
       "properties": {
         "displayName": "CustomerName naming - redis",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate suffix; Microsoft CAF resource-type mapping",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -1923,11 +1932,11 @@
       "name": "cust01-naming-fp",
       "properties": {
         "displayName": "CustomerName naming - fp",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate observed suffix; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -2091,11 +2100,11 @@
       "name": "cust01-naming-afw",
       "properties": {
         "displayName": "CustomerName naming - afw",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -2259,11 +2268,11 @@
       "name": "cust01-naming-bas",
       "properties": {
         "displayName": "CustomerName naming - bas",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF mapping; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -2427,11 +2436,11 @@
       "name": "cust01-naming-pip",
       "properties": {
         "displayName": "CustomerName naming - pip",
-        "description": "AirGate document keyword; core/example pattern or proposed extension",
+        "description": "AirGate abbreviation; standalone pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -2595,11 +2604,11 @@
       "name": "cust01-naming-ng",
       "properties": {
         "displayName": "CustomerName naming - ng",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -2763,11 +2772,11 @@
       "name": "cust01-naming-pep",
       "properties": {
         "displayName": "CustomerName naming - pep",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -2931,11 +2940,11 @@
       "name": "cust01-naming-ipg",
       "properties": {
         "displayName": "CustomerName naming - ipg",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -3099,11 +3108,11 @@
       "name": "cust01-naming-nw",
       "properties": {
         "displayName": "CustomerName naming - nw",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF abbreviation; provider-generated naming needs review",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -3267,11 +3276,11 @@
       "name": "cust01-naming-log",
       "properties": {
         "displayName": "CustomerName naming - log",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF mapping; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -3435,11 +3444,11 @@
       "name": "cust01-naming-aa",
       "properties": {
         "displayName": "CustomerName naming - aa",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -3603,11 +3612,11 @@
       "name": "cust01-naming-id",
       "properties": {
         "displayName": "CustomerName naming - id",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -3771,11 +3780,11 @@
       "name": "cust01-naming-cr",
       "properties": {
         "displayName": "CustomerName naming - cr",
-        "description": "Microsoft CAF keyword; proposed full pattern",
+        "description": "Microsoft CAF abbreviation; compact pattern proposed",
         "mode": "All",
         "metadata": {
           "category": "Naming",
-          "version": "2.0.0"
+          "version": "2.1.0"
         },
         "parameters": {
           "effect": {
@@ -3934,6 +3943,86 @@
       }
     },
     {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2023-04-01",
+      "name": "cust01-naming-subnet",
+      "properties": {
+        "displayName": "CustomerName naming - subnet",
+        "description": "Proposed allowlist for standalone and inline subnet names; includes Azure reserved subnet names.",
+        "mode": "All",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.1.0"
+        },
+        "parameters": {
+          "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          }
+        },
+        "policyRule": {
+          "if": {
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "field": "type",
+                    "equals": "Microsoft.Network/virtualNetworks/subnets"
+                  },
+                  {
+                    "field": "name",
+                    "notIn": [
+                      "snet-apps",
+                      "snet-core",
+                      "snet-management",
+                      "GatewaySubnet",
+                      "AzureBastionSubnet",
+                      "AzureFirewallSubnet",
+                      "AzureFirewallManagementSubnet"
+                    ]
+                  }
+                ]
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "type",
+                    "equals": "Microsoft.Network/virtualNetworks"
+                  },
+                  {
+                    "count": {
+                      "field": "Microsoft.Network/virtualNetworks/subnets[*]",
+                      "where": {
+                        "field": "Microsoft.Network/virtualNetworks/subnets[*].name",
+                        "notIn": [
+                          "snet-apps",
+                          "snet-core",
+                          "snet-management",
+                          "GatewaySubnet",
+                          "AzureBastionSubnet",
+                          "AzureFirewallSubnet",
+                          "AzureFirewallManagementSubnet"
+                        ]
+                      }
+                    },
+                    "greater": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "then": {
+            "effect": "[[parameters('effect')]"
+          }
+        }
+      }
+    },
+    {
       "type": "Microsoft.Authorization/policySetDefinitions",
       "apiVersion": "2023-04-01",
       "name": "cust01-naming-initiative",
@@ -3962,12 +4051,27 @@
         "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-log')]",
         "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-aa')]",
         "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-id')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-cr')]"
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-cr')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-subnet')]"
       ],
       "properties": {
         "displayName": "CustomerName naming initiative",
+        "description": "Type-specific naming rules. Subnet has an independent effect for safe rollout.",
+        "metadata": {
+          "category": "Naming",
+          "version": "2.1.0"
+        },
         "parameters": {
           "effect": {
+            "type": "String",
+            "allowedValues": [
+              "Audit",
+              "Deny",
+              "Disabled"
+            ],
+            "defaultValue": "Audit"
+          },
+          "subnetEffect": {
             "type": "String",
             "allowedValues": [
               "Audit",
@@ -4202,6 +4306,15 @@
                 "value": "[[parameters('effect')]"
               }
             }
+          },
+          {
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-subnet')]",
+            "policyDefinitionReferenceId": "subnet",
+            "parameters": {
+              "effect": {
+                "value": "[[parameters('subnetEffect')]"
+              }
+            }
           }
         ]
       }
@@ -4214,15 +4327,28 @@
         "[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', 'cust01-naming-initiative')]"
       ],
       "properties": {
-        "displayName": "CustomerName naming audit",
+        "displayName": "CustomerName naming assignment",
+        "description": "Customer naming assignment with separately controlled subnet rollout.",
         "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', 'cust01-naming-initiative')]",
         "enforcementMode": "[parameters('enforcementMode')]",
         "notScopes": "[parameters('notScopes')]",
         "parameters": {
           "effect": {
             "value": "[parameters('effect')]"
+          },
+          "subnetEffect": {
+            "value": "[parameters('subnetEffect')]"
           }
-        }
+        },
+        "nonComplianceMessages": [
+          {
+            "message": "Resource names must match the approved type-specific naming convention."
+          },
+          {
+            "message": "Subnet names must be in the approved allowlist.",
+            "policyDefinitionReferenceId": "subnet"
+          }
+        ]
       }
     }
   ],

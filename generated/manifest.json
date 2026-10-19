@@ -1,11 +1,11 @@
 {
   "config": "config/customer.json",
   "hashes": {
-    "config": "456d2966f152a2766b0a81aae78553f03736771c01dc0ca92167e58072cb9ac4",
-    "types": "8909c3c76cce7bf32ffad1d514816330973ff97129aac1aebb812cda62393f43",
-    "generator": "b41acf9766b29c252633171e744f4832c53ce27b1f229933e89cf64a8892c8d3",
-    "policies": "9282c324526d80d8d7cac9bdac0fc348c8142bb4fbaffe3b44b7b031cd7a1b14",
-    "template": "d0f119ab13b547304560e3e1bdb4b0d257b96f4c8bb8f7f38fb8d6d4ddec9a65",
-    "parameters": "08ffcab86870fefaa9a5ff85b0619225cf8456f3cc1cc13f8f466c564f36cef7"
+    "config": "4bf988f0f5020e1776d09bedbd93b5ebfd94fb97165b3da3e9869dfc81d2a093",
+    "types": "6d9e7e689f8b2fdd8d83fc8d2f60ab09d121632fdfb95beed3c62416f8005517",
+    "generator": "1bfde7b4fee869c3e7f212ebdedb03f5cf205ea715c50fcb6dabec3922886d43",
+    "policies": "b387f734fbc296ac541fc25a881257569c357d31e0c21cf273b4d94dbf49058c",
+    "template": "6f8fec3c8d2c5b6dcdae83bd9d895865e435f00b326e4bc97448e6d9026e12b4",
+    "parameters": "79fd0ed03abbc7c50e3a6788191f3322aa6516e35657454196079e477162d03d"
   }
 }

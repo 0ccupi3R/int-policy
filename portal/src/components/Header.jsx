@@ -156,13 +156,16 @@ export function Header({
               value={themePalette}
               onChange={(e) => {
                 onSelectPalette(e.target.value);
-                const name =
-                  e.target.value === "azure"
-                    ? "Azure Fluent"
-                    : e.target.value === "primer"
-                    ? "GitHub Primer"
-                    : "Cloudscape Console";
-                onShowToast(`Switched palette to ${name}`);
+                const nameMap = {
+                  linear: "Linear / Stripe Slate",
+                  catppuccin: "Catppuccin Latte",
+                  nord: "Nord Arctic Frost",
+                  stone: "Warm Ceramic Stone",
+                  azure: "Azure Fluent",
+                  primer: "GitHub Primer",
+                  cloudscape: "Cloudscape Console"
+                };
+                onShowToast(`Switched palette to ${nameMap[e.target.value] || e.target.value}`);
               }}
               className="form-input"
               style={{
@@ -175,9 +178,17 @@ export function Header({
                 cursor: "pointer"
               }}
             >
-              <option value="azure">Azure Fluent</option>
-              <option value="primer">GitHub Primer</option>
-              <option value="cloudscape">Cloudscape Console</option>
+              <optgroup label="Modern Internet (Zero Eye Strain)">
+                <option value="linear">Linear / Stripe Slate</option>
+                <option value="catppuccin">Catppuccin Latte (Warm Paper)</option>
+                <option value="nord">Nord Arctic Frost</option>
+                <option value="stone">Warm Ceramic (Stone)</option>
+              </optgroup>
+              <optgroup label="Calibrated Cloud Consoles">
+                <option value="azure">Azure Fluent</option>
+                <option value="primer">GitHub Primer</option>
+                <option value="cloudscape">Cloudscape Console</option>
+              </optgroup>
             </select>
           </div>
 

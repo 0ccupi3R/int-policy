@@ -21,13 +21,429 @@
 }
 
 /* ==============================================================================
-   1. AZURE FLUENT ENTERPRISE PALETTE (DEFAULT)
+   1. LINEAR & STRIPE LUXURY SLATE (MODERN SAAS BENCHMARK)
+   ============================================================================== */
+
+/* Linear Slate - Dark Mode */
+:root,
+[data-palette="linear"][data-theme="dark"],
+[data-theme="dark"] {
+  --bg-darkest: #070a0f;
+  --bg-canvas: #0b0f17;
+  --bg-primary: #111827;
+  --bg-surface: #131b2a;
+  --bg-surface-elevated: #1c263a;
+  --bg-surface-hover: #24314a;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-focus: #6366f1;
+
+  --azure-blue: #6366f1;
+  --azure-cyan: #38bdf8;
+  --azure-glow: rgba(99, 102, 241, 0.15);
+
+  --accent-purple: #a855f7;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  --glass-bg: rgba(19, 27, 42, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.4);
+
+  --code-bg: #080c14;
+  --code-header-bg: #111827;
+  --code-text: #e2e8f0;
+  --code-border: rgba(255, 255, 255, 0.08);
+
+  --status-success-bg: rgba(16, 185, 129, 0.15);
+  --status-success-text: #6ee7b7;
+  --status-success-border: rgba(16, 185, 129, 0.3);
+
+  --status-danger-bg: rgba(244, 63, 94, 0.15);
+  --status-danger-text: #fca5a5;
+  --status-danger-border: rgba(244, 63, 94, 0.3);
+
+  --status-warning-bg: rgba(245, 158, 11, 0.15);
+  --status-warning-text: #fde68a;
+  --status-warning-border: rgba(245, 158, 11, 0.3);
+
+  --modal-overlay-bg: rgba(0, 0, 0, 0.75);
+}
+
+/* Linear Slate - Light Mode (Zero Eye Strain Alabaster) */
+[data-palette="linear"][data-theme="light"] {
+  --bg-darkest: #f1f5f9;
+  --bg-canvas: #f8fafc;
+  --bg-primary: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f8fafc;
+  --bg-surface-hover: #f1f5f9;
+
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-strong: #cbd5e1;
+  --border-focus: #4f46e5;
+
+  --azure-blue: #4f46e5;
+  --azure-cyan: #0284c7;
+  --azure-glow: rgba(79, 70, 229, 0.12);
+
+  --accent-purple: #7c3aed;
+  --accent-emerald: #059669;
+  --accent-amber: #d97706;
+  --accent-rose: #e11d48;
+
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+
+  --glass-bg: rgba(255, 255, 255, 0.98);
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --glass-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+
+  --code-bg: #f1f5f9;
+  --code-header-bg: #e2e8f0;
+  --code-text: #0f172a;
+  --code-border: rgba(15, 23, 42, 0.08);
+
+  --status-success-bg: #ecfdf5;
+  --status-success-text: #047857;
+  --status-success-border: #a7f3d0;
+
+  --status-danger-bg: #fef2f2;
+  --status-danger-text: #b91c1c;
+  --status-danger-border: #fecaca;
+
+  --status-warning-bg: #fffbeb;
+  --status-warning-text: #b45309;
+  --status-warning-border: #fde68a;
+
+  --modal-overlay-bg: rgba(15, 23, 42, 0.5);
+}
+
+/* ==============================================================================
+   2. CATPPUCCIN LATTE & WARM PAPER (ANTI-GLARE / COZY BOOK FEEL)
+   ============================================================================== */
+
+/* Catppuccin Mocha - Dark Mode */
+[data-palette="catppuccin"][data-theme="dark"] {
+  --bg-darkest: #11111b;
+  --bg-canvas: #181825;
+  --bg-primary: #1e1e2e;
+  --bg-surface: #24273a;
+  --bg-surface-elevated: #313244;
+  --bg-surface-hover: #45475a;
+
+  --border-subtle: rgba(205, 214, 244, 0.1);
+  --border-strong: rgba(205, 214, 244, 0.2);
+  --border-focus: #89b4fa;
+
+  --azure-blue: #89b4fa;
+  --azure-cyan: #89dceb;
+  --azure-glow: rgba(137, 180, 250, 0.15);
+
+  --accent-purple: #cba6f7;
+  --accent-emerald: #a6e3a1;
+  --accent-amber: #f9e2af;
+  --accent-rose: #f38ba8;
+
+  --text-main: #cdd6f4;
+  --text-muted: #a6adc8;
+  --text-dim: #7f849c;
+
+  --glass-bg: rgba(36, 39, 58, 0.92);
+  --glass-border: rgba(205, 214, 244, 0.1);
+  --glass-shadow: 0 4px 20px 0 rgba(17, 17, 27, 0.5);
+
+  --code-bg: #181825;
+  --code-header-bg: #1e1e2e;
+  --code-text: #cdd6f4;
+  --code-border: rgba(205, 214, 244, 0.1);
+
+  --status-success-bg: rgba(166, 227, 161, 0.15);
+  --status-success-text: #a6e3a1;
+  --status-success-border: rgba(166, 227, 161, 0.3);
+
+  --status-danger-bg: rgba(243, 139, 168, 0.15);
+  --status-danger-text: #f38ba8;
+  --status-danger-border: rgba(243, 139, 168, 0.3);
+
+  --status-warning-bg: rgba(249, 226, 175, 0.15);
+  --status-warning-text: #f9e2af;
+  --status-warning-border: rgba(249, 226, 175, 0.3);
+
+  --modal-overlay-bg: rgba(17, 17, 27, 0.8);
+}
+
+/* Catppuccin Latte - Light Mode (Warm Cream Paper / Zero Eye Strain) */
+[data-palette="catppuccin"][data-theme="light"] {
+  --bg-darkest: #e6e9ef;
+  --bg-canvas: #eff1f5;
+  --bg-primary: #e6e9ef;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #e6e9ef;
+  --bg-surface-hover: #dce0e8;
+
+  --border-subtle: #dce0e8;
+  --border-strong: #ccd0da;
+  --border-focus: #1e66f5;
+
+  --azure-blue: #1e66f5;
+  --azure-cyan: #04a5e5;
+  --azure-glow: rgba(30, 102, 245, 0.12);
+
+  --accent-purple: #8839ef;
+  --accent-emerald: #40a02b;
+  --accent-amber: #df8e1d;
+  --accent-rose: #d20f39;
+
+  --text-main: #4c4f69;
+  --text-muted: #6c6f85;
+  --text-dim: #8c8fa1;
+
+  --glass-bg: rgba(255, 255, 255, 0.96);
+  --glass-border: #dce0e8;
+  --glass-shadow: 0 1px 3px 0 rgba(76, 79, 105, 0.05), 0 1px 2px -1px rgba(76, 79, 105, 0.03);
+
+  --code-bg: #e6e9ef;
+  --code-header-bg: #dce0e8;
+  --code-text: #4c4f69;
+  --code-border: #dce0e8;
+
+  --status-success-bg: #e8f5e9;
+  --status-success-text: #2e7d32;
+  --status-success-border: #c8e6c9;
+
+  --status-danger-bg: #ffebee;
+  --status-danger-text: #c62828;
+  --status-danger-border: #ffcdd2;
+
+  --status-warning-bg: #fff8e1;
+  --status-warning-text: #f57f17;
+  --status-warning-border: #ffecb3;
+
+  --modal-overlay-bg: rgba(76, 79, 105, 0.45);
+}
+
+/* ==============================================================================
+   3. NORD ARCTIC FROST (SCANDINAVIAN CALM & LOW COGNITIVE LOAD)
+   ============================================================================== */
+
+/* Nord - Dark Mode */
+[data-palette="nord"][data-theme="dark"] {
+  --bg-darkest: #1d212a;
+  --bg-canvas: #242933;
+  --bg-primary: #2e3440;
+  --bg-surface: #2e3440;
+  --bg-surface-elevated: #3b4252;
+  --bg-surface-hover: #434c5e;
+
+  --border-subtle: rgba(216, 222, 233, 0.1);
+  --border-strong: rgba(216, 222, 233, 0.2);
+  --border-focus: #88c0d0;
+
+  --azure-blue: #88c0d0;
+  --azure-cyan: #81a1c1;
+  --azure-glow: rgba(136, 192, 208, 0.15);
+
+  --accent-purple: #b48ead;
+  --accent-emerald: #a3be8c;
+  --accent-amber: #ebcb8b;
+  --accent-rose: #bf616a;
+
+  --text-main: #eceff4;
+  --text-muted: #d8dee9;
+  --text-dim: #94a3b8;
+
+  --glass-bg: rgba(46, 52, 64, 0.92);
+  --glass-border: rgba(216, 222, 233, 0.1);
+  --glass-shadow: 0 4px 20px 0 rgba(29, 33, 42, 0.5);
+
+  --code-bg: #1d212a;
+  --code-header-bg: #242933;
+  --code-text: #eceff4;
+  --code-border: rgba(216, 222, 233, 0.1);
+
+  --status-success-bg: rgba(163, 190, 140, 0.15);
+  --status-success-text: #a3be8c;
+  --status-success-border: rgba(163, 190, 140, 0.3);
+
+  --status-danger-bg: rgba(191, 97, 106, 0.15);
+  --status-danger-text: #bf616a;
+  --status-danger-border: rgba(191, 97, 106, 0.3);
+
+  --status-warning-bg: rgba(235, 203, 139, 0.15);
+  --status-warning-text: #ebcb8b;
+  --status-warning-border: rgba(235, 203, 139, 0.3);
+
+  --modal-overlay-bg: rgba(29, 33, 42, 0.75);
+}
+
+/* Nord - Light Mode (Snow Storm Polar Frost) */
+[data-palette="nord"][data-theme="light"] {
+  --bg-darkest: #e5e9f0;
+  --bg-canvas: #eceff4;
+  --bg-primary: #e5e9f0;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #e5e9f0;
+  --bg-surface-hover: #d8dee9;
+
+  --border-subtle: #d8dee9;
+  --border-strong: #c6d0df;
+  --border-focus: #0284c7;
+
+  --azure-blue: #0284c7;
+  --azure-cyan: #5e81ac;
+  --azure-glow: rgba(2, 132, 199, 0.12);
+
+  --accent-purple: #b48ead;
+  --accent-emerald: #a3be8c;
+  --accent-amber: #ebcb8b;
+  --accent-rose: #bf616a;
+
+  --text-main: #2e3440;
+  --text-muted: #4c566a;
+  --text-dim: #7b88a1;
+
+  --glass-bg: rgba(255, 255, 255, 0.96);
+  --glass-border: #d8dee9;
+  --glass-shadow: 0 1px 3px 0 rgba(46, 52, 64, 0.05), 0 1px 2px -1px rgba(46, 52, 64, 0.03);
+
+  --code-bg: #e5e9f0;
+  --code-header-bg: #d8dee9;
+  --code-text: #2e3440;
+  --code-border: #d8dee9;
+
+  --status-success-bg: #ebf5ee;
+  --status-success-text: #2e7d32;
+  --status-success-border: #c8e6c9;
+
+  --status-danger-bg: #fdf0f0;
+  --status-danger-text: #bf616a;
+  --status-danger-border: #f8d7da;
+
+  --status-warning-bg: #fff9eb;
+  --status-warning-text: #b45309;
+  --status-warning-border: #fde68a;
+
+  --modal-overlay-bg: rgba(46, 52, 64, 0.5);
+}
+
+/* ==============================================================================
+   4. TAILWIND CATALYST WARM CERAMIC (EXECUTIVE STONE)
+   ============================================================================== */
+
+/* Warm Stone - Dark Mode */
+[data-palette="stone"][data-theme="dark"] {
+  --bg-darkest: #0c0a09;
+  --bg-canvas: #141210;
+  --bg-primary: #1c1917;
+  --bg-surface: #1c1917;
+  --bg-surface-elevated: #292524;
+  --bg-surface-hover: #44403c;
+
+  --border-subtle: rgba(231, 229, 228, 0.1);
+  --border-strong: rgba(231, 229, 228, 0.18);
+  --border-focus: #38bdf8;
+
+  --azure-blue: #38bdf8;
+  --azure-cyan: #7dd3fc;
+  --azure-glow: rgba(56, 189, 248, 0.15);
+
+  --accent-purple: #a855f7;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+
+  --text-main: #f5f5f4;
+  --text-muted: #a8a29e;
+  --text-dim: #78716c;
+
+  --glass-bg: rgba(28, 25, 23, 0.92);
+  --glass-border: rgba(231, 229, 228, 0.1);
+  --glass-shadow: 0 4px 20px 0 rgba(12, 10, 9, 0.5);
+
+  --code-bg: #0c0a09;
+  --code-header-bg: #141210;
+  --code-text: #f5f5f4;
+  --code-border: rgba(231, 229, 228, 0.1);
+
+  --status-success-bg: rgba(16, 185, 129, 0.15);
+  --status-success-text: #6ee7b7;
+  --status-success-border: rgba(16, 185, 129, 0.3);
+
+  --status-danger-bg: rgba(244, 63, 94, 0.15);
+  --status-danger-text: #fca5a5;
+  --status-danger-border: rgba(244, 63, 94, 0.3);
+
+  --status-warning-bg: rgba(245, 158, 11, 0.15);
+  --status-warning-text: #fde68a;
+  --status-warning-border: rgba(245, 158, 11, 0.3);
+
+  --modal-overlay-bg: rgba(12, 10, 9, 0.75);
+}
+
+/* Warm Stone - Light Mode (Organic Stone 100 / No Glare) */
+[data-palette="stone"][data-theme="light"] {
+  --bg-darkest: #e7e5e4;
+  --bg-canvas: #f5f5f4;
+  --bg-primary: #e7e5e4;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #e7e5e4;
+  --bg-surface-hover: #d6d3d1;
+
+  --border-subtle: #e7e5e4;
+  --border-strong: #d6d3d1;
+  --border-focus: #0284c7;
+
+  --azure-blue: #0284c7;
+  --azure-cyan: #0ea5e9;
+  --azure-glow: rgba(2, 132, 199, 0.12);
+
+  --accent-purple: #7c3aed;
+  --accent-emerald: #059669;
+  --accent-amber: #d97706;
+  --accent-rose: #e11d48;
+
+  --text-main: #1c1917;
+  --text-muted: #57534e;
+  --text-dim: #78716c;
+
+  --glass-bg: rgba(255, 255, 255, 0.96);
+  --glass-border: #e7e5e4;
+  --glass-shadow: 0 1px 3px 0 rgba(28, 25, 23, 0.05), 0 1px 2px -1px rgba(28, 25, 23, 0.03);
+
+  --code-bg: #e7e5e4;
+  --code-header-bg: #d6d3d1;
+  --code-text: #1c1917;
+  --code-border: #e7e5e4;
+
+  --status-success-bg: #ecfdf5;
+  --status-success-text: #047857;
+  --status-success-border: #a7f3d0;
+
+  --status-danger-bg: #fef2f2;
+  --status-danger-text: #b91c1c;
+  --status-danger-border: #fecaca;
+
+  --status-warning-bg: #fffbeb;
+  --status-warning-text: #b45309;
+  --status-warning-border: #fde68a;
+
+  --modal-overlay-bg: rgba(28, 25, 23, 0.5);
+}
+
+/* ==============================================================================
+   5. AZURE FLUENT ENTERPRISE (CALIBRATED)
    ============================================================================== */
 
 /* Azure Fluent - Dark Mode */
-:root,
-[data-palette="azure"][data-theme="dark"],
-[data-theme="dark"] {
+[data-palette="azure"][data-theme="dark"] {
   --bg-darkest: #070a12;
   --bg-canvas: #0b0f19;
   --bg-primary: #0f1523;
@@ -52,7 +468,7 @@
   --text-muted: #94a3b8;
   --text-dim: #64748b;
 
-  --glass-bg: rgba(19, 27, 44, 0.85);
+  --glass-bg: rgba(19, 27, 44, 0.9);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.4);
 
@@ -76,11 +492,11 @@
   --modal-overlay-bg: rgba(0, 0, 0, 0.75);
 }
 
-/* Azure Fluent - Light Mode */
+/* Azure Fluent - Light Mode (Calibrated Alabaster) */
 [data-palette="azure"][data-theme="light"],
 [data-theme="light"] {
-  --bg-darkest: #eef2f6;
-  --bg-canvas: #f4f6f9;
+  --bg-darkest: #f1f5f9;
+  --bg-canvas: #f8fafc;
   --bg-primary: #edf2f7;
   --bg-surface: #ffffff;
   --bg-surface-elevated: #f8fafc;
@@ -100,12 +516,12 @@
   --accent-rose: #e11d48;
 
   --text-main: #0f172a;
-  --text-muted: #334155;
+  --text-muted: #475569;
   --text-dim: #64748b;
 
-  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-bg: rgba(255, 255, 255, 0.98);
   --glass-border: #e2e8f0;
-  --glass-shadow: 0 4px 16px 0 rgba(15, 23, 42, 0.06);
+  --glass-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
 
   --code-bg: #f8fafc;
   --code-header-bg: #f1f5f9;
@@ -128,7 +544,7 @@
 }
 
 /* ==============================================================================
-   2. GITHUB PRIMER & LINEAR PALETTE
+   6. GITHUB PRIMER & DEVELOPER CARBON
    ============================================================================== */
 
 /* Primer - Dark Mode */
@@ -207,9 +623,9 @@
   --text-muted: #424a53;
   --text-dim: #656d76;
 
-  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-bg: rgba(255, 255, 255, 0.98);
   --glass-border: #d0d7de;
-  --glass-shadow: 0 4px 16px 0 rgba(31, 35, 40, 0.06);
+  --glass-shadow: 0 1px 3px 0 rgba(31, 35, 40, 0.05), 0 1px 2px -1px rgba(31, 35, 40, 0.03);
 
   --code-bg: #f6f8fa;
   --code-header-bg: #eaeef2;
@@ -232,7 +648,7 @@
 }
 
 /* ==============================================================================
-   3. CLOUDSCAPE CONSOLE PALETTE
+   7. CLOUDSCAPE CONSOLE PALETTE
    ============================================================================== */
 
 /* Cloudscape - Dark Mode */
@@ -261,7 +677,7 @@
   --text-muted: #9ca3af;
   --text-dim: #6b7280;
 
-  --glass-bg: rgba(30, 36, 46, 0.9);
+  --glass-bg: rgba(30, 36, 46, 0.92);
   --glass-border: #3d4756;
   --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.45);
 
@@ -308,12 +724,12 @@
   --accent-rose: #be123c;
 
   --text-main: #18181b;
-  --text-muted: #3f3f46;
+  --text-muted: #52525b;
   --text-dim: #71717a;
 
-  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-bg: rgba(255, 255, 255, 0.98);
   --glass-border: #e4e4e7;
-  --glass-shadow: 0 4px 16px 0 rgba(24, 24, 27, 0.06);
+  --glass-shadow: 0 1px 3px 0 rgba(24, 24, 27, 0.05), 0 1px 2px -1px rgba(24, 24, 27, 0.03);
 
   --code-bg: #f4f4f5;
   --code-header-bg: #e4e4e7;
@@ -334,7 +750,6 @@
 
   --modal-overlay-bg: rgba(24, 24, 27, 0.5);
 }
-
 /* ==============================================================================
    Core Global Styles
    ============================================================================== */

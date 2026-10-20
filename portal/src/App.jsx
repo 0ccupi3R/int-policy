@@ -91,11 +91,11 @@ export function App() {
   const [themePalette, setThemePalette] = useState(() => {
     try {
       const saved = localStorage.getItem("alz_theme_palette");
-      if (["azure", "primer", "cloudscape"].includes(saved)) return saved;
+      if (["linear", "catppuccin", "nord", "stone", "azure", "primer", "cloudscape"].includes(saved)) return saved;
     } catch (e) {
       console.warn("Failed to load theme palette from storage", e);
     }
-    return "azure";
+    return "linear";
   });
 
   useEffect(() => {

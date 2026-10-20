@@ -454,13 +454,13 @@ export function NamingStudio({
           className="glass-panel"
           style={{
             padding: "16px 20px",
-            background: "linear-gradient(135deg, rgba(244, 63, 94, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%)",
-            border: "1px solid rgba(244, 63, 94, 0.4)",
+            background: "var(--status-danger-bg)",
+            border: "1px solid var(--status-danger-border)",
+            borderRadius: "var(--radius-lg)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: "16px",
-            boxShadow: "0 4px 20px rgba(244, 63, 94, 0.15)"
+            gap: "16px"
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -469,20 +469,20 @@ export function NamingStudio({
                 width: "36px",
                 height: "36px",
                 borderRadius: "8px",
-                background: "rgba(244, 63, 94, 0.2)",
+                background: "var(--status-danger-border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "var(--accent-rose)"
+                color: "var(--status-danger-text)"
               }}
             >
               <AlertTriangle size={20} />
             </div>
             <div>
-              <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "#fca5a5" }}>
+              <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--status-danger-text)" }}>
                 {platformViolations.length} Resource Naming Pattern{platformViolations.length > 1 ? "s" : ""} Violate Azure Platform Constraints
               </div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
                 Azure ARM will fail resource creation if names exceed length bounds or contain forbidden characters (e.g., Storage Accounts reject hyphens & uppercase).
               </div>
             </div>
@@ -712,7 +712,7 @@ export function NamingStudio({
                   {testValidation.reason}
                 </div>
                 {testValidation.errors && testValidation.errors.length > 1 && (
-                  <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: "0.75rem", color: "#fca5a5" }}>
+                  <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: "0.75rem", color: "var(--status-danger-text)" }}>
                     {testValidation.errors.map((e, idx) => (
                       <li key={idx}>{e}</li>
                     ))}
@@ -1147,16 +1147,16 @@ export function NamingStudio({
                           marginTop: "8px",
                           padding: "8px 10px",
                           borderRadius: "6px",
-                          background: "rgba(244, 63, 94, 0.12)",
-                          border: "1px solid rgba(244, 63, 94, 0.3)",
+                          background: "var(--status-danger-bg)",
+                          border: "1px solid var(--status-danger-border)",
                           fontSize: "0.75rem",
-                          color: "#fca5a5"
+                          color: "var(--status-danger-text)"
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                          <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: "2px", color: "var(--accent-rose)" }} />
+                          <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: "2px", color: "var(--status-danger-text)" }} />
                           <div style={{ flex: 1 }}>
-                            <strong style={{ color: "#f87171" }}>Azure Constraint Violation:</strong>
+                            <strong style={{ color: "var(--status-danger-text)" }}>Azure Constraint Violation:</strong>
                             <ul style={{ margin: "3px 0 0 14px", padding: 0 }}>
                               {[...structVal.errors, ...sampleVal.errors].slice(0, 2).map((err, idx) => (
                                 <li key={idx}>{err}</li>

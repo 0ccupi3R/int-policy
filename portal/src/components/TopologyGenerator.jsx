@@ -1406,13 +1406,13 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                 flex: 1,
                 overflowY: "auto",
                 maxHeight: "calc(88vh - 120px)",
-                background: "#080c14",
+                background: "var(--code-bg)",
                 padding: "12px",
                 borderRadius: "var(--radius-sm)",
                 fontSize: "0.78rem"
               }}
             >
-              <pre style={{ margin: 0, color: "#e2e8f0", fontFamily: "var(--font-mono)", lineHeight: 1.45 }}>
+              <pre style={{ margin: 0, color: "var(--code-text)", fontFamily: "var(--font-mono)", lineHeight: 1.45 }}>
                 <code>{currentCodeContent}</code>
               </pre>
             </div>
@@ -1451,12 +1451,12 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
               <div
                 style={{
-                  background: "rgba(244, 63, 94, 0.1)",
-                  border: "1px solid rgba(244, 63, 94, 0.25)",
+                  background: "var(--status-danger-bg)",
+                  border: "1px solid var(--status-danger-border)",
                   borderRadius: "var(--radius-sm)",
                   padding: "12px",
                   fontSize: "0.85rem",
-                  color: "#fca5a5"
+                  color: "var(--status-danger-text)"
                 }}
               >
                 {deleteModal.type === "sub" ? (

@@ -29,13 +29,13 @@ export class ErrorBoundary extends React.Component {
             padding: "32px",
             margin: "24px 0",
             borderLeft: "4px solid var(--accent-rose)",
-            background: "linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(17, 24, 39, 0.9) 100%)"
+            background: "var(--bg-surface)"
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
             <AlertTriangle size={28} color="var(--accent-rose)" />
             <div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "#f87171" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--status-danger-text)" }}>
                 Component Rendering Error
               </h3>
               <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>
@@ -47,11 +47,12 @@ export class ErrorBoundary extends React.Component {
           <div
             style={{
               padding: "12px 16px",
-              background: "#080c14",
+              background: "var(--code-bg)",
+              border: "1px solid var(--status-danger-border)",
               borderRadius: "var(--radius-sm)",
               fontFamily: "var(--font-mono)",
               fontSize: "0.8rem",
-              color: "#fca5a5",
+              color: "var(--status-danger-text)",
               marginBottom: "20px",
               overflowX: "auto"
             }}

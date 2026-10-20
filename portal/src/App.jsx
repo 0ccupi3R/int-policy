@@ -77,6 +77,38 @@ export function App() {
     return { ...DEFAULT_AIRGATE_OVERRIDES };
   });
 
+  // Multi-Palette Theme State (Dark / Light & Palettes: azure, primer, cloudscape)
+  const [themeMode, setThemeMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("alz_theme_mode");
+      if (saved === "light" || saved === "dark") return saved;
+    } catch (e) {
+      console.warn("Failed to load theme mode from storage", e);
+    }
+    return "dark";
+  });
+
+  const [themePalette, setThemePalette] = useState(() => {
+    try {
+      const saved = localStorage.getItem("alz_theme_palette");
+      if (["azure", "primer", "cloudscape"].includes(saved)) return saved;
+    } catch (e) {
+      console.warn("Failed to load theme palette from storage", e);
+    }
+    return "azure";
+  });
+
+  useEffect(() => {
+    try {
+      document.documentElement.setAttribute("data-theme", themeMode);
+      document.documentElement.setAttribute("data-palette", themePalette);
+      localStorage.setItem("alz_theme_mode", themeMode);
+      localStorage.setItem("alz_theme_palette", themePalette);
+    } catch (e) {
+      console.warn("Failed to sync theme attributes to DOM", e);
+    }
+  }, [themeMode, themePalette]);
+
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("edit"); // "edit" or "create"
@@ -199,6 +231,10 @@ export function App() {
         onBumpVersion={handleBumpVersion}
         catalog={catalog}
         onShowToast={showToast}
+        themeMode={themeMode}
+        onToggleThemeMode={() => setThemeMode((prev) => (prev === "dark" ? "light" : "dark"))}
+        themePalette={themePalette}
+        onSelectPalette={setThemePalette}
       />
 
       <main className="main-content">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShieldCheck, Download, Plus, Settings, Archive, Sparkles, ChevronDown } from "lucide-react";
+import { ShieldCheck, Download, Plus, Settings, Archive, Sparkles, ChevronDown, Sun, Moon, Palette } from "lucide-react";
 import { downloadBicepFile, downloadZipBundle } from "../engine/bundleExporter.js";
 
 export function Header({
@@ -9,7 +9,11 @@ export function Header({
   onOpenCustomerModal,
   onBumpVersion,
   catalog,
-  onShowToast
+  onShowToast,
+  themeMode,
+  onToggleThemeMode,
+  themePalette,
+  onSelectPalette
 }) {
   const [showVersionMenu, setShowVersionMenu] = useState(false);
 
@@ -96,15 +100,15 @@ export function Header({
                 top: "100%",
                 right: 0,
                 marginTop: "6px",
-                background: "#162032",
-                border: "1px solid rgba(255,255,255,0.15)",
+                background: "var(--bg-surface-elevated)",
+                border: "1px solid var(--border-subtle)",
                 borderRadius: "8px",
                 padding: "6px",
                 display: "flex",
                 flexDirection: "column",
                 gap: "4px",
                 zIndex: 60,
-                boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+                boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
                 minWidth: "150px"
               }}
             >
@@ -130,6 +134,89 @@ export function Header({
               </button>
             </div>
           )}
+        </div>
+
+        {/* Multi-Palette Theme Switcher */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            background: "var(--bg-surface-elevated)",
+            padding: "2px 6px",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid var(--border-subtle)"
+          }}
+        >
+          {/* Palette Selector */}
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <Palette size={13} style={{ color: "var(--text-muted)", marginLeft: "4px" }} />
+            <select
+              aria-label="Theme visual palette selector"
+              value={themePalette}
+              onChange={(e) => {
+                onSelectPalette(e.target.value);
+                const name =
+                  e.target.value === "azure"
+                    ? "Azure Fluent"
+                    : e.target.value === "primer"
+                    ? "GitHub Primer"
+                    : "Cloudscape Console";
+                onShowToast(`Switched palette to ${name}`);
+              }}
+              className="form-input"
+              style={{
+                fontSize: "0.78rem",
+                padding: "4px 6px",
+                width: "auto",
+                border: "none",
+                background: "transparent",
+                fontWeight: "600",
+                cursor: "pointer"
+              }}
+            >
+              <option value="azure">Azure Fluent</option>
+              <option value="primer">GitHub Primer</option>
+              <option value="cloudscape">Cloudscape Console</option>
+            </select>
+          </div>
+
+          <div style={{ width: "1px", height: "16px", background: "var(--border-subtle)" }} />
+
+          {/* Dark / Light Mode Toggle Button */}
+          <button
+            onClick={() => {
+              onToggleThemeMode();
+              onShowToast(`Switched to ${themeMode === "dark" ? "Light" : "Dark"} mode`);
+            }}
+            className="btn btn-sm"
+            style={{
+              padding: "4px 8px",
+              background: "transparent",
+              border: "none",
+              color: "var(--text-main)",
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              cursor: "pointer",
+              fontSize: "0.78rem",
+              fontWeight: "600"
+            }}
+            title={`Switch to ${themeMode === "dark" ? "Light" : "Dark"} Mode`}
+            aria-label={`Switch to ${themeMode === "dark" ? "Light" : "Dark"} Mode`}
+          >
+            {themeMode === "dark" ? (
+              <>
+                <Moon size={14} style={{ color: "var(--azure-cyan)" }} />
+                <span>Dark</span>
+              </>
+            ) : (
+              <>
+                <Sun size={14} style={{ color: "var(--accent-amber)" }} />
+                <span>Light</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Action Buttons */}

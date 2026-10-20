@@ -533,7 +533,7 @@ export function validateAzurePlatformConstraints(candidateName, resourceItem, co
 /**
  * Validates the template pattern string structure itself against resource constraints.
  */
-export function validatePatternStructure(pattern, resourceItem, context = {}) {
+export function validatePatternStructure(pattern, resourceItem, _context = {}) {
   if (!pattern) {
     return { valid: false, errors: ["Pattern cannot be empty."], warnings: [] };
   }
@@ -544,15 +544,6 @@ export function validatePatternStructure(pattern, resourceItem, context = {}) {
 
   const resType = (meta.resourceType || meta.id || "").toLowerCase();
   const key = (meta.key || meta.abbreviation || "").toLowerCase();
-
-  const isVirtualMachine =
-    resType.includes("microsoft.compute/virtualmachines") ||
-    key === "vm" ||
-    key === "vm_windows" ||
-    key === "vm_linux";
-
-  const effectiveOsType = context?.osType || resourceItem?.osType || meta?.osType || (key === "vm_linux" ? "Linux" : "Windows");
-  const isWindowsVm = isVirtualMachine && (typeof effectiveOsType === "string" ? effectiveOsType.toLowerCase().includes("win") : true);
 
   const isStorageAccount =
     resType.includes("microsoft.storage/storageaccounts") ||
@@ -675,12 +666,6 @@ export function validateCandidateName(candidate, pattern, customer, resourceType
   }
 
   const region = typeof regionCode === "object" ? regionCode.region : regionCode;
-  const purpose =
-    (typeof regionCode === "object" ? regionCode.purpose : purposeCode) ||
-    customer?.purpose ||
-    (customer?.purposes && customer.purposes[0]) ||
-    "core";
-
   const opts = typeof regionCode === "object" ? regionCode : (typeof purposeCode === "object" ? purposeCode : options);
   const effectiveOsType = opts?.osType || options?.osType || resourceType?.osType;
 

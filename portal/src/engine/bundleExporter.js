@@ -144,7 +144,6 @@ echo ">>> Deployment completed successfully!"
 
 export function generateReadme(customer) {
   const version = customer.version || "1.0.0";
-  const subCode = customer.subscriptionCode || "CON";
 
   return `# ${customer.name} Azure Landing Zone Policies (v${version})
 

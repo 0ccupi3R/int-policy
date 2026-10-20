@@ -8,10 +8,8 @@ import {
   getBaselineTopology,
   getAirGateDefaultPlatformTopology
 } from "../engine/topologyGenerator.js";
-import { toTitleCase } from "../engine/tokenParser.js";
 import {
   Layers,
-  Server,
   Plus,
   Trash2,
   Copy,
@@ -22,14 +20,9 @@ import {
   Tag,
   ChevronDown,
   ChevronRight,
-  Sparkles,
-  Database,
-  Shield,
-  Cpu,
   Globe,
   FolderTree,
   FileCode,
-  Info,
   Sliders,
   RotateCcw,
   Zap,
@@ -54,14 +47,14 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
         const parsed = parseInt(saved, 10);
         if (!isNaN(parsed) && parsed >= 0) return parsed;
       }
-    } catch (e) {}
+    } catch {}
     return 0;
   });
 
   useEffect(() => {
     try {
       localStorage.setItem(`alz_topology_sub_idx_${customer.id}`, activeSubIndex.toString());
-    } catch (e) {}
+    } catch {}
   }, [activeSubIndex, customer.id]);
 
   const [selectedResId, setSelectedResId] = useState(null);
@@ -501,6 +494,18 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
             <span className="chip chip-azure" style={{ fontSize: "0.75rem" }}>
               1 Bullet, Two Kills
             </span>
+            <span className="chip" style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", background: "rgba(255,255,255,0.06)" }}>
+              {totalResourcesCount} Resources
+            </span>
+            {validationErrorCount > 0 ? (
+              <span className="chip" style={{ fontSize: "0.75rem", background: "rgba(244, 63, 94, 0.15)", color: "var(--accent-rose)" }}>
+                ⚠ {validationErrorCount} Non-Compliant
+              </span>
+            ) : (
+              <span className="chip" style={{ fontSize: "0.75rem", background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-emerald)" }}>
+                ✔ All Compliant
+              </span>
+            )}
           </div>
           <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>
             Scaffold your Subscription → Resource Group → Leaf Resource topology. Generates both

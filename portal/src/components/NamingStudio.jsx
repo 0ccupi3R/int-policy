@@ -10,7 +10,7 @@ import {
   DEFAULT_VM_WINDOWS_PATTERN,
   DEFAULT_VM_LINUX_PATTERN
 } from "../engine/tokenParser.js";
-import { AZURE_NAMING_CATALOG, getEffectiveAbbreviation } from "../data/azureNamingCatalog.js";
+import { AZURE_NAMING_CATALOG } from "../data/azureNamingCatalog.js";
 import {
   BUILTIN_NAMING_TEMPLATES,
   getCustomTemplates,
@@ -28,19 +28,18 @@ import {
   Network,
   RotateCcw,
   Check,
-  FileCode,
   BookOpen,
   Sliders,
-  ShieldCheck,
   AlertTriangle,
-  ExternalLink,
   LayoutTemplate,
   Bookmark,
   Save,
   Trash2,
-  Zap,
-  Info
+  Zap
 } from "lucide-react";
+
+const EMPTY_OBJ = {};
+const EMPTY_ARR = [];
 
 export function NamingStudio({
   customer,
@@ -141,9 +140,9 @@ export function NamingStudio({
     setCafSearchQuery("");
   };
 
-  const namingRules = customer.namingRules || {};
-  const customPatterns = namingRules.customPatterns || {};
-  const unrestrictedTypes = namingRules.unrestrictedTypes || [];
+  const namingRules = customer.namingRules || EMPTY_OBJ;
+  const customPatterns = namingRules.customPatterns || EMPTY_OBJ;
+  const unrestrictedTypes = namingRules.unrestrictedTypes || EMPTY_ARR;
   const subnetAllowed = namingRules.subnetNaming?.allowedNames || [];
   const [newSubnetName, setNewSubnetName] = useState("");
 
@@ -1010,39 +1009,46 @@ export function NamingStudio({
                         </div>
                       )}
                     </div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: "2px" }}>
+                    <div
+                      style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: "2px" }}
+                      title={`Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters} | Length: ${meta.minLength}–${effectiveMax} chars`}
+                    >
                       {item.resourceType}
                     </div>
-                    {/* Constraints Pill */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
-                      <span
-                        className="chip"
-                        style={{
-                          fontSize: "0.68rem",
-                          padding: "2px 8px",
-                          background: "rgba(255, 255, 255, 0.05)",
-                          color: "var(--text-muted)",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px"
-                        }}
-                        title={
-                          isVm && vmOs === "windows"
-                            ? "Windows NetBIOS / Active Directory limitation: strict max 15 characters"
-                            : `Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters}`
-                        }
-                      >
-                        <span style={{ color: "var(--azure-cyan)", fontWeight: "600" }}>
-                          📏 {meta.minLength}–{effectiveMax} chars
+
+                    {/* Constraints Pill (Only shown when error / violation occurs to keep compliant cards clean) */}
+                    {hasError && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+                        <span
+                          className="chip"
+                          style={{
+                            fontSize: "0.68rem",
+                            padding: "2px 8px",
+                            background: "rgba(244, 63, 94, 0.15)",
+                            color: "var(--accent-rose)",
+                            border: "1px solid rgba(244, 63, 94, 0.3)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px"
+                          }}
+                          title={
+                            isVm && vmOs === "windows"
+                              ? "Windows NetBIOS / Active Directory limitation: strict max 15 characters"
+                              : `Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters}`
+                          }
+                        >
+                          <span style={{ fontWeight: "700" }}>
+                            📏 Allowed: {meta.minLength}–{effectiveMax} chars
+                          </span>
+                          <span style={{ opacity: 0.5 }}>•</span>
+                          <span>
+                            {isVm && vmOs === "windows"
+                              ? "Alphanumerics, hyphens (NetBIOS / AD limit)"
+                              : meta.allowedCharacters}
+                          </span>
                         </span>
-                        <span style={{ opacity: 0.5 }}>•</span>
-                        <span>
-                          {isVm && vmOs === "windows"
-                            ? "Alphanumerics, hyphens (NetBIOS / AD limit)"
-                            : meta.allowedCharacters}
-                        </span>
-                      </span>
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Mode Selector */}
@@ -1199,21 +1205,24 @@ export function NamingStudio({
                 {/* Sample Preview */}
                 <div
                   style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    background: hasError ? "rgba(244, 63, 94, 0.08)" : "rgba(0,0,0,0.3)",
-                    border: hasError ? "1px solid rgba(244, 63, 94, 0.25)" : "1px solid rgba(255,255,255,0.05)",
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    background: hasError ? "rgba(244, 63, 94, 0.08)" : "rgba(0,0,0,0.32)",
+                    border: hasError ? "1px solid rgba(244, 63, 94, 0.3)" : "1px solid rgba(255,255,255,0.06)",
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
+                    flexDirection: "column",
+                    gap: "8px"
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0, overflow: "hidden" }}>
-                    <span style={{ fontSize: "0.75rem", color: "var(--text-dim)", flexShrink: 0 }}>Example:</span>
+                  {/* Top Row: Full-width Sample Candidate Name */}
+                  <div style={{ display: "flex", alignItems: "baseline", gap: "8px", minWidth: 0 }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.05em", flexShrink: 0 }}>
+                      Example:
+                    </span>
                     <span
                       style={{
                         fontFamily: "var(--font-mono)",
-                        fontSize: "0.85rem",
+                        fontSize: "0.88rem",
                         color: isUnrestricted
                           ? "var(--text-dim)"
                           : hasError
@@ -1221,9 +1230,7 @@ export function NamingStudio({
                           : "var(--azure-cyan)",
                         fontWeight: "600",
                         textDecoration: hasError ? "line-through" : "none",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap"
+                        wordBreak: "break-all"
                       }}
                       title={sampleName}
                     >
@@ -1231,44 +1238,54 @@ export function NamingStudio({
                     </span>
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                    {!isUnrestricted && (
+                  {/* Bottom Row: Metrics & Minimalist Status Icon */}
+                  {!isUnrestricted && (
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingTop: "6px",
+                        borderTop: "1px solid rgba(255, 255, 255, 0.05)"
+                      }}
+                    >
                       <span
                         className="chip"
                         style={{
                           fontSize: "0.68rem",
-                          padding: "2px 6px",
+                          padding: "2px 8px",
                           fontFamily: "var(--font-mono)",
                           background:
                             isLengthExceeded || isLengthTooShort
                               ? "rgba(244, 63, 94, 0.2)"
-                              : "rgba(16, 185, 129, 0.15)",
+                              : "rgba(16, 185, 129, 0.12)",
                           color:
                             isLengthExceeded || isLengthTooShort
                               ? "var(--accent-rose)"
-                              : "var(--accent-emerald)"
+                              : "var(--accent-emerald)",
+                          borderRadius: "4px"
                         }}
                         title={`Current length: ${charCount} chars (Min: ${meta.minLength}, Max: ${effectiveMax})`}
                       >
                         {charCount} / {effectiveMax} chars
                       </span>
-                    )}
-                    {!isUnrestricted && (
+
                       <span
                         style={{
-                          fontSize: "0.7rem",
+                          fontSize: "0.72rem",
                           fontWeight: "600",
                           color: hasError ? "var(--accent-rose)" : "var(--accent-emerald)",
-                          display: "flex",
+                          display: "inline-flex",
                           alignItems: "center",
-                          gap: "3px"
+                          gap: "4px"
                         }}
+                        title={hasError ? "Non-Compliant with Azure constraints" : "Compliant with Azure constraints"}
                       >
-                        {hasError ? <XCircle size={13} /> : <CheckCircle size={13} />}
-                        {hasError ? "Non-Compliant" : "Compliant"}
+                        {hasError ? <XCircle size={14} /> : <CheckCircle size={14} />}
+                        <span>{hasError ? "Non-Compliant" : "Compliant"}</span>
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );

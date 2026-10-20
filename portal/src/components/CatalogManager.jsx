@@ -8,17 +8,10 @@ import {
 import {
   Search,
   BookOpen,
-  Filter,
-  CheckCircle2,
-  AlertTriangle,
   RotateCcw,
   Plus,
   ExternalLink,
   Download,
-  Tag,
-  ShieldCheck,
-  Sliders,
-  Layers,
   Edit2
 } from "lucide-react";
 
@@ -129,8 +122,6 @@ export function CatalogManager({
       return;
     }
 
-    const orgAbbr = customer.abbreviation || customer.name || "cust01";
-    const subCode = customer.subscriptionCode || "CON";
     const newType = {
       key: item.active_abbreviation,
       name: item.name,

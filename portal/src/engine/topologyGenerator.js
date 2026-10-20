@@ -233,7 +233,7 @@ export function getAirGateDefaultPlatformTopology(customer) {
  * Tier 2: Resource Group tags (Subscription inherited or rg.tags override)
  * Tier 3: Resource tags (RG inherited or resource.tags override + NA defaulted)
  */
-export function computeEffectiveResourceTags(customer, subscription, rg, resource, resourceMeta) {
+export function computeEffectiveResourceTags(customer, subscription, rg, resource, _resourceMeta) {
   const resultTags = {};
   const tagOrigins = {}; // key -> { value, source, description }
 
@@ -380,7 +380,7 @@ export function evaluateResourceNode(customer, catalog, subscription, rg, resour
   let evaluatedName = "";
   try {
     evaluatedName = toSampleName(pattern, customer, enrichedMeta, sampleContext);
-  } catch (e) {
+  } catch {
     evaluatedName = `${customer.abbreviation || "cust"}-${subscription.code}-${rg.purpose}-${resourceMeta.abbreviation || "res"}`;
   }
 
@@ -430,7 +430,7 @@ export function evaluateRgNode(customer, catalog, subscription, rg) {
   let evaluatedName = "";
   try {
     evaluatedName = toSampleName(pattern, customer, rgMeta, sampleContext);
-  } catch (e) {
+  } catch {
     evaluatedName = `${customer.abbreviation || "cust"}-${subscription.code}-${rg.purpose || "core"}-rg`;
   }
 

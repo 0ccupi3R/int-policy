@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Tag,
   Building,
@@ -19,6 +19,127 @@ import {
   KeyRound
 } from "lucide-react";
 import { BASELINE_TAGS } from "../data/baselineTags.js";
+
+/**
+ * Controlled Allowed Values Editor
+ * Preserves raw comma typing while updating parent tag array in real time
+ */
+function TagAllowedValuesEditor({ allowedValues = [], isRequired, activeScope, idx, tagKey, onChange }) {
+  const [text, setText] = useState(() => (allowedValues || []).join(", "));
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Sync from props only when not currently focused by user
+  useEffect(() => {
+    if (!isFocused) {
+      setText((allowedValues || []).join(", "));
+    }
+  }, [allowedValues, isFocused]);
+
+  const handleChange = (e) => {
+    const rawVal = e.target.value;
+    setText(rawVal);
+
+    const parsed = rawVal
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    onChange(parsed);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    const parsed = text
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    setText(parsed.join(", "));
+    onChange(parsed);
+  };
+
+  const handleRemoveVal = (valToRemove) => {
+    const updated = (allowedValues || []).filter((v) => v !== valToRemove);
+    setText(updated.join(", "));
+    onChange(updated);
+  };
+
+  return (
+    <div>
+      <label className="form-label" htmlFor={`tag-values-${activeScope}-${idx}`}>
+        Allowed Values (Comma-Separated)
+        {!isRequired && (
+          <span style={{ color: "var(--accent-amber)", fontSize: "0.75rem", marginLeft: "8px" }}>
+            (Automatically accepts "NA")
+          </span>
+        )}
+      </label>
+      <input
+        id={`tag-values-${activeScope}-${idx}`}
+        name={`tag_values_${activeScope}_${idx}`}
+        aria-label={`Allowed values for tag ${tagKey || idx + 1}`}
+        type="text"
+        className="form-input"
+        value={text}
+        onFocus={() => setIsFocused(true)}
+        onBlur={handleBlur}
+        onChange={handleChange}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleBlur();
+          }
+        }}
+        placeholder="Prod, NonProd, Dev, Stage"
+      />
+
+      {/* Badges Preview of Allowed Values with interactive remove */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", marginTop: "8px" }}>
+        <span style={{ fontSize: "0.75rem", color: "var(--text-dim)", marginRight: "4px" }}>
+          Enforced Values:
+        </span>
+        {(allowedValues || []).map((val, vIdx) => (
+          <span
+            key={vIdx}
+            className="chip chip-dim"
+            style={{
+              fontSize: "0.75rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "5px",
+              padding: "2px 8px"
+            }}
+          >
+            <span>{val}</span>
+            <button
+              type="button"
+              onClick={() => handleRemoveVal(val)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--text-dim)",
+                cursor: "pointer",
+                padding: "0 2px",
+                display: "inline-flex",
+                alignItems: "center",
+                fontSize: "0.85rem",
+                lineHeight: 1
+              }}
+              title={`Remove ${val}`}
+              aria-label={`Remove value ${val}`}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        {!isRequired && (
+          <span className="chip chip-amber" style={{ fontSize: "0.75rem" }}>
+            NA (Fallback)
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateToCatalogue }) {
   const [activeScope, setActiveScope] = useState("resource"); // "subscription", "resourceGroup", "resource", "inheritance"
@@ -120,16 +241,11 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
     handleUpdateCurrentTags(updatedList);
   };
 
-  const handleAllowedValuesChange = (index, commaStr) => {
-    const parsed = commaStr
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
+  const handleAllowedValuesChange = (index, parsedList) => {
     const updatedList = [...currentTags];
     updatedList[index] = {
       ...updatedList[index],
-      allowedValues: parsed
+      allowedValues: parsedList
     };
     handleUpdateCurrentTags(updatedList);
   };
@@ -718,8 +834,6 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
             </div>
           ) : (
             currentTags.map((tag, idx) => {
-              const allowedStr = (tag.allowedValues || []).join(", ");
-
               return (
                 <div
                   key={idx}
@@ -801,44 +915,16 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                     </div>
                   </div>
 
-                  {/* Second Row: Allowed Values List */}
-                  <div>
-                    <label className="form-label" htmlFor={`tag-values-${activeScope}-${idx}`}>
-                      Allowed Values (Comma-Separated)
-                      {!tag.required && (
-                        <span style={{ color: "var(--accent-amber)", fontSize: "0.75rem", marginLeft: "8px" }}>
-                          (Automatically accepts "NA")
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      id={`tag-values-${activeScope}-${idx}`}
-                      name={`tag_values_${activeScope}_${idx}`}
-                      aria-label={`Allowed values for tag ${tag.key || idx + 1}`}
-                      type="text"
-                      className="form-input"
-                      value={allowedStr}
-                      onChange={(e) => handleAllowedValuesChange(idx, e.target.value)}
-                      placeholder="Prod, NonProd, Dev, Stage"
-                    />
-                  </div>
-
-                  {/* Badges Preview of Allowed Values */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
-                    <span style={{ fontSize: "0.75rem", color: "var(--text-dim)", marginRight: "4px" }}>
-                      Enforced Values:
-                    </span>
-                    {(tag.allowedValues || []).map((val, vIdx) => (
-                      <span key={vIdx} className="chip chip-dim" style={{ fontSize: "0.75rem" }}>
-                        {val}
-                      </span>
-                    ))}
-                    {!tag.required && (
-                      <span className="chip chip-amber" style={{ fontSize: "0.75rem" }}>
-                        NA (Fallback)
-                      </span>
-                    )}
-                  </div>
+                  {/* Second Row: Allowed Values Editor */}
+                  <TagAllowedValuesEditor
+                    key={`${activeScope}-${idx}`}
+                    allowedValues={tag.allowedValues || []}
+                    isRequired={tag.required}
+                    activeScope={activeScope}
+                    idx={idx}
+                    tagKey={tag.key}
+                    onChange={(newAllowed) => handleAllowedValuesChange(idx, newAllowed)}
+                  />
 
                   {/* Description */}
                   <div>

@@ -303,8 +303,19 @@ export function NamingStudio({
 
   // Subnet Allowlist handlers
   const handleAddSubnetName = (name) => {
-    const clean = name.trim();
-    if (!clean || subnetAllowed.includes(clean)) return;
+    if (!name) return;
+    const candidates = name
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    if (candidates.length === 0) return;
+
+    const toAdd = candidates.filter((c) => !subnetAllowed.includes(c));
+    if (toAdd.length === 0) {
+      setNewSubnetName("");
+      onShowToast("Subnet(s) already in allowlist");
+      return;
+    }
 
     const updated = {
       ...customer,
@@ -312,13 +323,13 @@ export function NamingStudio({
         ...namingRules,
         subnetNaming: {
           ...namingRules.subnetNaming,
-          allowedNames: [...subnetAllowed, clean]
+          allowedNames: [...subnetAllowed, ...toAdd]
         }
       }
     };
     onUpdateCustomer(updated);
     setNewSubnetName("");
-    onShowToast(`Added subnet '${clean}' to allowlist`);
+    onShowToast(toAdd.length === 1 ? `Added subnet '${toAdd[0]}' to allowlist` : `Added ${toAdd.length} subnets to allowlist`);
   };
 
   const handleRemoveSubnetName = (name) => {

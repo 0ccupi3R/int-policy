@@ -193,8 +193,10 @@ export function App() {
 
       <main className="main-content">
         {/* Navigation Tabs */}
-        <div className="nav-tabs">
+        <div className="nav-tabs" role="tablist" aria-label="Policy Studio Workspace Views">
           <button
+            role="tab"
+            aria-selected={activeTab === "naming"}
             className={`nav-tab-btn ${activeTab === "naming" ? "active" : ""}`}
             onClick={() => setActiveTab("naming")}
           >
@@ -204,6 +206,8 @@ export function App() {
           </button>
 
           <button
+            role="tab"
+            aria-selected={activeTab === "tagging"}
             className={`nav-tab-btn ${activeTab === "tagging" ? "active" : ""}`}
             onClick={() => setActiveTab("tagging")}
           >
@@ -218,6 +222,8 @@ export function App() {
           </button>
 
           <button
+            role="tab"
+            aria-selected={activeTab === "topology"}
             className={`nav-tab-btn ${activeTab === "topology" ? "active" : ""}`}
             onClick={() => setActiveTab("topology")}
           >
@@ -229,6 +235,8 @@ export function App() {
           </button>
 
           <button
+            role="tab"
+            aria-selected={activeTab === "catalogue"}
             className={`nav-tab-btn ${activeTab === "catalogue" ? "active" : ""}`}
             onClick={() => setActiveTab("catalogue")}
           >
@@ -240,6 +248,8 @@ export function App() {
           </button>
 
           <button
+            role="tab"
+            aria-selected={activeTab === "code"}
             className={`nav-tab-btn ${activeTab === "code" ? "active" : ""}`}
             onClick={() => setActiveTab("code")}
           >

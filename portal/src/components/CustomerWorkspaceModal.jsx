@@ -73,6 +73,19 @@ export function CustomerWorkspaceModal({
     }
   }, [customer, mode, isOpen]);
 
+  // Dismiss modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
@@ -126,17 +139,24 @@ export function CustomerWorkspaceModal({
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-card">
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="customer-workspace-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Building2 size={20} color="var(--azure-cyan)" />
-            <h2 style={{ fontSize: "1.15rem", fontWeight: "700" }}>
+            <h2 id="customer-workspace-modal-title" style={{ fontSize: "1.15rem", fontWeight: "700" }}>
               {mode === "create" ? "Create Customer Workspace" : `Edit Profile: ${customer?.name}`}
             </h2>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close modal"
             style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer" }}
           >
             <X size={20} />
@@ -148,8 +168,10 @@ export function CustomerWorkspaceModal({
             {/* Customer Organization Details */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               <div>
-                <label className="form-label">Customer Name</label>
+                <label className="form-label" htmlFor="cust-name">Customer Name</label>
                 <input
+                  id="cust-name"
+                  name="customer_name"
                   type="text"
                   required
                   className="form-input"
@@ -161,8 +183,10 @@ export function CustomerWorkspaceModal({
               </div>
 
               <div>
-                <label className="form-label">Customer Abbreviation</label>
+                <label className="form-label" htmlFor="cust-abbr">Customer Abbreviation</label>
                 <input
+                  id="cust-abbr"
+                  name="customer_abbreviation"
                   type="text"
                   required
                   className="form-input"
@@ -177,8 +201,10 @@ export function CustomerWorkspaceModal({
             {/* Subscription & Environment */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
               <div>
-                <label className="form-label">Subscription Name</label>
+                <label className="form-label" htmlFor="cust-sub-name">Subscription Name</label>
                 <input
+                  id="cust-sub-name"
+                  name="subscription_name"
                   type="text"
                   required
                   className="form-input"
@@ -190,8 +216,10 @@ export function CustomerWorkspaceModal({
               </div>
 
               <div>
-                <label className="form-label">Sub Code / Abbr</label>
+                <label className="form-label" htmlFor="cust-sub-code">Sub Code / Abbr</label>
                 <input
+                  id="cust-sub-code"
+                  name="subscription_code"
                   type="text"
                   required
                   className="form-input"
@@ -203,8 +231,10 @@ export function CustomerWorkspaceModal({
               </div>
 
               <div>
-                <label className="form-label">Version</label>
+                <label className="form-label" htmlFor="cust-version">Version</label>
                 <input
+                  id="cust-version"
+                  name="workspace_version"
                   type="text"
                   required
                   className="form-input"
@@ -219,9 +249,11 @@ export function CustomerWorkspaceModal({
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
                 <MapPin size={14} color="var(--azure-cyan)" />
-                <label className="form-label" style={{ margin: 0 }}>Azure Regions Mapping</label>
+                <label className="form-label" htmlFor="cust-regions" style={{ margin: 0 }}>Azure Regions Mapping</label>
               </div>
               <input
+                id="cust-regions"
+                name="regions_mapping"
                 type="text"
                 required
                 className="form-input form-input-mono"
@@ -236,9 +268,11 @@ export function CustomerWorkspaceModal({
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
                 <Sliders size={14} color="var(--azure-cyan)" />
-                <label className="form-label" style={{ margin: 0 }}>Workload & Network Purposes</label>
+                <label className="form-label" htmlFor="cust-purposes" style={{ margin: 0 }}>Workload & Network Purposes</label>
               </div>
               <input
+                id="cust-purposes"
+                name="workload_purposes"
                 type="text"
                 className="form-input form-input-mono"
                 value={formData.purposesText}
@@ -259,8 +293,10 @@ export function CustomerWorkspaceModal({
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
                 <div>
-                  <label className="form-label">Naming Effect</label>
+                  <label className="form-label" htmlFor="cust-naming-effect">Naming Effect</label>
                   <select
+                    id="cust-naming-effect"
+                    name="naming_effect"
                     className="form-input"
                     value={formData.namingEffect}
                     onChange={(e) => setFormData({ ...formData, namingEffect: e.target.value })}
@@ -272,8 +308,10 @@ export function CustomerWorkspaceModal({
                 </div>
 
                 <div>
-                  <label className="form-label">Subnet Effect</label>
+                  <label className="form-label" htmlFor="cust-subnet-effect">Subnet Effect</label>
                   <select
+                    id="cust-subnet-effect"
+                    name="subnet_effect"
                     className="form-input"
                     value={formData.subnetEffect}
                     onChange={(e) => setFormData({ ...formData, subnetEffect: e.target.value })}
@@ -285,8 +323,10 @@ export function CustomerWorkspaceModal({
                 </div>
 
                 <div>
-                  <label className="form-label">Tag Effect</label>
+                  <label className="form-label" htmlFor="cust-tag-effect">Tag Effect</label>
                   <select
+                    id="cust-tag-effect"
+                    name="tag_effect"
                     className="form-input"
                     value={formData.tagEffect}
                     onChange={(e) => setFormData({ ...formData, tagEffect: e.target.value })}

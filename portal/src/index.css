@@ -490,3 +490,23 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Accessibility Focus Rings (WCAG 2.1 Criteria 2.4.7 Focus Visible) */
+:focus-visible {
+  outline: 2px solid var(--azure-cyan) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.25) !important;
+}
+
+/* Vestibular Motion Sensitivity Support (WCAG 2.1 Criteria 2.3.3 Animation from Interactions) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

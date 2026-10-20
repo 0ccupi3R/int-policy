@@ -77,6 +77,20 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   // Preset Confirmation Modal state: "airgate" | "reset" | null
   const [presetModal, setPresetModal] = useState(null);
 
+  // Dismiss modals on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (deleteModal) setDeleteModal(null);
+        if (presetModal) setPresetModal(null);
+      }
+    };
+    if (deleteModal || presetModal) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [deleteModal, presetModal]);
+
   // Ensure activeSubIndex stays in bounds if subscriptions are deleted
   const safeSubIndex = Math.min(activeSubIndex, Math.max(0, (topology.subscriptions?.length || 1) - 1));
   const activeSub = topology.subscriptions[safeSubIndex] || topology.subscriptions[0] || {};
@@ -428,6 +442,40 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
     return map;
   }, [customer]);
 
+  // Dynamically derive applicable tag keys for RG override dropdown from customer governance rules
+  const applicableRgTagKeys = useMemo(() => {
+    const keys = new Set([
+      ...(customer.tags?.subscription || []).map((t) => t.key),
+      ...(customer.tags?.resourceGroup || []).map((t) => t.key)
+    ]);
+    if (keys.size === 0) {
+      ["CostCenter", "Environment", "Workload", "Owner"].forEach((k) => keys.add(k));
+    }
+    return Array.from(keys);
+  }, [customer]);
+
+  // Dynamically derive applicable tag keys for Resource override dropdown from customer governance rules
+  const applicableResTagKeys = useMemo(() => {
+    const keys = new Set([
+      ...(customer.tags?.subscription || []).map((t) => t.key),
+      ...(customer.tags?.resourceGroup || []).map((t) => t.key),
+      ...(customer.tags?.resource || []).map((t) => t.key)
+    ]);
+    if (keys.size === 0) {
+      [
+        "CostCenter",
+        "Environment",
+        "Workload",
+        "Application",
+        "DataClassification",
+        "Criticality",
+        "DisasterRecovery",
+        "Owner"
+      ].forEach((k) => keys.add(k));
+    }
+    return Array.from(keys);
+  }, [customer]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Top Banner & KPI Ribbon */}
@@ -455,7 +503,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
             </span>
           </div>
           <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>
-            Scaffold your Subscription $\rightarrow$ Resource Group $\rightarrow$ Leaf Resource topology. Generates both
+            Scaffold your Subscription → Resource Group → Leaf Resource topology. Generates both
             compliant canonical resource names and complete multi-tier governance tags simultaneously.
           </p>
         </div>
@@ -549,15 +597,20 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
           </div>
 
           {/* Sub Inherited Tags preview */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-muted)", flexWrap: "wrap" }}>
             <Tag size={13} color="var(--azure-cyan)" />
             <span>Sub Tags:</span>
-            <span className="chip chip-azure" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
-              CostCenter = {activeSub.tags?.CostCenter || "1000"}
-            </span>
-            <span className="chip chip-azure" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
-              Owner = {activeSub.tags?.Owner || "cloudops@customer.com"}
-            </span>
+            {Object.entries(activeSub.tags || {}).length > 0 ? (
+              Object.entries(activeSub.tags).map(([k, v]) => (
+                <span key={k} className="chip chip-azure" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
+                  {k} = {v}
+                </span>
+              ))
+            ) : (
+              <span style={{ fontSize: "0.7rem", color: "var(--text-dim)", fontStyle: "italic" }}>
+                None defined
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -676,22 +729,16 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                   {/* RG Actions & Tag Pills */}
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }} onClick={(e) => e.stopPropagation()}>
-                    <div style={{ display: "flex", gap: "4px", alignItems: "center", marginRight: "6px" }}>
-                      <span
-                        className={`chip ${evalRg.tagOrigins?.CostCenter?.source?.includes("override") ? "chip-purple" : ""}`}
-                        style={{ fontSize: "0.68rem" }}
-                      >
-                        CostCenter: {evalRg.tags.CostCenter}
-                      </span>
-                      <span
-                        className={`chip ${evalRg.tagOrigins?.Environment?.source?.includes("override") ? "chip-purple" : "chip-purple"}`}
-                        style={{ fontSize: "0.68rem" }}
-                      >
-                        Env: {evalRg.tags.Environment}
-                      </span>
-                      <span className="chip chip-purple" style={{ fontSize: "0.68rem" }}>
-                        Workload: {evalRg.tags.Workload}
-                      </span>
+                    <div style={{ display: "flex", gap: "4px", alignItems: "center", marginRight: "6px", flexWrap: "wrap" }}>
+                      {Object.entries(evalRg.tags || {}).slice(0, 3).map(([k, v]) => (
+                        <span
+                          key={k}
+                          className={`chip ${evalRg.tagOrigins?.[k]?.source?.includes("override") ? "chip-purple" : ""}`}
+                          style={{ fontSize: "0.68rem" }}
+                        >
+                          {k}: {v}
+                        </span>
+                      ))}
                     </div>
 
                     {/* Toggle RG Tag Override Drawer */}
@@ -744,8 +791,11 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                     >
                       <span style={{ color: "var(--text-muted)" }}>Configure RG:</span>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <label style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Purpose Token:</label>
+                        <label htmlFor={`rg-purpose-${rg.id}`} style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Purpose Token:</label>
                         <select
+                          id={`rg-purpose-${rg.id}`}
+                          name={`rg_purpose_${rg.id}`}
+                          aria-label={`Purpose token for resource group ${rg.name || rg.purpose}`}
                           className="input-field"
                           value={rg.purpose || "core"}
                           onChange={(e) => handleUpdateRg(rg.id, { purpose: e.target.value })}
@@ -760,8 +810,11 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                       </div>
 
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <label style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Region:</label>
+                        <label htmlFor={`rg-region-${rg.id}`} style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Region:</label>
                         <select
+                          id={`rg-region-${rg.id}`}
+                          name={`rg_region_${rg.id}`}
+                          aria-label={`Region for resource group ${rg.name || rg.purpose}`}
                           className="input-field"
                           value={rg.location || activeSub.location || "canadacentral"}
                           onChange={(e) => handleUpdateRg(rg.id, { location: e.target.value })}
@@ -808,7 +861,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                         </div>
 
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "8px" }}>
-                          {["CostCenter", "Environment", "Workload", "Owner"].map((tagKey) => {
+                          {applicableRgTagKeys.map((tagKey) => {
                             const currentVal = rg.tags?.[tagKey] || "";
                             const inheritedVal = evalRg.tags[tagKey] || "";
                             const def = allTagDefinitions[tagKey];
@@ -841,6 +894,9 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                                 <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                                   <select
+                                    id={`rg-tag-override-${rg.id}-${tagKey}`}
+                                    name={`rg_tag_override_${rg.id}_${tagKey}`}
+                                    aria-label={`Override tag ${tagKey} for resource group ${rg.name}`}
                                     className="input-field"
                                     value={currentVal}
                                     onChange={(e) => handleSetRgTagOverride(rg.id, tagKey, e.target.value)}
@@ -920,8 +976,11 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                 <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                                   {/* Resource Type Dropdown */}
                                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Type:</label>
+                                    <label htmlFor={`res-type-${resource.id}`} style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Type:</label>
                                     <select
+                                      id={`res-type-${resource.id}`}
+                                      name={`res_type_${resource.id}`}
+                                      aria-label={`Select resource type for ${resource.name || "resource"}`}
                                       className="input-field"
                                       value={resource.resourceTypeKey}
                                       onChange={(e) =>
@@ -947,8 +1006,11 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                                   {/* Purpose Override */}
                                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Role/Purpose:</label>
+                                    <label htmlFor={`res-purpose-${resource.id}`} style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Role/Purpose:</label>
                                     <input
+                                      id={`res-purpose-${resource.id}`}
+                                      name={`res_purpose_${resource.id}`}
+                                      aria-label={`Role purpose for ${resource.name || "resource"}`}
                                       type="text"
                                       className="input-field"
                                       value={resource.purpose || rg.purpose || "core"}
@@ -963,8 +1025,11 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                                   {/* Instance Number */}
                                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Instance:</label>
+                                    <label htmlFor={`res-instance-${resource.id}`} style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Instance:</label>
                                     <input
+                                      id={`res-instance-${resource.id}`}
+                                      name={`res_instance_${resource.id}`}
+                                      aria-label={`Instance number for ${resource.name || "resource"}`}
                                       type="text"
                                       className="input-field"
                                       value={resource.instance || "01"}
@@ -1148,16 +1213,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                   </div>
 
                                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: "8px" }}>
-                                    {[
-                                      "CostCenter",
-                                      "Environment",
-                                      "Workload",
-                                      "Application",
-                                      "DataClassification",
-                                      "Criticality",
-                                      "DisasterRecovery",
-                                      "Owner"
-                                    ].map((tagKey) => {
+                                    {applicableResTagKeys.map((tagKey) => {
                                       const currentVal = resource.tags?.[tagKey] || "";
                                       const effectiveVal = evalRes.tags[tagKey] || "";
                                       const def = allTagDefinitions[tagKey];
@@ -1190,6 +1246,9 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                                           <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                                             <select
+                                              id={`res-tag-override-${resource.id}-${tagKey}`}
+                                              name={`res_tag_override_${resource.id}_${tagKey}`}
+                                              aria-label={`Override tag ${tagKey} for resource ${resource.name || "resource"}`}
                                               className="input-field"
                                               value={currentVal}
                                               onChange={(e) =>
@@ -1328,12 +1387,15 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
           <div
             className="modal-card"
             style={{ maxWidth: "480px", borderLeft: "4px solid var(--accent-rose)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <AlertTriangle size={22} color="var(--accent-rose)" />
-                <h3 style={{ fontSize: "1.1rem", fontWeight: "700" }}>
+                <h3 id="delete-modal-title" style={{ fontSize: "1.1rem", fontWeight: "700" }}>
                   Confirm Deletion
                 </h3>
               </div>
@@ -1395,12 +1457,15 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
           <div
             className="modal-card"
             style={{ maxWidth: "500px", borderLeft: "4px solid var(--azure-cyan)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="preset-modal-title"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <Zap size={22} color="var(--azure-cyan)" />
-                <h3 style={{ fontSize: "1.1rem", fontWeight: "700" }}>
+                <h3 id="preset-modal-title" style={{ fontSize: "1.1rem", fontWeight: "700" }}>
                   {presetModal === "airgate" ? "Load AirGate Default Platform" : "Reset to Profile Baseline"}
                 </h3>
               </div>

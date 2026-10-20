@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AZURE_NAMING_CATALOG,
   DEFAULT_AIRGATE_OVERRIDES,
@@ -39,6 +39,19 @@ export function CatalogManager({
   // Edit Override Modal
   const [editingItem, setEditingItem] = useState(null);
   const [overrideValue, setOverrideValue] = useState("");
+
+  // Dismiss modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && editingItem) {
+        setEditingItem(null);
+      }
+    };
+    if (editingItem) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [editingItem]);
 
   const categories = ["All", ...getCatalogCategories()];
   const scopes = ["All", ...getCatalogScopes()];
@@ -280,6 +293,9 @@ export function CatalogManager({
           <div style={{ position: "relative" }}>
             <Search size={15} style={{ position: "absolute", left: "10px", top: "12px", color: "var(--text-dim)" }} />
             <input
+              id="catalog-search"
+              name="catalog_search"
+              aria-label="Search 200 Azure resource types"
               type="text"
               className="form-input"
               style={{ paddingLeft: "32px", fontSize: "0.85rem" }}
@@ -292,6 +308,9 @@ export function CatalogManager({
           {/* Category Filter */}
           <div>
             <select
+              id="catalog-category-filter"
+              name="catalog_category_filter"
+              aria-label="Filter catalog by category"
               className="form-input"
               style={{ fontSize: "0.85rem" }}
               value={selectedCategory}
@@ -308,6 +327,9 @@ export function CatalogManager({
           {/* Scope Filter */}
           <div>
             <select
+              id="catalog-scope-filter"
+              name="catalog_scope_filter"
+              aria-label="Filter catalog by scope"
               className="form-input"
               style={{ fontSize: "0.85rem" }}
               value={selectedScope}
@@ -324,6 +346,9 @@ export function CatalogManager({
           {/* Tag Filter */}
           <div>
             <select
+              id="catalog-tag-filter"
+              name="catalog_tag_filter"
+              aria-label="Filter catalog by tag governance"
               className="form-input"
               style={{ fontSize: "0.85rem" }}
               value={selectedTagFilter}
@@ -338,6 +363,9 @@ export function CatalogManager({
           {/* Override Filter */}
           <div>
             <select
+              id="catalog-standards-filter"
+              name="catalog_standards_filter"
+              aria-label="Filter catalog by standards"
               className="form-input"
               style={{ fontSize: "0.85rem" }}
               value={selectedOverrideFilter}
@@ -549,14 +577,22 @@ export function CatalogManager({
 
       {/* 4. Edit Override Modal */}
       {editingItem && (
-        <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: "480px" }}>
+        <div className="modal-overlay" onClick={() => setEditingItem(null)}>
+          <div
+            className="modal-card"
+            style={{ maxWidth: "480px" }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-override-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
-              <h2 style={{ fontSize: "1.1rem", fontWeight: "700" }}>
+              <h2 id="edit-override-modal-title" style={{ fontSize: "1.1rem", fontWeight: "700" }}>
                 Customize Standard for {editingItem.name}
               </h2>
               <button
                 onClick={() => setEditingItem(null)}
+                aria-label="Close modal"
                 style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer" }}
               >
                 ✕
@@ -576,8 +612,10 @@ export function CatalogManager({
               </div>
 
               <div>
-                <label className="form-label">Active / AirGate Standard Abbreviation</label>
+                <label className="form-label" htmlFor="edit-abbreviation-input">Active / AirGate Standard Abbreviation</label>
                 <input
+                  id="edit-abbreviation-input"
+                  name="edit_abbreviation"
                   type="text"
                   className="form-input form-input-mono"
                   value={overrideValue}

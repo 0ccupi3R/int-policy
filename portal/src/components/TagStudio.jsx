@@ -464,6 +464,8 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                         }}
                       >
                         <input
+                          id={`chk-sub-rg-${t.key}`}
+                          name={`chk_sub_rg_${t.key}`}
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handleToggleSubToRg(t.key)}
@@ -514,6 +516,8 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                         }}
                       >
                         <input
+                          id={`chk-rg-res-${t.key}`}
+                          name={`chk_rg_res_${t.key}`}
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handleToggleRgToRes(t.key)}
@@ -564,6 +568,8 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                         }}
                       >
                         <input
+                          id={`chk-res-na-${t.key}`}
+                          name={`chk_res_na_${t.key}`}
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handleToggleDefaultNA(t.key)}
@@ -599,6 +605,9 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
 
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <select
+                  id="geo-restrictions-effect"
+                  name="geo_restrictions_effect"
+                  aria-label="Regional Geo-Boundary policy effect"
                   className="form-select form-select-sm"
                   style={{ width: "110px" }}
                   value={geoRestrictions.effect || "Audit"}
@@ -728,8 +737,11 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                   {/* Top Row: Key Name, Required Toggle, and Delete */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "16px", alignItems: "center" }}>
                     <div>
-                      <label className="form-label">Tag Key Name</label>
+                      <label className="form-label" htmlFor={`tag-key-${activeScope}-${idx}`}>Tag Key Name</label>
                       <input
+                        id={`tag-key-${activeScope}-${idx}`}
+                        name={`tag_key_${activeScope}_${idx}`}
+                        aria-label={`Tag key name for ${activeScope} rule ${idx + 1}`}
                         type="text"
                         className="form-input form-input-mono"
                         value={tag.key}
@@ -754,6 +766,7 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                         <input
                           type="checkbox"
                           id={`req-${activeScope}-${idx}`}
+                          name={`req_${activeScope}_${idx}`}
                           checked={tag.required}
                           onChange={(e) => handleTagFieldChange(idx, "required", e.target.checked)}
                           style={{ cursor: "pointer", width: "16px", height: "16px" }}
@@ -790,7 +803,7 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
 
                   {/* Second Row: Allowed Values List */}
                   <div>
-                    <label className="form-label">
+                    <label className="form-label" htmlFor={`tag-values-${activeScope}-${idx}`}>
                       Allowed Values (Comma-Separated)
                       {!tag.required && (
                         <span style={{ color: "var(--accent-amber)", fontSize: "0.75rem", marginLeft: "8px" }}>
@@ -799,6 +812,9 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                       )}
                     </label>
                     <input
+                      id={`tag-values-${activeScope}-${idx}`}
+                      name={`tag_values_${activeScope}_${idx}`}
+                      aria-label={`Allowed values for tag ${tag.key || idx + 1}`}
                       type="text"
                       className="form-input"
                       value={allowedStr}
@@ -827,6 +843,9 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                   {/* Description */}
                   <div>
                     <input
+                      id={`tag-desc-${activeScope}-${idx}`}
+                      name={`tag_desc_${activeScope}_${idx}`}
+                      aria-label={`Description for tag ${tag.key || idx + 1}`}
                       type="text"
                       className="form-input"
                       style={{ fontSize: "0.8rem", padding: "6px 10px", color: "var(--text-muted)" }}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   AVAILABLE_TOKENS,
   toSampleName,
@@ -71,6 +71,26 @@ export function NamingStudio({
   const [customTemplates, setCustomTemplates] = useState(() => getCustomTemplates());
   const [newTemplateName, setNewTemplateName] = useState("");
   const [newTemplateDesc, setNewTemplateDesc] = useState("");
+
+  // Dismiss modals on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (showAddTypeModal) {
+          setShowAddTypeModal(false);
+          setSelectedCafItem(null);
+          setCafSearchQuery("");
+        }
+        if (showTemplateModal) {
+          setShowTemplateModal(false);
+        }
+      }
+    };
+    if (showAddTypeModal || showTemplateModal) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [showAddTypeModal, showTemplateModal]);
   const [newType, setNewType] = useState({
     key: "",
     name: "",
@@ -315,29 +335,31 @@ export function NamingStudio({
     effectivePurpose
   );
 
-  // Calculate platform violations across all active/enforced resources
-  const platformViolations = catalog
-    .filter((item) => !unrestrictedTypes.includes(item.key))
-    .map((item) => {
-      const airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
-      const pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
-      const meta = getEnrichedResourceMeta(item);
-      const sampleName = toSampleName(pattern, customer, item, { purpose: effectivePurpose });
-      const sampleVal = validateAzurePlatformConstraints(sampleName, meta);
-      const structVal = validatePatternStructure(pattern, meta);
-      const isValid = sampleVal.valid && structVal.valid;
-      return {
-        item,
-        pattern,
-        meta,
-        sampleName,
-        sampleVal,
-        structVal,
-        isValid,
-        autoFix: autoFixPatternForResource(pattern, meta)
-      };
-    })
-    .filter((v) => !v.isValid);
+  // Calculate platform violations across all active/enforced resources (memoized for high responsiveness)
+  const platformViolations = useMemo(() => {
+    return catalog
+      .filter((item) => !unrestrictedTypes.includes(item.key))
+      .map((item) => {
+        const airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+        const pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
+        const meta = getEnrichedResourceMeta(item);
+        const sampleName = toSampleName(pattern, customer, item, { purpose: effectivePurpose });
+        const sampleVal = validateAzurePlatformConstraints(sampleName, meta);
+        const structVal = validatePatternStructure(pattern, meta);
+        const isValid = sampleVal.valid && structVal.valid;
+        return {
+          item,
+          pattern,
+          meta,
+          sampleName,
+          sampleVal,
+          structVal,
+          isValid,
+          autoFix: autoFixPatternForResource(pattern, meta)
+        };
+      })
+      .filter((v) => !v.isValid);
+  }, [catalog, unrestrictedTypes, customPatterns, customer, effectivePurpose]);
 
   const handleAutoFixAll = () => {
     const updatedPatterns = { ...customPatterns };
@@ -485,8 +507,11 @@ export function NamingStudio({
 
         <div style={{ display: "grid", gridTemplateColumns: "180px 120px 140px 1fr", gap: "12px", alignItems: "center" }}>
           <div>
-            <label className="form-label">Resource Type</label>
+            <label className="form-label" htmlFor="sandbox-resource-type">Resource Type</label>
             <select
+              id="sandbox-resource-type"
+              name="sandbox_resource_type"
+              aria-label="Select resource type to test in sandbox"
               className="form-input"
               value={testTypeKey}
               onChange={(e) => setTestTypeKey(e.target.value)}
@@ -500,8 +525,11 @@ export function NamingStudio({
           </div>
 
           <div>
-            <label className="form-label">Region</label>
+            <label className="form-label" htmlFor="sandbox-region">Region</label>
             <select
+              id="sandbox-region"
+              name="sandbox_region"
+              aria-label="Select Azure region for sandbox test"
               className="form-input"
               value={testRegion}
               onChange={(e) => setTestRegion(e.target.value)}
@@ -515,8 +543,11 @@ export function NamingStudio({
           </div>
 
           <div>
-            <label className="form-label">Purpose</label>
+            <label className="form-label" htmlFor="sandbox-purpose">Purpose</label>
             <select
+              id="sandbox-purpose"
+              name="sandbox_purpose"
+              aria-label="Select purpose token for sandbox test"
               className="form-input"
               value={testPurpose}
               onChange={(e) => setTestPurpose(e.target.value)}
@@ -533,8 +564,11 @@ export function NamingStudio({
           </div>
 
           <div>
-            <label className="form-label">Test Candidate Name</label>
+            <label className="form-label" htmlFor="sandbox-test-name">Test Candidate Name</label>
             <input
+              id="sandbox-test-name"
+              name="sandbox_test_name"
+              aria-label="Enter candidate name to evaluate compliance"
               type="text"
               className="form-input form-input-mono"
               placeholder={`e.g. ${toSampleName(currentTestPattern, customer, currentTestItem, { region: testRegion, purpose: effectivePurpose })}`}
@@ -668,6 +702,9 @@ export function NamingStudio({
         {/* Add Subnet Input & Quick Presets */}
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <input
+            id="naming-new-subnet-input"
+            name="new_subnet_name"
+            aria-label="Add new allowed subnet name"
             type="text"
             className="form-input form-input-mono"
             style={{ maxWidth: "300px" }}
@@ -738,6 +775,9 @@ export function NamingStudio({
             <div style={{ position: "relative" }}>
               <Search size={15} style={{ position: "absolute", left: "10px", top: "12px", color: "var(--text-dim)" }} />
               <input
+                id="naming-search-types"
+                name="search_types"
+                aria-label="Search resource types by name, key or provider"
                 type="text"
                 className="form-input"
                 style={{ paddingLeft: "32px", width: "200px", fontSize: "0.85rem" }}
@@ -749,6 +789,9 @@ export function NamingStudio({
 
             {/* Category Filter */}
             <select
+              id="naming-category-filter"
+              name="category_filter"
+              aria-label="Filter resource types by category"
               className="form-input"
               style={{ width: "auto", fontSize: "0.85rem" }}
               value={selectedCategory}
@@ -916,6 +959,9 @@ export function NamingStudio({
                       </div>
                     </div>
                     <input
+                      id={`pattern-input-${item.key}`}
+                      name={`pattern_${item.key}`}
+                      aria-label={`Naming pattern for ${item.name}`}
                       type="text"
                       className="form-input form-input-mono"
                       style={{
@@ -1070,11 +1116,18 @@ export function NamingStudio({
 
       {/* Modal: Add Custom Resource Type with CAF & AirGate Catalogue Autofill */}
       {showAddTypeModal && (
-        <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: "680px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+        <div className="modal-overlay" onClick={() => setShowAddTypeModal(false)}>
+          <div
+            className="modal-card"
+            style={{ maxWidth: "680px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-resource-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <div>
-                <h2 style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+                <h2 id="add-resource-modal-title" style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
                   <BookOpen size={18} color="var(--azure-cyan)" />
                   Add Azure Resource Type
                 </h2>
@@ -1097,7 +1150,7 @@ export function NamingStudio({
             <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {/* 1. Quick CAF Autocomplete Search */}
               <div style={{ position: "relative" }}>
-                <label className="form-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label className="form-label" htmlFor="caf-search-input" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <Sparkles size={14} color="var(--azure-cyan)" />
                     Quick Pick from 200 CAF & AirGate Resources
@@ -1109,6 +1162,9 @@ export function NamingStudio({
                 <div style={{ position: "relative" }}>
                   <Search size={15} style={{ position: "absolute", left: "10px", top: "12px", color: "var(--text-dim)" }} />
                   <input
+                    id="caf-search-input"
+                    name="caf_search_query"
+                    aria-label="Search 200 CAF and AirGate resources"
                     type="text"
                     className="form-input"
                     style={{ paddingLeft: "32px", fontSize: "0.85rem" }}
@@ -1297,8 +1353,10 @@ export function NamingStudio({
 
               {/* 3. Form Inputs */}
               <div>
-                <label className="form-label">Display Name</label>
+                <label className="form-label" htmlFor="custom-res-display-name">Display Name</label>
                 <input
+                  id="custom-res-display-name"
+                  name="custom_res_display_name"
                   type="text"
                   className="form-input"
                   placeholder="e.g. Azure Databricks Workspace"
@@ -1309,8 +1367,10 @@ export function NamingStudio({
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label className="form-label">Short Key</label>
+                  <label className="form-label" htmlFor="custom-res-key">Short Key</label>
                   <input
+                    id="custom-res-key"
+                    name="custom_res_key"
                     type="text"
                     className="form-input form-input-mono"
                     placeholder="e.g. dbw"
@@ -1320,8 +1380,10 @@ export function NamingStudio({
                 </div>
 
                 <div>
-                  <label className="form-label">Abbreviation</label>
+                  <label className="form-label" htmlFor="custom-res-abbr">Abbreviation</label>
                   <input
+                    id="custom-res-abbr"
+                    name="custom_res_abbr"
                     type="text"
                     className="form-input form-input-mono"
                     placeholder="e.g. dbw"
@@ -1332,8 +1394,10 @@ export function NamingStudio({
               </div>
 
               <div>
-                <label className="form-label">Azure Resource Provider String</label>
+                <label className="form-label" htmlFor="custom-res-provider">Azure Resource Provider String</label>
                 <input
+                  id="custom-res-provider"
+                  name="custom_res_provider"
                   type="text"
                   className="form-input form-input-mono"
                   placeholder="e.g. Microsoft.Databricks/workspaces"
@@ -1344,8 +1408,10 @@ export function NamingStudio({
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label className="form-label">Min Length</label>
+                  <label className="form-label" htmlFor="custom-res-minlen">Min Length</label>
                   <input
+                    id="custom-res-minlen"
+                    name="custom_res_minlen"
                     type="number"
                     className="form-input form-input-mono"
                     min="1"
@@ -1355,8 +1421,10 @@ export function NamingStudio({
                   />
                 </div>
                 <div>
-                  <label className="form-label">Max Length</label>
+                  <label className="form-label" htmlFor="custom-res-maxlen">Max Length</label>
                   <input
+                    id="custom-res-maxlen"
+                    name="custom_res_maxlen"
                     type="number"
                     className="form-input form-input-mono"
                     min="1"
@@ -1368,8 +1436,10 @@ export function NamingStudio({
               </div>
 
               <div>
-                <label className="form-label">Allowed Characters Rule</label>
+                <label className="form-label" htmlFor="custom-res-chars">Allowed Characters Rule</label>
                 <input
+                  id="custom-res-chars"
+                  name="custom_res_chars"
                   type="text"
                   className="form-input"
                   placeholder="e.g. Alphanumerics, hyphens, underscores"
@@ -1379,8 +1449,10 @@ export function NamingStudio({
               </div>
 
               <div>
-                <label className="form-label">Default Naming Pattern</label>
+                <label className="form-label" htmlFor="custom-res-pattern">Default Naming Pattern</label>
                 <input
+                  id="custom-res-pattern"
+                  name="custom_res_pattern"
                   type="text"
                   className="form-input form-input-mono"
                   placeholder="{Org}-{SUB}-{ResourceGroup}-dbw"
@@ -1449,11 +1521,18 @@ export function NamingStudio({
 
       {/* Modal: Curated Naming Baselines & Templates */}
       {showTemplateModal && (
-        <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: "900px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+        <div className="modal-overlay" onClick={() => setShowTemplateModal(false)}>
+          <div
+            className="modal-card"
+            style={{ maxWidth: "900px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="template-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <div>
-                <h2 style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+                <h2 id="template-modal-title" style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
                   <LayoutTemplate size={18} color="var(--azure-cyan)" />
                   Curated Naming Baselines & Workload Templates
                 </h2>
@@ -1562,6 +1641,9 @@ export function NamingStudio({
                     Save Current Rules as Baseline
                   </span>
                   <input
+                    id="new-template-name"
+                    name="new_template_name"
+                    aria-label="Custom baseline template name"
                     type="text"
                     className="form-input"
                     style={{ fontSize: "0.8rem", padding: "6px 10px" }}
@@ -1570,6 +1652,9 @@ export function NamingStudio({
                     onChange={(e) => setNewTemplateName(e.target.value)}
                   />
                   <input
+                    id="new-template-desc"
+                    name="new_template_desc"
+                    aria-label="Custom baseline template description"
                     type="text"
                     className="form-input"
                     style={{ fontSize: "0.8rem", padding: "6px 10px" }}

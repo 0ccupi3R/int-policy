@@ -40,6 +40,9 @@ export function Header({
         {/* Customer Workspace Selector */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <select
+            id="active-customer-select"
+            name="active_customer_id"
+            aria-label="Active customer workspace selector"
             className="form-input"
             style={{ width: "auto", minWidth: "180px", cursor: "pointer", fontWeight: "600" }}
             value={activeCustomer.id}
@@ -77,6 +80,8 @@ export function Header({
             className="chip chip-purple"
             style={{ cursor: "pointer", border: "1px solid rgba(139, 92, 246, 0.4)", padding: "6px 12px" }}
             onClick={() => setShowVersionMenu(!showVersionMenu)}
+            aria-haspopup="true"
+            aria-expanded={showVersionMenu}
             title="Click to bump version"
           >
             <Sparkles size={12} />

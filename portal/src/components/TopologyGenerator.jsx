@@ -983,11 +983,14 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                       aria-label={`Select resource type for ${resource.name || "resource"}`}
                                       className="input-field"
                                       value={resource.resourceTypeKey}
-                                      onChange={(e) =>
-                                        handleUpdateResource(rg.id, resource.id, {
-                                          resourceTypeKey: e.target.value
-                                        })
-                                      }
+                                      onChange={(e) => {
+                                        const newKey = e.target.value;
+                                        const updates = { resourceTypeKey: newKey };
+                                        if (newKey === "vm" && !resource.osType) {
+                                          updates.osType = "Windows";
+                                        }
+                                        handleUpdateResource(rg.id, resource.id, updates);
+                                      }}
                                       style={{
                                         padding: "4px 8px",
                                         fontSize: "0.8rem",
@@ -1041,6 +1044,35 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                       style={{ width: "50px", padding: "4px 8px", fontSize: "0.8rem", textAlign: "center" }}
                                     />
                                   </div>
+
+                                  {/* OS Type Selector (Only for VM) */}
+                                  {(resource.resourceTypeKey === "vm" || evalRes.resourceMeta.resourceType?.toLowerCase().includes("virtualmachines")) && (
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                      <label htmlFor={`res-os-${resource.id}`} style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>OS:</label>
+                                      <select
+                                        id={`res-os-${resource.id}`}
+                                        name={`res_os_${resource.id}`}
+                                        aria-label={`Select OS type for VM ${resource.id}`}
+                                        className="input-field"
+                                        value={resource.osType || "Windows"}
+                                        onChange={(e) =>
+                                          handleUpdateResource(rg.id, resource.id, {
+                                            osType: e.target.value
+                                          })
+                                        }
+                                        style={{
+                                          padding: "4px 8px",
+                                          fontSize: "0.78rem",
+                                          fontWeight: "600",
+                                          borderColor: (resource.osType || "Windows") === "Windows" ? "var(--azure-cyan)" : "var(--accent-purple)",
+                                          background: "rgba(0,0,0,0.3)"
+                                        }}
+                                      >
+                                        <option value="Windows">🪟 Windows (15 max)</option>
+                                        <option value="Linux">🐧 Linux (64 max)</option>
+                                      </select>
+                                    </div>
+                                  )}
                                 </div>
 
                                 {/* Resource Actions: Tag Override Toggle & Delete */}
@@ -1094,13 +1126,15 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                       <span className="chip chip-emerald" style={{ fontSize: "0.68rem", padding: "1px 6px" }}>
                                         <CheckCircle2 size={11} />
                                         <span>
-                                          Compliant ({evalRes.evaluatedName.length}/{evalRes.resourceMeta.maxLength || 64})
+                                          Compliant ({evalRes.evaluatedName.length}/{evalRes.validation.maxLength || (evalRes.osType === "Windows" ? 15 : (evalRes.resourceMeta.maxLength || 64))})
                                         </span>
                                       </span>
                                     ) : (
                                       <span className="chip chip-amber" style={{ fontSize: "0.68rem", padding: "1px 6px" }}>
                                         <AlertTriangle size={11} />
-                                        <span>Constraint Violation</span>
+                                        <span>
+                                          Constraint Violation ({evalRes.evaluatedName.length}/{evalRes.validation.maxLength || (evalRes.osType === "Windows" ? 15 : (evalRes.resourceMeta.maxLength || 64))})
+                                        </span>
                                       </span>
                                     )}
                                   </div>

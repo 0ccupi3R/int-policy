@@ -4,7 +4,7 @@ export const DEFAULT_CUSTOMERS = [
   {
     id: "cust01",
     name: "CustomerName",
-    abbreviation: "cust01",
+    abbreviation: "c01",
     subscriptionName: "Connectivity",
     subscriptionCode: "CON",
     environment: "prod",
@@ -27,7 +27,9 @@ export const DEFAULT_CUSTOMERS = [
       globalPattern: "{Org}-{SUB}-{ResourceGroup}-{abbreviation}",
       unrestrictedTypes: [],
       customPatterns: {
-        vm: "{Org}-{SUB}-{ResourceGroup}-vm",
+        vm_windows: "vm-{org}{sub}{purpose}{instance}",
+        vm_linux: "{Org}-{SUB}-{ResourceGroup}-vm",
+        vm: "vm-{org}{sub}{purpose}{instance}",
         rg: "{Org}-{SUB}-{ResourceGroup}-rg",
         vnet: "{Org}-{SUB}-{ResourceGroup}-vnet",
         nsg: "{Org}-{SUB}-{ResourceGroup}-nsg",
@@ -199,7 +201,9 @@ export const DEFAULT_CUSTOMERS = [
       globalPattern: "{Org}-{SUB}-{ResourceGroup}-{abbreviation}",
       unrestrictedTypes: ["nw"], // Network Watcher unrestricted
       customPatterns: {
-        vm: "{Org}-{SUB}-{ResourceGroup}-vm",
+        vm_windows: "vm-{org}{sub}{purpose}{instance}",
+        vm_linux: "{Org}-{SUB}-{ResourceGroup}-vm",
+        vm: "vm-{org}{sub}{purpose}{instance}",
         rg: "{Org}-{SUB}-{ResourceGroup}-rg",
         vnet: "{Org}-{SUB}-{ResourceGroup}-vnet",
         storage: "{org}{sub}{region}sa",
@@ -326,7 +330,9 @@ export const DEFAULT_CUSTOMERS = [
         mlw: "{Org}-{SUB}-{ResourceGroup}-mlw",
         aif: "{Org}-{SUB}-{ResourceGroup}-aif",
         dbw: "{Org}-{SUB}-{ResourceGroup}-dbw",
-        vm: "{Org}-{SUB}-{ResourceGroup}-vm",
+        vm_windows: "vm-{org}{sub}{purpose}{instance}",
+        vm_linux: "{Org}-{SUB}-{ResourceGroup}-vm",
+        vm: "vm-{org}{sub}{purpose}{instance}",
         rg: "{Org}-{SUB}-{ResourceGroup}-rg",
         vnet: "{Org}-{SUB}-{ResourceGroup}-vnet",
         storage: "{org}{sub}{region}sa",

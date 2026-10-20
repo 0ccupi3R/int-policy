@@ -1,6 +1,6 @@
 // Azure Bicep Generator for ALZ Naming Conventions and Granular Tag Governance
 
-import { toAzurePolicyPattern } from "./tokenParser.js";
+import { toAzurePolicyPattern, DEFAULT_VM_WINDOWS_PATTERN, DEFAULT_VM_LINUX_PATTERN } from "./tokenParser.js";
 
 function escapeBicepString(val) {
   if (typeof val !== "string") return val;
@@ -92,9 +92,54 @@ param notScopes array = []
     const resourceDefName = `policyNaming_${item.key}`;
     activeItems.push({ item, resourceDefName, pattern });
 
+    const isVm = item.key === "vm" || (item.resourceType && item.resourceType.toLowerCase().includes("virtualmachines"));
+
     const regionBranches = Object.entries(regions).map(([locName, locCode]) => {
-      const polPattern = toAzurePolicyPattern(pattern, customer, item, locCode);
-      return `                  {
+      if (isVm) {
+        const winPattern = customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN;
+        const winPolPattern = toAzurePolicyPattern(winPattern, customer, item, locCode);
+        const linuxPattern = customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN;
+        const linuxPolPattern = toAzurePolicyPattern(linuxPattern, customer, item, locCode);
+
+        return `                  {
+                    allOf: [
+                      {
+                        field: 'location'
+                        equals: '${locName}'
+                      }
+                      {
+                        anyOf: [
+                          {
+                            allOf: [
+                              {
+                                field: 'Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType'
+                                equals: 'Windows'
+                              }
+                              {
+                                field: 'name'
+                                matchInsensitively: '${winPolPattern}'
+                              }
+                            ]
+                          }
+                          {
+                            allOf: [
+                              {
+                                field: 'Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType'
+                                notEquals: 'Windows'
+                              }
+                              {
+                                field: 'name'
+                                matchInsensitively: '${linuxPolPattern}'
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }`;
+      } else {
+        const polPattern = toAzurePolicyPattern(pattern, customer, item, locCode);
+        return `                  {
                     allOf: [
                       {
                         field: 'location'
@@ -106,6 +151,7 @@ param notScopes array = []
                       }
                     ]
                   }`;
+      }
     }).join("\n");
 
     bicep += `

@@ -1,6 +1,6 @@
 // Azure Resource Manager (ARM) JSON Generator
 
-import { toAzurePolicyPattern } from "./tokenParser.js";
+import { toAzurePolicyPattern, DEFAULT_VM_WINDOWS_PATTERN, DEFAULT_VM_LINUX_PATTERN } from "./tokenParser.js";
 
 export function generateArmTemplate(customer, catalog) {
   const orgAbbr = customer.abbreviation || customer.name || "cust01";
@@ -32,7 +32,36 @@ export function generateArmTemplate(customer, catalog) {
     const pattern = customPatterns[item.key] || namingRules.globalPattern || item.defaultPattern;
     const defName = `${prefix}-naming-${item.key}`;
 
+    const isVm = item.key === "vm" || (item.resourceType && item.resourceType.toLowerCase().includes("virtualmachines"));
+
     const allowedAnyOf = Object.entries(regions).map(([locName, locCode]) => {
+      if (isVm) {
+        const winPattern = customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN;
+        const winPol = toAzurePolicyPattern(winPattern, customer, item, locCode);
+        const linuxPattern = customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN;
+        const linuxPol = toAzurePolicyPattern(linuxPattern, customer, item, locCode);
+        return {
+          allOf: [
+            { field: "location", equals: locName },
+            {
+              anyOf: [
+                {
+                  allOf: [
+                    { field: "Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType", equals: "Windows" },
+                    { field: "name", matchInsensitively: winPol }
+                  ]
+                },
+                {
+                  allOf: [
+                    { field: "Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType", notEquals: "Windows" },
+                    { field: "name", matchInsensitively: linuxPol }
+                  ]
+                }
+              ]
+            }
+          ]
+        };
+      }
       const polPattern = toAzurePolicyPattern(pattern, customer, item, locCode);
       return {
         allOf: [

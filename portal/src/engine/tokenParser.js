@@ -1,6 +1,9 @@
 // Dynamic Token Pattern Engine for Azure Policy Naming Conventions
 import { AZURE_NAMING_CATALOG } from "../data/azureNamingCatalog.js";
 
+export const DEFAULT_VM_WINDOWS_PATTERN = "vm-{org}{sub}{purpose}{instance}";
+export const DEFAULT_VM_LINUX_PATTERN = "{Org}-{SUB}-{ResourceGroup}-vm";
+
 export function toTitleCase(str) {
   if (!str) return "";
   return str
@@ -64,7 +67,8 @@ export const AVAILABLE_TOKENS = [
   { token: "{Purpose}", description: "TitleCase purpose (e.g., Core, Hub, Apps)", example: "Core" },
   { token: "{PURPOSE}", description: "UPPERCASE purpose (e.g., CORE, HUB, APPS)", example: "CORE" },
   { token: "{abbreviation}", description: "Standard resource abbreviation (e.g., vm, oai, sa)", example: "vm" },
-  { token: "##", description: "Two-digit instance counter (01-99)", example: "01" }
+  { token: "{instance}", description: "Two-digit instance counter (e.g., 01, 02)", example: "01" },
+  { token: "##", description: "Two-digit instance counter wildcard (01-99)", example: "01" }
 ];
 
 export function resolveToken(tokenName, customer, resourceType, sampleContext = {}) {
@@ -207,6 +211,8 @@ export function resolveToken(tokenName, customer, resourceType, sampleContext = 
       return abbr;
 
     case "##":
+    case "{instance}":
+    case "{Instance}":
       return sampleContext.forPolicy ? "##" : (sampleContext.instance || "01");
 
     default:
@@ -230,6 +236,7 @@ export function toSampleName(pattern, customer, resourceType, sampleContext = {}
     "{ENVNAME}", "{EnvName}", "{envname}",
     "{RGNAME}", "{RgName}", "{rgname}", "{ResourceGroup}",
     "{PURPOSE}", "{Purpose}", "{purpose}",
+    "{instance}", "{Instance}",
     // Short tokens next
     "{ORG}", "{Org}", "{org}",
     "{SUB}", "{Sub}", "{sub}",
@@ -245,7 +252,7 @@ export function toSampleName(pattern, customer, resourceType, sampleContext = {}
     result = result.split(t).join(val);
   });
 
-  result = result.replace(/##/g, sampleContext.instance || "01");
+  result = result.replace(/\{instance\}|\{Instance\}|##/g, sampleContext.instance || "01");
   return result;
 }
 
@@ -279,6 +286,7 @@ export function toAzurePolicyPattern(pattern, customer, resourceType, regionCode
   // ResourceGroup and wildcard tokens translate to * in Azure Policy
   result = result.replace(/\{ResourceGroup\}|\{RGNAME\}|\{rgname\}|\{RgName\}|\{RG\}|\{rg\}|\{Rg\}/g, "*");
   result = result.replace(/\{Role\}|\{role\}|\{purpose\}|\{Purpose\}|\{PURPOSE\}|\{workload\}/g, "*");
+  result = result.replace(/\{instance\}|\{Instance\}|##/g, "##");
 
   return result;
 }
@@ -343,7 +351,7 @@ export function getEnrichedResourceMeta(item) {
 /**
  * Validates candidate name or sample preview string against physical Azure ARM resource constraints.
  */
-export function validateAzurePlatformConstraints(candidateName, resourceItem) {
+export function validateAzurePlatformConstraints(candidateName, resourceItem, context = {}) {
   const meta = getEnrichedResourceMeta(resourceItem);
   const errors = [];
   const warnings = [];
@@ -366,16 +374,32 @@ export function validateAzurePlatformConstraints(candidateName, resourceItem) {
   const resType = (meta.resourceType || meta.id || "").toLowerCase();
   const key = (meta.key || meta.abbreviation || "").toLowerCase();
 
+  const isVirtualMachine =
+    resType.includes("microsoft.compute/virtualmachines") ||
+    key === "vm" ||
+    key === "vm_windows" ||
+    key === "vm_linux";
+
+  const effectiveOsType = context?.osType || resourceItem?.osType || meta?.osType || (key === "vm_linux" ? "Linux" : "Windows");
+  const isWindowsVm = isVirtualMachine && (typeof effectiveOsType === "string" ? effectiveOsType.toLowerCase().includes("win") : true);
+
   // 1. Length validation
+  const effectiveMaxLen = isWindowsVm ? 15 : (meta.maxLength || 64);
   if (meta.minLength && len < meta.minLength) {
     errors.push(
       `Name length (${len} chars) is below Azure minimum of ${meta.minLength} chars for ${meta.name || "this resource"}.`
     );
   }
-  if (meta.maxLength && len > meta.maxLength) {
-    errors.push(
-      `Name length (${len} chars) exceeds Azure maximum of ${meta.maxLength} chars for ${meta.name || "this resource"}.`
-    );
+  if (len > effectiveMaxLen) {
+    if (isWindowsVm) {
+      errors.push(
+        `Windows computer names are strictly capped at 15 characters (Azure Active Directory / NetBIOS limit). Current: ${len} chars.`
+      );
+    } else {
+      errors.push(
+        `Name length (${len} chars) exceeds Azure maximum of ${effectiveMaxLen} chars for ${meta.name || "this resource"}.`
+      );
+    }
   }
 
   // 2. Resource-specific character type validation
@@ -390,9 +414,6 @@ export function validateAzurePlatformConstraints(candidateName, resourceItem) {
 
   const isKeyVault =
     resType.includes("microsoft.keyvault/vaults") || key === "kv";
-
-  const isVirtualMachine =
-    resType.includes("microsoft.compute/virtualmachines") || key === "vm";
 
   const isCosmosDb =
     resType.includes("microsoft.documentdb/databaseaccounts") || key === "cosmos";
@@ -440,17 +461,35 @@ export function validateAzurePlatformConstraints(candidateName, resourceItem) {
       errors.push("Key Vault names only permit alphanumeric characters and hyphens.");
     }
   } else if (isVirtualMachine) {
-    // VM: NetBIOS computer name max 15 chars for Windows, no underscores
-    if (len > 15) {
-      warnings.push("Azure Windows VM computer names are strictly capped at 15 characters (Linux allows up to 64).");
+    if (isWindowsVm) {
+      if (name.includes("_")) {
+        errors.push("Windows computer names cannot contain underscores ('_').");
+      }
+      if (name.includes(".")) {
+        errors.push("Windows computer names cannot contain periods ('.').");
+      }
+      if (name.startsWith("-") || name.endsWith("-")) {
+        errors.push("Windows computer names cannot begin or end with a hyphen ('-').");
+      }
+      if (/^[0-9]+$/.test(name)) {
+        errors.push("Windows computer names cannot be composed entirely of numbers.");
+      }
+      if (/[^a-zA-Z0-9-]/.test(name)) {
+        errors.push("Windows computer names only allow alphanumeric characters and hyphens.");
+      }
+    } else {
+      if (name.includes("_")) {
+        errors.push("Linux hostnames cannot contain underscores ('_').");
+      }
+      if (name.startsWith("-") || name.endsWith("-")) {
+        errors.push("Linux hostnames cannot begin or end with a hyphen ('-').");
+      }
+      if (/[^a-zA-Z0-9-]/.test(name)) {
+        errors.push("Linux hostnames only allow alphanumeric characters and hyphens.");
+      }
     }
-    if (name.includes("_")) {
-      errors.push("Virtual machine hostnames cannot contain underscores ('_').");
-    }
-    if (/[^a-zA-Z0-9-]/.test(name)) {
-      errors.push("Virtual machine hostnames only allow alphanumeric characters and hyphens.");
-    }
-  } else if (isCosmosDb || isSearchService) {
+  }
+ else if (isCosmosDb || isSearchService) {
     // Lowercase alphanumeric and hyphens
     if (/[A-Z]/.test(name)) {
       errors.push(`${meta.name || "This resource"} strictly requires lowercase letters and numbers (no uppercase).`);
@@ -482,16 +521,19 @@ export function validateAzurePlatformConstraints(candidateName, resourceItem) {
     warnings,
     length: len,
     minLength: meta.minLength,
-    maxLength: meta.maxLength,
-    allowedCharacters: meta.allowedCharacters,
-    pattern: meta.pattern
+    maxLength: effectiveMaxLen,
+    allowedCharacters: isWindowsVm
+      ? "Alphanumerics and hyphens (max 15 chars for Windows NetBIOS)"
+      : (isVirtualMachine ? "Alphanumerics and hyphens (max 64 chars for Linux)" : meta.allowedCharacters),
+    pattern: isWindowsVm ? "^[a-zA-Z0-9-]{1,15}$" : meta.pattern,
+    osType: isVirtualMachine ? (isWindowsVm ? "Windows" : "Linux") : undefined
   };
 }
 
 /**
  * Validates the template pattern string structure itself against resource constraints.
  */
-export function validatePatternStructure(pattern, resourceItem) {
+export function validatePatternStructure(pattern, resourceItem, context = {}) {
   if (!pattern) {
     return { valid: false, errors: ["Pattern cannot be empty."], warnings: [] };
   }
@@ -502,6 +544,15 @@ export function validatePatternStructure(pattern, resourceItem) {
 
   const resType = (meta.resourceType || meta.id || "").toLowerCase();
   const key = (meta.key || meta.abbreviation || "").toLowerCase();
+
+  const isVirtualMachine =
+    resType.includes("microsoft.compute/virtualmachines") ||
+    key === "vm" ||
+    key === "vm_windows" ||
+    key === "vm_linux";
+
+  const effectiveOsType = context?.osType || resourceItem?.osType || meta?.osType || (key === "vm_linux" ? "Linux" : "Windows");
+  const isWindowsVm = isVirtualMachine && (typeof effectiveOsType === "string" ? effectiveOsType.toLowerCase().includes("win") : true);
 
   const isStorageAccount =
     resType.includes("microsoft.storage/storageaccounts") ||
@@ -613,7 +664,7 @@ export function autoFixPatternForResource(pattern, resourceItem) {
 /**
  * Validates candidate name against both Azure Policy wildcard rule and Azure ARM platform limits.
  */
-export function validateCandidateName(candidate, pattern, customer, resourceType, regionCode, purposeCode) {
+export function validateCandidateName(candidate, pattern, customer, resourceType, regionCode, purposeCode, options = {}) {
   if (!candidate || !candidate.trim()) {
     return {
       valid: false,
@@ -629,6 +680,9 @@ export function validateCandidateName(candidate, pattern, customer, resourceType
     customer?.purpose ||
     (customer?.purposes && customer.purposes[0]) ||
     "core";
+
+  const opts = typeof regionCode === "object" ? regionCode : (typeof purposeCode === "object" ? purposeCode : options);
+  const effectiveOsType = opts?.osType || options?.osType || resourceType?.osType;
 
   const name = candidate.trim();
   const policyPattern = toAzurePolicyPattern(pattern, customer, resourceType, region);
@@ -647,7 +701,7 @@ export function validateCandidateName(candidate, pattern, customer, resourceType
   const isMatch = regex.test(name);
 
   // Check physical Azure platform constraints
-  const platformValidation = validateAzurePlatformConstraints(name, resourceType);
+  const platformValidation = validateAzurePlatformConstraints(name, resourceType, { osType: effectiveOsType });
 
   if (!platformValidation.valid) {
     const errorMsg = platformValidation.errors.join("; ");

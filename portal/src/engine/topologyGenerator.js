@@ -1,7 +1,14 @@
 // Resource Topology & Bicep/ARM Parameter Generator ("1 Bullet, Two Kills")
 // Automatically resolves canonical compliant resource names and 3-tier tag inheritance
 
-import { toSampleName, validateAzurePlatformConstraints, getEnrichedResourceMeta, toTitleCase } from "./tokenParser.js";
+import {
+  toSampleName,
+  validateAzurePlatformConstraints,
+  getEnrichedResourceMeta,
+  toTitleCase,
+  DEFAULT_VM_WINDOWS_PATTERN,
+  DEFAULT_VM_LINUX_PATTERN
+} from "./tokenParser.js";
 import { AZURE_RESOURCE_CATALOG } from "../data/azureResourceCatalog.js";
 
 /**
@@ -340,11 +347,23 @@ export function evaluateResourceNode(customer, catalog, subscription, rg, resour
   // Pattern resolution
   const customPatterns = customer.namingRules?.customPatterns || {};
   const resKey = (resourceMeta.key || resourceMeta.abbreviation || "").toLowerCase();
-  const pattern =
-    customPatterns[resKey] ||
-    customPatterns[resourceMeta.abbreviation] ||
-    customer.namingRules?.globalPattern ||
-    "{Org}-{SUB}-{ResourceGroup}-{abbreviation}";
+  const isVm = resKey === "vm" || (resourceMeta.resourceType || "").toLowerCase().includes("virtualmachines");
+  const osType = resource.osType || (isVm ? "Windows" : undefined);
+
+  let pattern = "";
+  if (isVm) {
+    if (osType === "Windows") {
+      pattern = customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN;
+    } else {
+      pattern = customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN;
+    }
+  } else {
+    pattern =
+      customPatterns[resKey] ||
+      customPatterns[resourceMeta.abbreviation] ||
+      customer.namingRules?.globalPattern ||
+      "{Org}-{SUB}-{ResourceGroup}-{abbreviation}";
+  }
 
   // Context for token parser
   const sampleContext = {
@@ -366,7 +385,7 @@ export function evaluateResourceNode(customer, catalog, subscription, rg, resour
   }
 
   // 2. Validate Platform Constraints
-  const validation = validateAzurePlatformConstraints(evaluatedName, enrichedMeta);
+  const validation = validateAzurePlatformConstraints(evaluatedName, enrichedMeta, { osType });
 
   // 3. Compute Effective Tags
   const { tags, tagOrigins } = computeEffectiveResourceTags(customer, subscription, rg, resource, enrichedMeta);
@@ -375,6 +394,7 @@ export function evaluateResourceNode(customer, catalog, subscription, rg, resour
     id: resource.id,
     resourceTypeKey: resource.resourceTypeKey,
     resourceMeta: enrichedMeta,
+    osType: isVm ? osType : undefined,
     evaluatedName,
     pattern,
     validation,
@@ -512,6 +532,9 @@ export function generateBicepParameters(customer, topology, catalog) {
         out += `          {\n`;
         out += `            name: '${evalRes.evaluatedName}'\n`;
         out += `            type: '${evalRes.resourceMeta.resourceType || "Microsoft.Resources/unknown"}'\n`;
+        if (evalRes.osType) {
+          out += `            osType: '${evalRes.osType}'\n`;
+        }
         out += `            purpose: '${res.purpose}'\n`;
         out += `            instance: '${res.instance || "01"}'\n`;
         out += `            location: '${evalRes.location}'\n`;
@@ -561,6 +584,7 @@ export function generateArmParameters(customer, topology, catalog) {
             return {
               name: evalRes.evaluatedName,
               type: evalRes.resourceMeta.resourceType,
+              ...(evalRes.osType ? { osType: evalRes.osType } : {}),
               purpose: res.purpose,
               instance: res.instance || "01",
               location: evalRes.location,

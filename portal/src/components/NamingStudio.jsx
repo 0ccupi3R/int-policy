@@ -6,7 +6,9 @@ import {
   getEnrichedResourceMeta,
   validateAzurePlatformConstraints,
   validatePatternStructure,
-  autoFixPatternForResource
+  autoFixPatternForResource,
+  DEFAULT_VM_WINDOWS_PATTERN,
+  DEFAULT_VM_LINUX_PATTERN
 } from "../engine/tokenParser.js";
 import { AZURE_NAMING_CATALOG, getEffectiveAbbreviation } from "../data/azureNamingCatalog.js";
 import {
@@ -53,6 +55,8 @@ export function NamingStudio({
   // Live Sandbox state
   const [testName, setTestName] = useState("");
   const [testTypeKey, setTestTypeKey] = useState("vm");
+  const [testOsType, setTestOsType] = useState("Windows"); // "Windows" | "Linux"
+  const [vmOsMode, setVmOsMode] = useState("windows"); // "windows" | "linux"
   const [testRegion, setTestRegion] = useState(
     customer.regions ? Object.values(customer.regions)[0] : "cc"
   );
@@ -173,7 +177,13 @@ export function NamingStudio({
   const handleApplyAirGateToAll = () => {
     const updatedPatterns = { ...customPatterns };
     catalog.forEach((item) => {
-      updatedPatterns[item.key] = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+      if (item.key === "vm") {
+        updatedPatterns.vm_windows = DEFAULT_VM_WINDOWS_PATTERN;
+        updatedPatterns.vm_linux = DEFAULT_VM_LINUX_PATTERN;
+        updatedPatterns.vm = DEFAULT_VM_WINDOWS_PATTERN;
+      } else {
+        updatedPatterns[item.key] = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+      }
     });
     onUpdateCustomer({
       ...customer,
@@ -186,7 +196,13 @@ export function NamingStudio({
   const handleApplyCafToAll = () => {
     const updatedPatterns = { ...customPatterns };
     catalog.forEach((item) => {
-      updatedPatterns[item.key] = item.cafPattern || `${item.abbreviation}-{workload}-{env}-{region}`;
+      if (item.key === "vm") {
+        updatedPatterns.vm_windows = "vm-{workload}-{env}";
+        updatedPatterns.vm_linux = item.cafPattern || "vm-{workload}-{env}-{region}";
+        updatedPatterns.vm = item.cafPattern || "vm-{workload}-{env}-{region}";
+      } else {
+        updatedPatterns[item.key] = item.cafPattern || `${item.abbreviation}-{workload}-{env}-{region}`;
+      }
     });
     onUpdateCustomer({
       ...customer,
@@ -322,8 +338,13 @@ export function NamingStudio({
 
   // Live Sandbox validation calculation
   const currentTestItem = catalog.find((i) => i.key === testTypeKey) || catalog[0];
-  const currentTestPattern =
-    customPatterns[testTypeKey] || namingRules.globalPattern || currentTestItem?.defaultPattern;
+  const isTestVm = testTypeKey === "vm" || (currentTestItem?.resourceType || "").toLowerCase().includes("virtualmachines");
+  const effectiveTestPattern = isTestVm
+    ? (testOsType === "Windows"
+        ? (customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN)
+        : (customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN))
+    : (customPatterns[testTypeKey] || namingRules.globalPattern || currentTestItem?.defaultPattern);
+  const currentTestPattern = effectiveTestPattern;
   const isTestItemUnrestricted = unrestrictedTypes.includes(testTypeKey);
   const effectivePurpose = testPurpose || customer.purpose || (customer.purposes && customer.purposes[0]) || "core";
   const testValidation = validateCandidateName(
@@ -332,33 +353,78 @@ export function NamingStudio({
     customer,
     currentTestItem,
     testRegion,
-    effectivePurpose
+    effectivePurpose,
+    { osType: isTestVm ? testOsType : undefined }
   );
 
   // Calculate platform violations across all active/enforced resources (memoized for high responsiveness)
   const platformViolations = useMemo(() => {
-    return catalog
+    const list = [];
+    catalog
       .filter((item) => !unrestrictedTypes.includes(item.key))
-      .map((item) => {
-        const airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
-        const pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
-        const meta = getEnrichedResourceMeta(item);
-        const sampleName = toSampleName(pattern, customer, item, { purpose: effectivePurpose });
-        const sampleVal = validateAzurePlatformConstraints(sampleName, meta);
-        const structVal = validatePatternStructure(pattern, meta);
-        const isValid = sampleVal.valid && structVal.valid;
-        return {
-          item,
-          pattern,
-          meta,
-          sampleName,
-          sampleVal,
-          structVal,
-          isValid,
-          autoFix: autoFixPatternForResource(pattern, meta)
-        };
-      })
-      .filter((v) => !v.isValid);
+      .forEach((item) => {
+        const isVm = item.key === "vm" || (item.resourceType || "").toLowerCase().includes("virtualmachines");
+        if (isVm) {
+          // 1. Evaluate Windows VM (strict 15-char limit)
+          const winPattern = customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN;
+          const winMeta = getEnrichedResourceMeta(item);
+          const winSample = toSampleName(winPattern, customer, item, { purpose: effectivePurpose });
+          const winSampleVal = validateAzurePlatformConstraints(winSample, winMeta, { osType: "Windows" });
+          const winStructVal = validatePatternStructure(winPattern, winMeta, { osType: "Windows" });
+          if (!winSampleVal.valid || !winStructVal.valid) {
+            list.push({
+              item: { ...item, name: `${item.name} (Windows - 15 char limit)`, key: "vm_windows" },
+              pattern: winPattern,
+              meta: winMeta,
+              sampleName: winSample,
+              sampleVal: winSampleVal,
+              structVal: winStructVal,
+              isValid: false,
+              autoFix: null // strict warning only
+            });
+          }
+
+          // 2. Evaluate Linux VM (64-char limit)
+          const linuxPattern = customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN;
+          const linuxMeta = getEnrichedResourceMeta(item);
+          const linuxSample = toSampleName(linuxPattern, customer, item, { purpose: effectivePurpose });
+          const linuxSampleVal = validateAzurePlatformConstraints(linuxSample, linuxMeta, { osType: "Linux" });
+          const linuxStructVal = validatePatternStructure(linuxPattern, linuxMeta, { osType: "Linux" });
+          if (!linuxSampleVal.valid || !linuxStructVal.valid) {
+            list.push({
+              item: { ...item, name: `${item.name} (Linux - 64 char limit)`, key: "vm_linux" },
+              pattern: linuxPattern,
+              meta: linuxMeta,
+              sampleName: linuxSample,
+              sampleVal: linuxSampleVal,
+              structVal: linuxStructVal,
+              isValid: false,
+              autoFix: autoFixPatternForResource(linuxPattern, linuxMeta)
+            });
+          }
+        } else {
+          const airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+          const pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
+          const meta = getEnrichedResourceMeta(item);
+          const sampleName = toSampleName(pattern, customer, item, { purpose: effectivePurpose });
+          const sampleVal = validateAzurePlatformConstraints(sampleName, meta);
+          const structVal = validatePatternStructure(pattern, meta);
+          const isValid = sampleVal.valid && structVal.valid;
+          if (!isValid) {
+            list.push({
+              item,
+              pattern,
+              meta,
+              sampleName,
+              sampleVal,
+              structVal,
+              isValid,
+              autoFix: autoFixPatternForResource(pattern, meta)
+            });
+          }
+        }
+      });
+    return list;
   }, [catalog, unrestrictedTypes, customPatterns, customer, effectivePurpose]);
 
   const handleAutoFixAll = () => {
@@ -505,7 +571,7 @@ export function NamingStudio({
           <span className="chip chip-azure" style={{ marginLeft: "auto" }}>Real-time Policy Evaluator</span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "180px 120px 140px 1fr", gap: "12px", alignItems: "center" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isTestVm ? "180px 150px 120px 140px 1fr" : "180px 120px 140px 1fr", gap: "12px", alignItems: "center" }}>
           <div>
             <label className="form-label" htmlFor="sandbox-resource-type">Resource Type</label>
             <select
@@ -523,6 +589,27 @@ export function NamingStudio({
               ))}
             </select>
           </div>
+
+          {isTestVm && (
+            <div>
+              <label className="form-label" htmlFor="sandbox-os-type">OS Platform</label>
+              <select
+                id="sandbox-os-type"
+                name="sandbox_os_type"
+                aria-label="Select OS platform for VM sandbox"
+                className="form-input"
+                value={testOsType}
+                onChange={(e) => setTestOsType(e.target.value)}
+                style={{
+                  borderColor: testOsType === "Windows" ? "var(--azure-cyan)" : "var(--accent-purple)",
+                  fontWeight: "600"
+                }}
+              >
+                <option value="Windows">🪟 Windows (15 max)</option>
+                <option value="Linux">🐧 Linux (64 max)</option>
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="form-label" htmlFor="sandbox-region">Region</label>
@@ -811,19 +898,38 @@ export function NamingStudio({
           {filteredCatalog.map((item) => {
             const meta = getEnrichedResourceMeta(item);
             const isUnrestricted = unrestrictedTypes.includes(item.key);
-            const airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
-            const cafPattern = item.cafPattern || `${item.abbreviation}-{workload}-{env}-{region}`;
-            const pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
+            const isVm = item.key === "vm" || (item.resourceType || "").toLowerCase().includes("virtualmachines");
+            const vmOs = vmOsMode; // "windows" | "linux"
+
+            let patternKey = item.key;
+            let airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+            let cafPattern = item.cafPattern || `${item.abbreviation}-{workload}-{env}-{region}`;
+            let pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
+
+            if (isVm) {
+              if (vmOs === "windows") {
+                patternKey = "vm_windows";
+                airgatePattern = DEFAULT_VM_WINDOWS_PATTERN;
+                pattern = customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN;
+              } else {
+                patternKey = "vm_linux";
+                airgatePattern = DEFAULT_VM_LINUX_PATTERN;
+                pattern = customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN;
+              }
+            }
+
             const isAirGate = pattern === airgatePattern;
             const isCaf = pattern === cafPattern;
+            const effectiveOsType = isVm ? (vmOs === "windows" ? "Windows" : "Linux") : undefined;
             const sampleName = toSampleName(pattern, customer, item, { purpose: effectivePurpose });
 
-            const sampleVal = validateAzurePlatformConstraints(sampleName, meta);
-            const structVal = validatePatternStructure(pattern, meta);
+            const sampleVal = validateAzurePlatformConstraints(sampleName, meta, { osType: effectiveOsType });
+            const structVal = validatePatternStructure(pattern, meta, { osType: effectiveOsType });
             const hasError = !isUnrestricted && (!sampleVal.valid || !structVal.valid);
-            const autoFixSuggestion = hasError ? autoFixPatternForResource(pattern, meta) : null;
+            const autoFixSuggestion = hasError && !isVm ? autoFixPatternForResource(pattern, meta) : null;
             const charCount = sampleName ? sampleName.length : 0;
-            const isLengthExceeded = meta.maxLength && charCount > meta.maxLength;
+            const effectiveMax = isVm && vmOs === "windows" ? 15 : (meta.maxLength || 64);
+            const isLengthExceeded = charCount > effectiveMax;
             const isLengthTooShort = meta.minLength && charCount < meta.minLength;
 
             return (
@@ -847,7 +953,7 @@ export function NamingStudio({
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                       <span style={{ fontWeight: "700", fontSize: "1rem" }}>{item.name}</span>
                       <span className="chip chip-azure" style={{ padding: "2px 8px", fontSize: "0.7rem" }}>
                         {item.abbreviation}
@@ -855,6 +961,54 @@ export function NamingStudio({
                       <span className="chip" style={{ padding: "2px 8px", fontSize: "0.7rem" }}>
                         {item.category}
                       </span>
+
+                      {/* OS Mode Toggle for VM */}
+                      {isVm && (
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            background: "rgba(0,0,0,0.35)",
+                            borderRadius: "6px",
+                            padding: "2px",
+                            border: "1px solid var(--border-subtle)"
+                          }}
+                        >
+                          <button
+                            type="button"
+                            id="vm-os-windows-toggle"
+                            className={`btn btn-sm ${vmOs === "windows" ? "btn-outline-azure" : "btn-secondary"}`}
+                            style={{
+                              fontSize: "0.68rem",
+                              padding: "2px 8px",
+                              height: "22px",
+                              lineHeight: 1,
+                              borderColor: vmOs === "windows" ? "var(--azure-cyan)" : "transparent",
+                              fontWeight: vmOs === "windows" ? "700" : "normal"
+                            }}
+                            onClick={() => setVmOsMode("windows")}
+                            title="Windows Virtual Machine (Strict 15-character NetBIOS limit)"
+                          >
+                            🪟 Windows (15 max)
+                          </button>
+                          <button
+                            type="button"
+                            id="vm-os-linux-toggle"
+                            className={`btn btn-sm ${vmOs === "linux" ? "btn-outline-azure" : "btn-secondary"}`}
+                            style={{
+                              fontSize: "0.68rem",
+                              padding: "2px 8px",
+                              height: "22px",
+                              lineHeight: 1,
+                              borderColor: vmOs === "linux" ? "var(--accent-purple)" : "transparent",
+                              fontWeight: vmOs === "linux" ? "700" : "normal"
+                            }}
+                            onClick={() => setVmOsMode("linux")}
+                            title="Linux Virtual Machine (Standard 64-character limit)"
+                          >
+                            🐧 Linux (64 max)
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: "2px" }}>
                       {item.resourceType}
@@ -872,13 +1026,21 @@ export function NamingStudio({
                           alignItems: "center",
                           gap: "4px"
                         }}
-                        title={`Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters}`}
+                        title={
+                          isVm && vmOs === "windows"
+                            ? "Windows NetBIOS / Active Directory limitation: strict max 15 characters"
+                            : `Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters}`
+                        }
                       >
                         <span style={{ color: "var(--azure-cyan)", fontWeight: "600" }}>
-                          📏 {meta.minLength}–{meta.maxLength} chars
+                          📏 {meta.minLength}–{effectiveMax} chars
                         </span>
                         <span style={{ opacity: 0.5 }}>•</span>
-                        <span>{meta.allowedCharacters}</span>
+                        <span>
+                          {isVm && vmOs === "windows"
+                            ? "Alphanumerics, hyphens (NetBIOS / AD limit)"
+                            : meta.allowedCharacters}
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -931,8 +1093,8 @@ export function NamingStudio({
                             gap: "3px",
                             borderColor: isAirGate ? "var(--azure-cyan)" : undefined
                           }}
-                          onClick={() => handlePatternChange(item.key, airgatePattern)}
-                          title="Apply AirGate standard pattern: {Org}-{SUB}-{ResourceGroup}-{abbr}"
+                          onClick={() => handlePatternChange(patternKey, airgatePattern)}
+                          title={`Apply AirGate standard pattern: ${airgatePattern}`}
                         >
                           {isAirGate && <Check size={11} />}
                           AirGate
@@ -950,7 +1112,7 @@ export function NamingStudio({
                             gap: "3px",
                             borderColor: isCaf ? "var(--accent-purple)" : undefined
                           }}
-                          onClick={() => handlePatternChange(item.key, cafPattern)}
+                          onClick={() => handlePatternChange(patternKey, cafPattern)}
                           title="Apply Microsoft CAF pattern: {abbr}-{workload}-{env}-{region}"
                         >
                           {isCaf && <Check size={11} />}
@@ -961,7 +1123,7 @@ export function NamingStudio({
                     <input
                       id={`pattern-input-${item.key}`}
                       name={`pattern_${item.key}`}
-                      aria-label={`Naming pattern for ${item.name}`}
+                      aria-label={`Naming pattern for ${item.name}${isVm ? ` (${vmOs})` : ""}`}
                       type="text"
                       className="form-input form-input-mono"
                       style={{
@@ -969,7 +1131,7 @@ export function NamingStudio({
                         background: hasError ? "rgba(244, 63, 94, 0.04)" : undefined
                       }}
                       value={pattern}
-                      onChange={(e) => handlePatternChange(item.key, e.target.value)}
+                      onChange={(e) => handlePatternChange(patternKey, e.target.value)}
                     />
 
                     {/* Constraint Error Callout */}
@@ -1086,9 +1248,9 @@ export function NamingStudio({
                               ? "var(--accent-rose)"
                               : "var(--accent-emerald)"
                         }}
-                        title={`Current length: ${charCount} chars (Min: ${meta.minLength}, Max: ${meta.maxLength})`}
+                        title={`Current length: ${charCount} chars (Min: ${meta.minLength}, Max: ${effectiveMax})`}
                       >
-                        {charCount} / {meta.maxLength} chars
+                        {charCount} / {effectiveMax} chars
                       </span>
                     )}
                     {!isUnrestricted && (

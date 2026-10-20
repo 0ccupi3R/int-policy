@@ -1,11 +1,11 @@
 {
   "config": "config/customer.json",
   "hashes": {
-    "config": "4bf988f0f5020e1776d09bedbd93b5ebfd94fb97165b3da3e9869dfc81d2a093",
+    "config": "228389a5cc5c413d0db03b3239f54ad95d0aa5a2182c01e0d2eb427ccdbaf5e1",
     "types": "6d9e7e689f8b2fdd8d83fc8d2f60ab09d121632fdfb95beed3c62416f8005517",
     "generator": "1bfde7b4fee869c3e7f212ebdedb03f5cf205ea715c50fcb6dabec3922886d43",
-    "policies": "b387f734fbc296ac541fc25a881257569c357d31e0c21cf273b4d94dbf49058c",
-    "template": "6f8fec3c8d2c5b6dcdae83bd9d895865e435f00b326e4bc97448e6d9026e12b4",
+    "policies": "f7f08fbb859f8d744c3c08200458191ec4a43622336a9f9d8b719cb5e82c374e",
+    "template": "27d11ea230f7e02d67fc6ed083ba35238b5866f33a5e89df8980e8bdda5d0d69",
     "parameters": "79fd0ed03abbc7c50e3a6788191f3322aa6516e35657454196079e477162d03d"
   }
 }

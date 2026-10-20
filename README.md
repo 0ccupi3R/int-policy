@@ -14,13 +14,13 @@ Aligned with the **Microsoft Cloud Adoption Framework (CAF)** and Azure Landing 
 
 2. **Naming Convention Studio**:
    - **Dynamic Token Pattern Engine**: Define pattern syntax using smart tokens with automatic case rules:
-     - `{Org}`: TitleCase customer abbreviation (e.g. `Cust01`, `Nova`)
-     - `{org}`: lowercase customer abbreviation (e.g. `cust01`, `nova`)
-     - `{ORG}`: UPPERCASE customer abbreviation (e.g. `CUST01`, `NOVA`)
-     - `{OrgName}` / `{orgname}` / `{ORGNAME}`: Full customer name (e.g. `NovaaiDynamics`, `novaai-dynamics`, `NOVAAI-DYNAMICS`)
-     - `{SUB}`: UPPERCASE subscription code (e.g. `CON`, `AIP`)
-     - `{sub}`: lowercase subscription code (e.g. `con`, `aip`)
-     - `{SUBNAME}` / `{subname}` / `{SubName}`: Full subscription name (e.g. `AI-FOUNDRY-PRODUCTION`, `Connectivity`)
+     - `{Org}`: TitleCase customer abbreviation (e.g. `Con`, `Contoso`)
+     - `{org}`: lowercase customer abbreviation (e.g. `con`, `contoso`)
+     - `{ORG}`: UPPERCASE customer abbreviation (e.g. `CON`, `CONTOSO`)
+     - `{OrgName}` / `{orgname}` / `{ORGNAME}`: Full customer name (e.g. `ContosoEnterprise`, `contoso-enterprise`, `CONTOSO-ENTERPRISE`)
+     - `{SUB}`: UPPERCASE subscription code (e.g. `CON`, `PRDA`, `AIP`)
+     - `{sub}`: lowercase subscription code (e.g. `con`, `prda`, `aip`)
+     - `{SUBNAME}` / `{subname}` / `{SubName}`: Full subscription name (e.g. `CONNECTIVITY`, `Connectivity`)
      - `{ENV}` / `{env}`: Environment short code (e.g. `PRD`, `prd`, `DEV`, `dev`)
      - `{ENVNAME}` / `{envname}`: Full environment name (e.g. `PRODUCTION`, `production`)
      - `{ResourceGroup}` / `{RG}` / `{RGNAME}`: Resource Group wildcard (`*`) in Azure Policy

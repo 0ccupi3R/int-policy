@@ -2,14 +2,14 @@
 
 export const DEFAULT_CUSTOMERS = [
   {
-    id: "cust01",
-    name: "CustomerName",
-    abbreviation: "c01",
+    id: "contoso",
+    name: "Contoso Enterprise",
+    abbreviation: "con",
     subscriptionName: "Connectivity",
     subscriptionCode: "CON",
     environment: "prod",
     version: "2.1.0",
-    description: "Default customer landing zone profile with Canadian regional mapping.",
+    description: "Standard enterprise landing zone for Contoso core workloads and platform governance.",
     regions: {
       canadacentral: "cc",
       canadaeast: "ce"
@@ -65,7 +65,7 @@ export const DEFAULT_CUSTOMERS = [
           displayName: "Owner",
           required: true,
           caseSensitive: false,
-          allowedValues: ["cloudops@customer.com", "platform-team@customer.com", "security@customer.com"],
+          allowedValues: ["cloudops@contoso.com", "platform-team@contoso.com", "security@contoso.com"],
           description: "Operational owner contact or team email."
         },
         {
@@ -107,7 +107,7 @@ export const DEFAULT_CUSTOMERS = [
           displayName: "Owner",
           required: true,
           caseSensitive: false,
-          allowedValues: ["cloudops@customer.com", "platform-team@customer.com", "security@customer.com"],
+          allowedValues: ["cloudops@contoso.com", "platform-team@contoso.com", "security@contoso.com"],
           description: "Operational team accountable for this RG."
         }
       ],
@@ -176,9 +176,9 @@ export const DEFAULT_CUSTOMERS = [
     }
   },
   {
-    id: "contoso",
+    id: "contoso-health",
     name: "Contoso Health",
-    abbreviation: "contoso",
+    abbreviation: "conhealth",
     subscriptionName: "Production-Core",
     subscriptionCode: "PRDA",
     environment: "prod",
@@ -299,9 +299,9 @@ export const DEFAULT_CUSTOMERS = [
     }
   },
   {
-    id: "nova-ai",
-    name: "NovaAI Dynamics",
-    abbreviation: "nova",
+    id: "contoso-ai",
+    name: "Contoso AI Labs",
+    abbreviation: "conai",
     subscriptionName: "AI-Foundry-Production",
     subscriptionCode: "AIP",
     environment: "prod",
@@ -365,7 +365,7 @@ export const DEFAULT_CUSTOMERS = [
           displayName: "Platform Owner",
           required: true,
           caseSensitive: false,
-          allowedValues: ["ai-leads@nova.ai", "mlops-platform@nova.ai", "security@nova.ai"],
+          allowedValues: ["ai-leads@contoso.com", "mlops-platform@contoso.com", "security@contoso.com"],
           description: "Designated team custodian for subscription governance."
         },
         {

@@ -255,7 +255,7 @@ export function computeEffectiveResourceTags(customer, subscription, rg, resourc
     } else {
       val = t.allowedValues?.[0] || "NA";
       if (t.key === "CostCenter") val = t.allowedValues?.[0] || "1000";
-      if (t.key === "Owner") val = t.allowedValues?.[0] || "cloudops@customer.com";
+      if (t.key === "Owner") val = t.allowedValues?.[0] || "cloudops@contoso.com";
       if (t.key === "BusinessUnit") val = t.allowedValues?.[0] || "EnterpriseIT";
     }
     resultTags[t.key] = val;

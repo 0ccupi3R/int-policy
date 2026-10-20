@@ -17,7 +17,15 @@ export function App() {
   const [customers, setCustomers] = useState(() => {
     try {
       const saved = localStorage.getItem("alz_policy_customers");
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const hasLegacy = Array.isArray(parsed) && parsed.some(
+          (c) => c.id === "cust01" || c.name === "CustomerName" || c.id === "nova-ai"
+        );
+        if (!hasLegacy && Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
     } catch (e) {
       console.warn("Failed to load customers from storage", e);
     }
@@ -27,11 +35,13 @@ export function App() {
   const [activeCustomerId, setActiveCustomerId] = useState(() => {
     try {
       const saved = localStorage.getItem("alz_active_customer_id");
-      if (saved && customers.some((c) => c.id === saved)) return saved;
+      if (saved && saved !== "cust01" && saved !== "nova-ai" && customers.some((c) => c.id === saved)) {
+        return saved;
+      }
     } catch (e) {
       console.warn("Failed to load active customer from storage", e);
     }
-    return customers[0]?.id || "cust01";
+    return customers[0]?.id || "contoso";
   });
 
   // Resource Catalog state

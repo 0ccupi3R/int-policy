@@ -10,43 +10,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-rg"
+        "pattern": "contoso-con-cc-hub-rg"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-rg"
+        "pattern": "contoso-con-cc-core-rg"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-rg"
+        "pattern": "contoso-con-cc-monitoring-rg"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-rg"
+        "pattern": "contoso-con-cc-infrafw-rg"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-rg"
+        "pattern": "contoso-con-cc-apps-rg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-rg"
+        "pattern": "contoso-con-ce-hub-rg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-rg"
+        "pattern": "contoso-con-ce-core-rg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-rg"
+        "pattern": "contoso-con-ce-monitoring-rg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-rg"
+        "pattern": "contoso-con-ce-infrafw-rg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-rg"
+        "pattern": "contoso-con-ce-apps-rg"
       }
     ],
     "forbiddenPatterns": []
@@ -62,26 +62,26 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-dc##-vm"
+        "pattern": "contoso-con-cc-dc##-vm"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-web##-vm"
+        "pattern": "contoso-con-cc-web##-vm"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-dc##-vm"
+        "pattern": "contoso-con-ce-dc##-vm"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-web##-vm"
+        "pattern": "contoso-con-ce-web##-vm"
       }
     ],
     "forbiddenPatterns": [
-      "cust01-con-cc-dc00-vm",
-      "cust01-con-cc-web00-vm",
-      "cust01-con-ce-dc00-vm",
-      "cust01-con-ce-web00-vm"
+      "contoso-con-cc-dc00-vm",
+      "contoso-con-cc-web00-vm",
+      "contoso-con-ce-dc00-vm",
+      "contoso-con-ce-web00-vm"
     ]
   },
   {
@@ -95,43 +95,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-vnet"
+        "pattern": "contoso-con-cc-hub-vnet"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-vnet"
+        "pattern": "contoso-con-cc-core-vnet"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-vnet"
+        "pattern": "contoso-con-cc-monitoring-vnet"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-vnet"
+        "pattern": "contoso-con-cc-infrafw-vnet"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-vnet"
+        "pattern": "contoso-con-cc-apps-vnet"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-vnet"
+        "pattern": "contoso-con-ce-hub-vnet"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-vnet"
+        "pattern": "contoso-con-ce-core-vnet"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-vnet"
+        "pattern": "contoso-con-ce-monitoring-vnet"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-vnet"
+        "pattern": "contoso-con-ce-infrafw-vnet"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-vnet"
+        "pattern": "contoso-con-ce-apps-vnet"
       }
     ],
     "forbiddenPatterns": []
@@ -147,43 +147,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-vnet-nsg-hub"
+        "pattern": "contoso-con-cc-hub-vnet-nsg-hub"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-vnet-nsg-core"
+        "pattern": "contoso-con-cc-hub-vnet-nsg-core"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-vnet-nsg-monitoring"
+        "pattern": "contoso-con-cc-hub-vnet-nsg-monitoring"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-vnet-nsg-infrafw"
+        "pattern": "contoso-con-cc-hub-vnet-nsg-infrafw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-vnet-nsg-apps"
+        "pattern": "contoso-con-cc-hub-vnet-nsg-apps"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-vnet-nsg-hub"
+        "pattern": "contoso-con-ce-hub-vnet-nsg-hub"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-vnet-nsg-core"
+        "pattern": "contoso-con-ce-hub-vnet-nsg-core"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-vnet-nsg-monitoring"
+        "pattern": "contoso-con-ce-hub-vnet-nsg-monitoring"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-vnet-nsg-infrafw"
+        "pattern": "contoso-con-ce-hub-vnet-nsg-infrafw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-vnet-nsg-apps"
+        "pattern": "contoso-con-ce-hub-vnet-nsg-apps"
       }
     ],
     "forbiddenPatterns": []
@@ -199,27 +199,27 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-dc01-nic"
+        "pattern": "contoso-con-cc-dc01-nic"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-dc02-nic"
+        "pattern": "contoso-con-cc-dc02-nic"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-web01-nic"
+        "pattern": "contoso-con-cc-web01-nic"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-dc01-nic"
+        "pattern": "contoso-con-ce-dc01-nic"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-dc02-nic"
+        "pattern": "contoso-con-ce-dc02-nic"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-web01-nic"
+        "pattern": "contoso-con-ce-web01-nic"
       }
     ],
     "forbiddenPatterns": []
@@ -235,51 +235,51 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-dc01-lbi"
+        "pattern": "contoso-con-cc-dc01-lbi"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-dc01-lbe"
+        "pattern": "contoso-con-cc-dc01-lbe"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-dc02-lbi"
+        "pattern": "contoso-con-cc-dc02-lbi"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-dc02-lbe"
+        "pattern": "contoso-con-cc-dc02-lbe"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-web01-lbi"
+        "pattern": "contoso-con-cc-web01-lbi"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-web01-lbe"
+        "pattern": "contoso-con-cc-web01-lbe"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-dc01-lbi"
+        "pattern": "contoso-con-ce-dc01-lbi"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-dc01-lbe"
+        "pattern": "contoso-con-ce-dc01-lbe"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-dc02-lbi"
+        "pattern": "contoso-con-ce-dc02-lbi"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-dc02-lbe"
+        "pattern": "contoso-con-ce-dc02-lbe"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-web01-lbi"
+        "pattern": "contoso-con-ce-web01-lbi"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-web01-lbe"
+        "pattern": "contoso-con-ce-web01-lbe"
       }
     ],
     "forbiddenPatterns": []
@@ -295,19 +295,19 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-vng-vpn"
+        "pattern": "contoso-con-cc-hub-vng-vpn"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-vng-er"
+        "pattern": "contoso-con-cc-hub-vng-er"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-vng-vpn"
+        "pattern": "contoso-con-ce-hub-vng-vpn"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-vng-er"
+        "pattern": "contoso-con-ce-hub-vng-er"
       }
     ],
     "forbiddenPatterns": []
@@ -323,19 +323,19 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01conccdiagsa"
+        "pattern": "contosoconccdiagsa"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01conccfilessa"
+        "pattern": "contosoconccfilessa"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01concediagsa"
+        "pattern": "contosoconcediagsa"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01concefilessa"
+        "pattern": "contosoconcefilessa"
       }
     ],
     "forbiddenPatterns": []
@@ -351,43 +351,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-rt"
+        "pattern": "contoso-con-cc-hub-rt"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-rt"
+        "pattern": "contoso-con-cc-core-rt"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-rt"
+        "pattern": "contoso-con-cc-monitoring-rt"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-rt"
+        "pattern": "contoso-con-cc-infrafw-rt"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-rt"
+        "pattern": "contoso-con-cc-apps-rt"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-rt"
+        "pattern": "contoso-con-ce-hub-rt"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-rt"
+        "pattern": "contoso-con-ce-core-rt"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-rt"
+        "pattern": "contoso-con-ce-monitoring-rt"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-rt"
+        "pattern": "contoso-con-ce-infrafw-rt"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-rt"
+        "pattern": "contoso-con-ce-apps-rt"
       }
     ],
     "forbiddenPatterns": []
@@ -403,43 +403,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-agw"
+        "pattern": "contoso-con-cc-hub-agw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-agw"
+        "pattern": "contoso-con-cc-core-agw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-agw"
+        "pattern": "contoso-con-cc-monitoring-agw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-agw"
+        "pattern": "contoso-con-cc-infrafw-agw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-agw"
+        "pattern": "contoso-con-cc-apps-agw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-agw"
+        "pattern": "contoso-con-ce-hub-agw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-agw"
+        "pattern": "contoso-con-ce-core-agw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-agw"
+        "pattern": "contoso-con-ce-monitoring-agw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-agw"
+        "pattern": "contoso-con-ce-infrafw-agw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-agw"
+        "pattern": "contoso-con-ce-apps-agw"
       }
     ],
     "forbiddenPatterns": []
@@ -455,19 +455,19 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-kv"
+        "pattern": "contoso-con-cc-core-kv"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-kv"
+        "pattern": "contoso-con-cc-apps-kv"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-kv"
+        "pattern": "contoso-con-ce-core-kv"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-kv"
+        "pattern": "contoso-con-ce-apps-kv"
       }
     ],
     "forbiddenPatterns": []
@@ -483,43 +483,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-pgsql"
+        "pattern": "contoso-con-cc-hub-pgsql"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-pgsql"
+        "pattern": "contoso-con-cc-core-pgsql"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-pgsql"
+        "pattern": "contoso-con-cc-monitoring-pgsql"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-pgsql"
+        "pattern": "contoso-con-cc-infrafw-pgsql"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-pgsql"
+        "pattern": "contoso-con-cc-apps-pgsql"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-pgsql"
+        "pattern": "contoso-con-ce-hub-pgsql"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-pgsql"
+        "pattern": "contoso-con-ce-core-pgsql"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-pgsql"
+        "pattern": "contoso-con-ce-monitoring-pgsql"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-pgsql"
+        "pattern": "contoso-con-ce-infrafw-pgsql"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-pgsql"
+        "pattern": "contoso-con-ce-apps-pgsql"
       }
     ],
     "forbiddenPatterns": []
@@ -535,43 +535,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-rc"
+        "pattern": "contoso-con-cc-hub-rc"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-rc"
+        "pattern": "contoso-con-cc-core-rc"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-rc"
+        "pattern": "contoso-con-cc-monitoring-rc"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-rc"
+        "pattern": "contoso-con-cc-infrafw-rc"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-rc"
+        "pattern": "contoso-con-cc-apps-rc"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-rc"
+        "pattern": "contoso-con-ce-hub-rc"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-rc"
+        "pattern": "contoso-con-ce-core-rc"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-rc"
+        "pattern": "contoso-con-ce-monitoring-rc"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-rc"
+        "pattern": "contoso-con-ce-infrafw-rc"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-rc"
+        "pattern": "contoso-con-ce-apps-rc"
       }
     ],
     "forbiddenPatterns": []
@@ -587,43 +587,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-Firewall-Policy"
+        "pattern": "contoso-con-cc-hub-Firewall-Policy"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-Firewall-Policy"
+        "pattern": "contoso-con-cc-core-Firewall-Policy"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-Firewall-Policy"
+        "pattern": "contoso-con-cc-monitoring-Firewall-Policy"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-Firewall-Policy"
+        "pattern": "contoso-con-cc-infrafw-Firewall-Policy"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-Firewall-Policy"
+        "pattern": "contoso-con-cc-apps-Firewall-Policy"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-Firewall-Policy"
+        "pattern": "contoso-con-ce-hub-Firewall-Policy"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-Firewall-Policy"
+        "pattern": "contoso-con-ce-core-Firewall-Policy"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-Firewall-Policy"
+        "pattern": "contoso-con-ce-monitoring-Firewall-Policy"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-Firewall-Policy"
+        "pattern": "contoso-con-ce-infrafw-Firewall-Policy"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-Firewall-Policy"
+        "pattern": "contoso-con-ce-apps-Firewall-Policy"
       }
     ],
     "forbiddenPatterns": []
@@ -639,43 +639,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-afw"
+        "pattern": "contoso-con-cc-hub-afw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-afw"
+        "pattern": "contoso-con-cc-core-afw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-afw"
+        "pattern": "contoso-con-cc-monitoring-afw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-afw"
+        "pattern": "contoso-con-cc-infrafw-afw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-afw"
+        "pattern": "contoso-con-cc-apps-afw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-afw"
+        "pattern": "contoso-con-ce-hub-afw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-afw"
+        "pattern": "contoso-con-ce-core-afw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-afw"
+        "pattern": "contoso-con-ce-monitoring-afw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-afw"
+        "pattern": "contoso-con-ce-infrafw-afw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-afw"
+        "pattern": "contoso-con-ce-apps-afw"
       }
     ],
     "forbiddenPatterns": []
@@ -691,43 +691,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-bas"
+        "pattern": "contoso-con-cc-hub-bas"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-bas"
+        "pattern": "contoso-con-cc-core-bas"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-bas"
+        "pattern": "contoso-con-cc-monitoring-bas"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-bas"
+        "pattern": "contoso-con-cc-infrafw-bas"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-bas"
+        "pattern": "contoso-con-cc-apps-bas"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-bas"
+        "pattern": "contoso-con-ce-hub-bas"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-bas"
+        "pattern": "contoso-con-ce-core-bas"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-bas"
+        "pattern": "contoso-con-ce-monitoring-bas"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-bas"
+        "pattern": "contoso-con-ce-infrafw-bas"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-bas"
+        "pattern": "contoso-con-ce-apps-bas"
       }
     ],
     "forbiddenPatterns": []
@@ -743,43 +743,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-pip"
+        "pattern": "contoso-con-cc-hub-pip"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-pip"
+        "pattern": "contoso-con-cc-core-pip"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-pip"
+        "pattern": "contoso-con-cc-monitoring-pip"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-pip"
+        "pattern": "contoso-con-cc-infrafw-pip"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-pip"
+        "pattern": "contoso-con-cc-apps-pip"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-pip"
+        "pattern": "contoso-con-ce-hub-pip"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-pip"
+        "pattern": "contoso-con-ce-core-pip"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-pip"
+        "pattern": "contoso-con-ce-monitoring-pip"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-pip"
+        "pattern": "contoso-con-ce-infrafw-pip"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-pip"
+        "pattern": "contoso-con-ce-apps-pip"
       }
     ],
     "forbiddenPatterns": []
@@ -795,43 +795,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-ng"
+        "pattern": "contoso-con-cc-hub-ng"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-ng"
+        "pattern": "contoso-con-cc-core-ng"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-ng"
+        "pattern": "contoso-con-cc-monitoring-ng"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-ng"
+        "pattern": "contoso-con-cc-infrafw-ng"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-ng"
+        "pattern": "contoso-con-cc-apps-ng"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-ng"
+        "pattern": "contoso-con-ce-hub-ng"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-ng"
+        "pattern": "contoso-con-ce-core-ng"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-ng"
+        "pattern": "contoso-con-ce-monitoring-ng"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-ng"
+        "pattern": "contoso-con-ce-infrafw-ng"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-ng"
+        "pattern": "contoso-con-ce-apps-ng"
       }
     ],
     "forbiddenPatterns": []
@@ -847,43 +847,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-pep"
+        "pattern": "contoso-con-cc-hub-pep"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-pep"
+        "pattern": "contoso-con-cc-core-pep"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-pep"
+        "pattern": "contoso-con-cc-monitoring-pep"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-pep"
+        "pattern": "contoso-con-cc-infrafw-pep"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-pep"
+        "pattern": "contoso-con-cc-apps-pep"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-pep"
+        "pattern": "contoso-con-ce-hub-pep"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-pep"
+        "pattern": "contoso-con-ce-core-pep"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-pep"
+        "pattern": "contoso-con-ce-monitoring-pep"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-pep"
+        "pattern": "contoso-con-ce-infrafw-pep"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-pep"
+        "pattern": "contoso-con-ce-apps-pep"
       }
     ],
     "forbiddenPatterns": []
@@ -899,43 +899,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-ipg"
+        "pattern": "contoso-con-cc-hub-ipg"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-ipg"
+        "pattern": "contoso-con-cc-core-ipg"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-ipg"
+        "pattern": "contoso-con-cc-monitoring-ipg"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-ipg"
+        "pattern": "contoso-con-cc-infrafw-ipg"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-ipg"
+        "pattern": "contoso-con-cc-apps-ipg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-ipg"
+        "pattern": "contoso-con-ce-hub-ipg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-ipg"
+        "pattern": "contoso-con-ce-core-ipg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-ipg"
+        "pattern": "contoso-con-ce-monitoring-ipg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-ipg"
+        "pattern": "contoso-con-ce-infrafw-ipg"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-ipg"
+        "pattern": "contoso-con-ce-apps-ipg"
       }
     ],
     "forbiddenPatterns": []
@@ -951,43 +951,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-nw"
+        "pattern": "contoso-con-cc-hub-nw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-nw"
+        "pattern": "contoso-con-cc-core-nw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-nw"
+        "pattern": "contoso-con-cc-monitoring-nw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-nw"
+        "pattern": "contoso-con-cc-infrafw-nw"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-nw"
+        "pattern": "contoso-con-cc-apps-nw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-nw"
+        "pattern": "contoso-con-ce-hub-nw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-nw"
+        "pattern": "contoso-con-ce-core-nw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-nw"
+        "pattern": "contoso-con-ce-monitoring-nw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-nw"
+        "pattern": "contoso-con-ce-infrafw-nw"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-nw"
+        "pattern": "contoso-con-ce-apps-nw"
       }
     ],
     "forbiddenPatterns": []
@@ -1003,43 +1003,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-log"
+        "pattern": "contoso-con-cc-hub-log"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-log"
+        "pattern": "contoso-con-cc-core-log"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-log"
+        "pattern": "contoso-con-cc-monitoring-log"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-log"
+        "pattern": "contoso-con-cc-infrafw-log"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-log"
+        "pattern": "contoso-con-cc-apps-log"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-log"
+        "pattern": "contoso-con-ce-hub-log"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-log"
+        "pattern": "contoso-con-ce-core-log"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-log"
+        "pattern": "contoso-con-ce-monitoring-log"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-log"
+        "pattern": "contoso-con-ce-infrafw-log"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-log"
+        "pattern": "contoso-con-ce-apps-log"
       }
     ],
     "forbiddenPatterns": []
@@ -1055,43 +1055,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-aa"
+        "pattern": "contoso-con-cc-hub-aa"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-aa"
+        "pattern": "contoso-con-cc-core-aa"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-aa"
+        "pattern": "contoso-con-cc-monitoring-aa"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-aa"
+        "pattern": "contoso-con-cc-infrafw-aa"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-aa"
+        "pattern": "contoso-con-cc-apps-aa"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-aa"
+        "pattern": "contoso-con-ce-hub-aa"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-aa"
+        "pattern": "contoso-con-ce-core-aa"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-aa"
+        "pattern": "contoso-con-ce-monitoring-aa"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-aa"
+        "pattern": "contoso-con-ce-infrafw-aa"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-aa"
+        "pattern": "contoso-con-ce-apps-aa"
       }
     ],
     "forbiddenPatterns": []
@@ -1107,43 +1107,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-hub-id"
+        "pattern": "contoso-con-cc-hub-id"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-core-id"
+        "pattern": "contoso-con-cc-core-id"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-monitoring-id"
+        "pattern": "contoso-con-cc-monitoring-id"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-infrafw-id"
+        "pattern": "contoso-con-cc-infrafw-id"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01-con-cc-apps-id"
+        "pattern": "contoso-con-cc-apps-id"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-hub-id"
+        "pattern": "contoso-con-ce-hub-id"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-core-id"
+        "pattern": "contoso-con-ce-core-id"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-monitoring-id"
+        "pattern": "contoso-con-ce-monitoring-id"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-infrafw-id"
+        "pattern": "contoso-con-ce-infrafw-id"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01-con-ce-apps-id"
+        "pattern": "contoso-con-ce-apps-id"
       }
     ],
     "forbiddenPatterns": []
@@ -1159,43 +1159,43 @@
     "rules": [
       {
         "location": "canadacentral",
-        "pattern": "cust01concchubcr"
+        "pattern": "contosoconcchubcr"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01concccorecr"
+        "pattern": "contosoconcccorecr"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01conccmonitoringcr"
+        "pattern": "contosoconccmonitoringcr"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01conccinfrafwcr"
+        "pattern": "contosoconccinfrafwcr"
       },
       {
         "location": "canadacentral",
-        "pattern": "cust01conccappscr"
+        "pattern": "contosoconccappscr"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01concehubcr"
+        "pattern": "contosoconcehubcr"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01concecorecr"
+        "pattern": "contosoconcecorecr"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01concemonitoringcr"
+        "pattern": "contosoconcemonitoringcr"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01conceinfrafwcr"
+        "pattern": "contosoconceinfrafwcr"
       },
       {
         "location": "canadaeast",
-        "pattern": "cust01conceappscr"
+        "pattern": "contosoconceappscr"
       }
     ],
     "forbiddenPatterns": []

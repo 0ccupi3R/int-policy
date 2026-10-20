@@ -37,9 +37,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-rg",
+      "name": "contoso-naming-rg",
       "properties": {
-        "displayName": "CustomerName naming - rg",
+        "displayName": "Contoso naming - rg",
         "description": "AirGate document keyword; core/example pattern or proposed extension",
         "mode": "All",
         "metadata": {
@@ -77,7 +77,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-rg"
+                              "matchInsensitively": "contoso-con-cc-hub-rg"
                             }
                           ]
                         },
@@ -89,7 +89,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-rg"
+                              "matchInsensitively": "contoso-con-cc-core-rg"
                             }
                           ]
                         },
@@ -101,7 +101,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-rg"
+                              "matchInsensitively": "contoso-con-cc-monitoring-rg"
                             }
                           ]
                         },
@@ -113,7 +113,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-rg"
+                              "matchInsensitively": "contoso-con-cc-infrafw-rg"
                             }
                           ]
                         },
@@ -125,7 +125,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-rg"
+                              "matchInsensitively": "contoso-con-cc-apps-rg"
                             }
                           ]
                         },
@@ -137,7 +137,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-rg"
+                              "matchInsensitively": "contoso-con-ce-hub-rg"
                             }
                           ]
                         },
@@ -149,7 +149,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-rg"
+                              "matchInsensitively": "contoso-con-ce-core-rg"
                             }
                           ]
                         },
@@ -161,7 +161,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-rg"
+                              "matchInsensitively": "contoso-con-ce-monitoring-rg"
                             }
                           ]
                         },
@@ -173,7 +173,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-rg"
+                              "matchInsensitively": "contoso-con-ce-infrafw-rg"
                             }
                           ]
                         },
@@ -185,7 +185,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-rg"
+                              "matchInsensitively": "contoso-con-ce-apps-rg"
                             }
                           ]
                         }
@@ -205,9 +205,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-vm",
+      "name": "contoso-naming-vm",
       "properties": {
-        "displayName": "CustomerName naming - vm",
+        "displayName": "Contoso naming - vm",
         "description": "AirGate document keyword; confirmed VM numbering 01-99",
         "mode": "All",
         "metadata": {
@@ -245,7 +245,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-dc##-vm"
+                              "matchInsensitively": "contoso-con-cc-dc##-vm"
                             }
                           ]
                         },
@@ -257,7 +257,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-web##-vm"
+                              "matchInsensitively": "contoso-con-cc-web##-vm"
                             }
                           ]
                         },
@@ -269,7 +269,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-dc##-vm"
+                              "matchInsensitively": "contoso-con-ce-dc##-vm"
                             }
                           ]
                         },
@@ -281,7 +281,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-web##-vm"
+                              "matchInsensitively": "contoso-con-ce-web##-vm"
                             }
                           ]
                         }
@@ -292,19 +292,19 @@
                     "anyOf": [
                       {
                         "field": "name",
-                        "matchInsensitively": "cust01-con-cc-dc00-vm"
+                        "matchInsensitively": "contoso-con-cc-dc00-vm"
                       },
                       {
                         "field": "name",
-                        "matchInsensitively": "cust01-con-cc-web00-vm"
+                        "matchInsensitively": "contoso-con-cc-web00-vm"
                       },
                       {
                         "field": "name",
-                        "matchInsensitively": "cust01-con-ce-dc00-vm"
+                        "matchInsensitively": "contoso-con-ce-dc00-vm"
                       },
                       {
                         "field": "name",
-                        "matchInsensitively": "cust01-con-ce-web00-vm"
+                        "matchInsensitively": "contoso-con-ce-web00-vm"
                       }
                     ]
                   }
@@ -321,9 +321,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-vnet",
+      "name": "contoso-naming-vnet",
       "properties": {
-        "displayName": "CustomerName naming - vnet",
+        "displayName": "Contoso naming - vnet",
         "description": "AirGate document keyword; proposed extension beyond hub",
         "mode": "All",
         "metadata": {
@@ -361,7 +361,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-vnet"
+                              "matchInsensitively": "contoso-con-cc-hub-vnet"
                             }
                           ]
                         },
@@ -373,7 +373,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-vnet"
+                              "matchInsensitively": "contoso-con-cc-core-vnet"
                             }
                           ]
                         },
@@ -385,7 +385,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-vnet"
+                              "matchInsensitively": "contoso-con-cc-monitoring-vnet"
                             }
                           ]
                         },
@@ -397,7 +397,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-vnet"
+                              "matchInsensitively": "contoso-con-cc-infrafw-vnet"
                             }
                           ]
                         },
@@ -409,7 +409,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-vnet"
+                              "matchInsensitively": "contoso-con-cc-apps-vnet"
                             }
                           ]
                         },
@@ -421,7 +421,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-vnet"
+                              "matchInsensitively": "contoso-con-ce-hub-vnet"
                             }
                           ]
                         },
@@ -433,7 +433,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-vnet"
+                              "matchInsensitively": "contoso-con-ce-core-vnet"
                             }
                           ]
                         },
@@ -445,7 +445,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-vnet"
+                              "matchInsensitively": "contoso-con-ce-monitoring-vnet"
                             }
                           ]
                         },
@@ -457,7 +457,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-vnet"
+                              "matchInsensitively": "contoso-con-ce-infrafw-vnet"
                             }
                           ]
                         },
@@ -469,7 +469,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-vnet"
+                              "matchInsensitively": "contoso-con-ce-apps-vnet"
                             }
                           ]
                         }
@@ -489,9 +489,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-nsg",
+      "name": "contoso-naming-nsg",
       "properties": {
-        "displayName": "CustomerName naming - nsg",
+        "displayName": "Contoso naming - nsg",
         "description": "AirGate document keyword and type-specific pattern",
         "mode": "All",
         "metadata": {
@@ -529,7 +529,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-hub"
+                              "matchInsensitively": "contoso-con-cc-hub-vnet-nsg-hub"
                             }
                           ]
                         },
@@ -541,7 +541,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-core"
+                              "matchInsensitively": "contoso-con-cc-hub-vnet-nsg-core"
                             }
                           ]
                         },
@@ -553,7 +553,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-monitoring"
+                              "matchInsensitively": "contoso-con-cc-hub-vnet-nsg-monitoring"
                             }
                           ]
                         },
@@ -565,7 +565,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-infrafw"
+                              "matchInsensitively": "contoso-con-cc-hub-vnet-nsg-infrafw"
                             }
                           ]
                         },
@@ -577,7 +577,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-vnet-nsg-apps"
+                              "matchInsensitively": "contoso-con-cc-hub-vnet-nsg-apps"
                             }
                           ]
                         },
@@ -589,7 +589,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-hub"
+                              "matchInsensitively": "contoso-con-ce-hub-vnet-nsg-hub"
                             }
                           ]
                         },
@@ -601,7 +601,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-core"
+                              "matchInsensitively": "contoso-con-ce-hub-vnet-nsg-core"
                             }
                           ]
                         },
@@ -613,7 +613,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-monitoring"
+                              "matchInsensitively": "contoso-con-ce-hub-vnet-nsg-monitoring"
                             }
                           ]
                         },
@@ -625,7 +625,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-infrafw"
+                              "matchInsensitively": "contoso-con-ce-hub-vnet-nsg-infrafw"
                             }
                           ]
                         },
@@ -637,7 +637,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-vnet-nsg-apps"
+                              "matchInsensitively": "contoso-con-ce-hub-vnet-nsg-apps"
                             }
                           ]
                         }
@@ -657,9 +657,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-nic",
+      "name": "contoso-naming-nic",
       "properties": {
-        "displayName": "CustomerName naming - nic",
+        "displayName": "Contoso naming - nic",
         "description": "AirGate document keyword and server-name pattern",
         "mode": "All",
         "metadata": {
@@ -697,7 +697,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-dc01-nic"
+                              "matchInsensitively": "contoso-con-cc-dc01-nic"
                             }
                           ]
                         },
@@ -709,7 +709,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-dc02-nic"
+                              "matchInsensitively": "contoso-con-cc-dc02-nic"
                             }
                           ]
                         },
@@ -721,7 +721,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-web01-nic"
+                              "matchInsensitively": "contoso-con-cc-web01-nic"
                             }
                           ]
                         },
@@ -733,7 +733,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-dc01-nic"
+                              "matchInsensitively": "contoso-con-ce-dc01-nic"
                             }
                           ]
                         },
@@ -745,7 +745,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-dc02-nic"
+                              "matchInsensitively": "contoso-con-ce-dc02-nic"
                             }
                           ]
                         },
@@ -757,7 +757,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-web01-nic"
+                              "matchInsensitively": "contoso-con-ce-web01-nic"
                             }
                           ]
                         }
@@ -777,9 +777,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-lb",
+      "name": "contoso-naming-lb",
       "properties": {
-        "displayName": "CustomerName naming - lb",
+        "displayName": "Contoso naming - lb",
         "description": "AirGate document internal/external keywords",
         "mode": "All",
         "metadata": {
@@ -817,7 +817,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-dc01-lbi"
+                              "matchInsensitively": "contoso-con-cc-dc01-lbi"
                             }
                           ]
                         },
@@ -829,7 +829,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-dc01-lbe"
+                              "matchInsensitively": "contoso-con-cc-dc01-lbe"
                             }
                           ]
                         },
@@ -841,7 +841,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-dc02-lbi"
+                              "matchInsensitively": "contoso-con-cc-dc02-lbi"
                             }
                           ]
                         },
@@ -853,7 +853,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-dc02-lbe"
+                              "matchInsensitively": "contoso-con-cc-dc02-lbe"
                             }
                           ]
                         },
@@ -865,7 +865,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-web01-lbi"
+                              "matchInsensitively": "contoso-con-cc-web01-lbi"
                             }
                           ]
                         },
@@ -877,7 +877,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-web01-lbe"
+                              "matchInsensitively": "contoso-con-cc-web01-lbe"
                             }
                           ]
                         },
@@ -889,7 +889,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-dc01-lbi"
+                              "matchInsensitively": "contoso-con-ce-dc01-lbi"
                             }
                           ]
                         },
@@ -901,7 +901,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-dc01-lbe"
+                              "matchInsensitively": "contoso-con-ce-dc01-lbe"
                             }
                           ]
                         },
@@ -913,7 +913,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-dc02-lbi"
+                              "matchInsensitively": "contoso-con-ce-dc02-lbi"
                             }
                           ]
                         },
@@ -925,7 +925,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-dc02-lbe"
+                              "matchInsensitively": "contoso-con-ce-dc02-lbe"
                             }
                           ]
                         },
@@ -937,7 +937,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-web01-lbi"
+                              "matchInsensitively": "contoso-con-ce-web01-lbi"
                             }
                           ]
                         },
@@ -949,7 +949,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-web01-lbe"
+                              "matchInsensitively": "contoso-con-ce-web01-lbe"
                             }
                           ]
                         }
@@ -969,9 +969,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-vng",
+      "name": "contoso-naming-vng",
       "properties": {
-        "displayName": "CustomerName naming - vng",
+        "displayName": "Contoso naming - vng",
         "description": "AirGate document VPN and ExpressRoute gateway patterns",
         "mode": "All",
         "metadata": {
@@ -1009,7 +1009,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-vng-vpn"
+                              "matchInsensitively": "contoso-con-cc-hub-vng-vpn"
                             }
                           ]
                         },
@@ -1021,7 +1021,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-vng-er"
+                              "matchInsensitively": "contoso-con-cc-hub-vng-er"
                             }
                           ]
                         },
@@ -1033,7 +1033,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-vng-vpn"
+                              "matchInsensitively": "contoso-con-ce-hub-vng-vpn"
                             }
                           ]
                         },
@@ -1045,7 +1045,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-vng-er"
+                              "matchInsensitively": "contoso-con-ce-hub-vng-er"
                             }
                           ]
                         }
@@ -1065,9 +1065,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-storage",
+      "name": "contoso-naming-storage",
       "properties": {
-        "displayName": "CustomerName naming - storage",
+        "displayName": "Contoso naming - storage",
         "description": "AirGate document keyword; compact lowercase pattern",
         "mode": "All",
         "metadata": {
@@ -1105,7 +1105,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01conccdiagsa"
+                              "matchInsensitively": "contosoconccdiagsa"
                             }
                           ]
                         },
@@ -1117,7 +1117,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01conccfilessa"
+                              "matchInsensitively": "contosoconccfilessa"
                             }
                           ]
                         },
@@ -1129,7 +1129,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01concediagsa"
+                              "matchInsensitively": "contosoconcediagsa"
                             }
                           ]
                         },
@@ -1141,7 +1141,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01concefilessa"
+                              "matchInsensitively": "contosoconcefilessa"
                             }
                           ]
                         }
@@ -1161,9 +1161,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-rt",
+      "name": "contoso-naming-rt",
       "properties": {
-        "displayName": "CustomerName naming - rt",
+        "displayName": "Contoso naming - rt",
         "description": "AirGate observed suffix; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -1201,7 +1201,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-rt"
+                              "matchInsensitively": "contoso-con-cc-hub-rt"
                             }
                           ]
                         },
@@ -1213,7 +1213,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-rt"
+                              "matchInsensitively": "contoso-con-cc-core-rt"
                             }
                           ]
                         },
@@ -1225,7 +1225,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-rt"
+                              "matchInsensitively": "contoso-con-cc-monitoring-rt"
                             }
                           ]
                         },
@@ -1237,7 +1237,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-rt"
+                              "matchInsensitively": "contoso-con-cc-infrafw-rt"
                             }
                           ]
                         },
@@ -1249,7 +1249,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-rt"
+                              "matchInsensitively": "contoso-con-cc-apps-rt"
                             }
                           ]
                         },
@@ -1261,7 +1261,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-rt"
+                              "matchInsensitively": "contoso-con-ce-hub-rt"
                             }
                           ]
                         },
@@ -1273,7 +1273,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-rt"
+                              "matchInsensitively": "contoso-con-ce-core-rt"
                             }
                           ]
                         },
@@ -1285,7 +1285,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-rt"
+                              "matchInsensitively": "contoso-con-ce-monitoring-rt"
                             }
                           ]
                         },
@@ -1297,7 +1297,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-rt"
+                              "matchInsensitively": "contoso-con-ce-infrafw-rt"
                             }
                           ]
                         },
@@ -1309,7 +1309,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-rt"
+                              "matchInsensitively": "contoso-con-ce-apps-rt"
                             }
                           ]
                         }
@@ -1329,9 +1329,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-agw",
+      "name": "contoso-naming-agw",
       "properties": {
-        "displayName": "CustomerName naming - agw",
+        "displayName": "Contoso naming - agw",
         "description": "AirGate observed suffix; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -1369,7 +1369,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-agw"
+                              "matchInsensitively": "contoso-con-cc-hub-agw"
                             }
                           ]
                         },
@@ -1381,7 +1381,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-agw"
+                              "matchInsensitively": "contoso-con-cc-core-agw"
                             }
                           ]
                         },
@@ -1393,7 +1393,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-agw"
+                              "matchInsensitively": "contoso-con-cc-monitoring-agw"
                             }
                           ]
                         },
@@ -1405,7 +1405,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-agw"
+                              "matchInsensitively": "contoso-con-cc-infrafw-agw"
                             }
                           ]
                         },
@@ -1417,7 +1417,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-agw"
+                              "matchInsensitively": "contoso-con-cc-apps-agw"
                             }
                           ]
                         },
@@ -1429,7 +1429,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-agw"
+                              "matchInsensitively": "contoso-con-ce-hub-agw"
                             }
                           ]
                         },
@@ -1441,7 +1441,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-agw"
+                              "matchInsensitively": "contoso-con-ce-core-agw"
                             }
                           ]
                         },
@@ -1453,7 +1453,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-agw"
+                              "matchInsensitively": "contoso-con-ce-monitoring-agw"
                             }
                           ]
                         },
@@ -1465,7 +1465,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-agw"
+                              "matchInsensitively": "contoso-con-ce-infrafw-agw"
                             }
                           ]
                         },
@@ -1477,7 +1477,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-agw"
+                              "matchInsensitively": "contoso-con-ce-apps-agw"
                             }
                           ]
                         }
@@ -1497,9 +1497,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-kv",
+      "name": "contoso-naming-kv",
       "properties": {
-        "displayName": "CustomerName naming - kv",
+        "displayName": "Contoso naming - kv",
         "description": "AirGate observed suffix; type-specific short purposes",
         "mode": "All",
         "metadata": {
@@ -1537,7 +1537,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-kv"
+                              "matchInsensitively": "contoso-con-cc-core-kv"
                             }
                           ]
                         },
@@ -1549,7 +1549,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-kv"
+                              "matchInsensitively": "contoso-con-cc-apps-kv"
                             }
                           ]
                         },
@@ -1561,7 +1561,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-kv"
+                              "matchInsensitively": "contoso-con-ce-core-kv"
                             }
                           ]
                         },
@@ -1573,7 +1573,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-kv"
+                              "matchInsensitively": "contoso-con-ce-apps-kv"
                             }
                           ]
                         }
@@ -1593,9 +1593,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-pgsql",
+      "name": "contoso-naming-pgsql",
       "properties": {
-        "displayName": "CustomerName naming - pgsql",
+        "displayName": "Contoso naming - pgsql",
         "description": "AirGate suffix; Microsoft CAF resource-type mapping",
         "mode": "All",
         "metadata": {
@@ -1633,7 +1633,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-pgsql"
+                              "matchInsensitively": "contoso-con-cc-hub-pgsql"
                             }
                           ]
                         },
@@ -1645,7 +1645,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-pgsql"
+                              "matchInsensitively": "contoso-con-cc-core-pgsql"
                             }
                           ]
                         },
@@ -1657,7 +1657,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-pgsql"
+                              "matchInsensitively": "contoso-con-cc-monitoring-pgsql"
                             }
                           ]
                         },
@@ -1669,7 +1669,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-pgsql"
+                              "matchInsensitively": "contoso-con-cc-infrafw-pgsql"
                             }
                           ]
                         },
@@ -1681,7 +1681,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-pgsql"
+                              "matchInsensitively": "contoso-con-cc-apps-pgsql"
                             }
                           ]
                         },
@@ -1693,7 +1693,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-pgsql"
+                              "matchInsensitively": "contoso-con-ce-hub-pgsql"
                             }
                           ]
                         },
@@ -1705,7 +1705,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-pgsql"
+                              "matchInsensitively": "contoso-con-ce-core-pgsql"
                             }
                           ]
                         },
@@ -1717,7 +1717,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-pgsql"
+                              "matchInsensitively": "contoso-con-ce-monitoring-pgsql"
                             }
                           ]
                         },
@@ -1729,7 +1729,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-pgsql"
+                              "matchInsensitively": "contoso-con-ce-infrafw-pgsql"
                             }
                           ]
                         },
@@ -1741,7 +1741,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-pgsql"
+                              "matchInsensitively": "contoso-con-ce-apps-pgsql"
                             }
                           ]
                         }
@@ -1761,9 +1761,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-redis",
+      "name": "contoso-naming-redis",
       "properties": {
-        "displayName": "CustomerName naming - redis",
+        "displayName": "Contoso naming - redis",
         "description": "AirGate suffix; Microsoft CAF resource-type mapping",
         "mode": "All",
         "metadata": {
@@ -1801,7 +1801,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-rc"
+                              "matchInsensitively": "contoso-con-cc-hub-rc"
                             }
                           ]
                         },
@@ -1813,7 +1813,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-rc"
+                              "matchInsensitively": "contoso-con-cc-core-rc"
                             }
                           ]
                         },
@@ -1825,7 +1825,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-rc"
+                              "matchInsensitively": "contoso-con-cc-monitoring-rc"
                             }
                           ]
                         },
@@ -1837,7 +1837,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-rc"
+                              "matchInsensitively": "contoso-con-cc-infrafw-rc"
                             }
                           ]
                         },
@@ -1849,7 +1849,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-rc"
+                              "matchInsensitively": "contoso-con-cc-apps-rc"
                             }
                           ]
                         },
@@ -1861,7 +1861,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-rc"
+                              "matchInsensitively": "contoso-con-ce-hub-rc"
                             }
                           ]
                         },
@@ -1873,7 +1873,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-rc"
+                              "matchInsensitively": "contoso-con-ce-core-rc"
                             }
                           ]
                         },
@@ -1885,7 +1885,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-rc"
+                              "matchInsensitively": "contoso-con-ce-monitoring-rc"
                             }
                           ]
                         },
@@ -1897,7 +1897,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-rc"
+                              "matchInsensitively": "contoso-con-ce-infrafw-rc"
                             }
                           ]
                         },
@@ -1909,7 +1909,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-rc"
+                              "matchInsensitively": "contoso-con-ce-apps-rc"
                             }
                           ]
                         }
@@ -1929,9 +1929,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-fp",
+      "name": "contoso-naming-fp",
       "properties": {
-        "displayName": "CustomerName naming - fp",
+        "displayName": "Contoso naming - fp",
         "description": "AirGate observed suffix; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -1969,7 +1969,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-cc-hub-Firewall-Policy"
                             }
                           ]
                         },
@@ -1981,7 +1981,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-cc-core-Firewall-Policy"
                             }
                           ]
                         },
@@ -1993,7 +1993,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-cc-monitoring-Firewall-Policy"
                             }
                           ]
                         },
@@ -2005,7 +2005,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-cc-infrafw-Firewall-Policy"
                             }
                           ]
                         },
@@ -2017,7 +2017,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-cc-apps-Firewall-Policy"
                             }
                           ]
                         },
@@ -2029,7 +2029,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-ce-hub-Firewall-Policy"
                             }
                           ]
                         },
@@ -2041,7 +2041,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-ce-core-Firewall-Policy"
                             }
                           ]
                         },
@@ -2053,7 +2053,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-ce-monitoring-Firewall-Policy"
                             }
                           ]
                         },
@@ -2065,7 +2065,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-ce-infrafw-Firewall-Policy"
                             }
                           ]
                         },
@@ -2077,7 +2077,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-Firewall-Policy"
+                              "matchInsensitively": "contoso-con-ce-apps-Firewall-Policy"
                             }
                           ]
                         }
@@ -2097,9 +2097,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-afw",
+      "name": "contoso-naming-afw",
       "properties": {
-        "displayName": "CustomerName naming - afw",
+        "displayName": "Contoso naming - afw",
         "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -2137,7 +2137,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-afw"
+                              "matchInsensitively": "contoso-con-cc-hub-afw"
                             }
                           ]
                         },
@@ -2149,7 +2149,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-afw"
+                              "matchInsensitively": "contoso-con-cc-core-afw"
                             }
                           ]
                         },
@@ -2161,7 +2161,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-afw"
+                              "matchInsensitively": "contoso-con-cc-monitoring-afw"
                             }
                           ]
                         },
@@ -2173,7 +2173,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-afw"
+                              "matchInsensitively": "contoso-con-cc-infrafw-afw"
                             }
                           ]
                         },
@@ -2185,7 +2185,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-afw"
+                              "matchInsensitively": "contoso-con-cc-apps-afw"
                             }
                           ]
                         },
@@ -2197,7 +2197,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-afw"
+                              "matchInsensitively": "contoso-con-ce-hub-afw"
                             }
                           ]
                         },
@@ -2209,7 +2209,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-afw"
+                              "matchInsensitively": "contoso-con-ce-core-afw"
                             }
                           ]
                         },
@@ -2221,7 +2221,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-afw"
+                              "matchInsensitively": "contoso-con-ce-monitoring-afw"
                             }
                           ]
                         },
@@ -2233,7 +2233,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-afw"
+                              "matchInsensitively": "contoso-con-ce-infrafw-afw"
                             }
                           ]
                         },
@@ -2245,7 +2245,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-afw"
+                              "matchInsensitively": "contoso-con-ce-apps-afw"
                             }
                           ]
                         }
@@ -2265,9 +2265,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-bas",
+      "name": "contoso-naming-bas",
       "properties": {
-        "displayName": "CustomerName naming - bas",
+        "displayName": "Contoso naming - bas",
         "description": "Microsoft CAF mapping; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -2305,7 +2305,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-bas"
+                              "matchInsensitively": "contoso-con-cc-hub-bas"
                             }
                           ]
                         },
@@ -2317,7 +2317,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-bas"
+                              "matchInsensitively": "contoso-con-cc-core-bas"
                             }
                           ]
                         },
@@ -2329,7 +2329,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-bas"
+                              "matchInsensitively": "contoso-con-cc-monitoring-bas"
                             }
                           ]
                         },
@@ -2341,7 +2341,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-bas"
+                              "matchInsensitively": "contoso-con-cc-infrafw-bas"
                             }
                           ]
                         },
@@ -2353,7 +2353,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-bas"
+                              "matchInsensitively": "contoso-con-cc-apps-bas"
                             }
                           ]
                         },
@@ -2365,7 +2365,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-bas"
+                              "matchInsensitively": "contoso-con-ce-hub-bas"
                             }
                           ]
                         },
@@ -2377,7 +2377,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-bas"
+                              "matchInsensitively": "contoso-con-ce-core-bas"
                             }
                           ]
                         },
@@ -2389,7 +2389,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-bas"
+                              "matchInsensitively": "contoso-con-ce-monitoring-bas"
                             }
                           ]
                         },
@@ -2401,7 +2401,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-bas"
+                              "matchInsensitively": "contoso-con-ce-infrafw-bas"
                             }
                           ]
                         },
@@ -2413,7 +2413,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-bas"
+                              "matchInsensitively": "contoso-con-ce-apps-bas"
                             }
                           ]
                         }
@@ -2433,9 +2433,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-pip",
+      "name": "contoso-naming-pip",
       "properties": {
-        "displayName": "CustomerName naming - pip",
+        "displayName": "Contoso naming - pip",
         "description": "AirGate abbreviation; standalone pattern proposed",
         "mode": "All",
         "metadata": {
@@ -2473,7 +2473,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-pip"
+                              "matchInsensitively": "contoso-con-cc-hub-pip"
                             }
                           ]
                         },
@@ -2485,7 +2485,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-pip"
+                              "matchInsensitively": "contoso-con-cc-core-pip"
                             }
                           ]
                         },
@@ -2497,7 +2497,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-pip"
+                              "matchInsensitively": "contoso-con-cc-monitoring-pip"
                             }
                           ]
                         },
@@ -2509,7 +2509,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-pip"
+                              "matchInsensitively": "contoso-con-cc-infrafw-pip"
                             }
                           ]
                         },
@@ -2521,7 +2521,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-pip"
+                              "matchInsensitively": "contoso-con-cc-apps-pip"
                             }
                           ]
                         },
@@ -2533,7 +2533,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-pip"
+                              "matchInsensitively": "contoso-con-ce-hub-pip"
                             }
                           ]
                         },
@@ -2545,7 +2545,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-pip"
+                              "matchInsensitively": "contoso-con-ce-core-pip"
                             }
                           ]
                         },
@@ -2557,7 +2557,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-pip"
+                              "matchInsensitively": "contoso-con-ce-monitoring-pip"
                             }
                           ]
                         },
@@ -2569,7 +2569,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-pip"
+                              "matchInsensitively": "contoso-con-ce-infrafw-pip"
                             }
                           ]
                         },
@@ -2581,7 +2581,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-pip"
+                              "matchInsensitively": "contoso-con-ce-apps-pip"
                             }
                           ]
                         }
@@ -2601,9 +2601,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-ng",
+      "name": "contoso-naming-ng",
       "properties": {
-        "displayName": "CustomerName naming - ng",
+        "displayName": "Contoso naming - ng",
         "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -2641,7 +2641,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-ng"
+                              "matchInsensitively": "contoso-con-cc-hub-ng"
                             }
                           ]
                         },
@@ -2653,7 +2653,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-ng"
+                              "matchInsensitively": "contoso-con-cc-core-ng"
                             }
                           ]
                         },
@@ -2665,7 +2665,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-ng"
+                              "matchInsensitively": "contoso-con-cc-monitoring-ng"
                             }
                           ]
                         },
@@ -2677,7 +2677,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-ng"
+                              "matchInsensitively": "contoso-con-cc-infrafw-ng"
                             }
                           ]
                         },
@@ -2689,7 +2689,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-ng"
+                              "matchInsensitively": "contoso-con-cc-apps-ng"
                             }
                           ]
                         },
@@ -2701,7 +2701,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-ng"
+                              "matchInsensitively": "contoso-con-ce-hub-ng"
                             }
                           ]
                         },
@@ -2713,7 +2713,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-ng"
+                              "matchInsensitively": "contoso-con-ce-core-ng"
                             }
                           ]
                         },
@@ -2725,7 +2725,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-ng"
+                              "matchInsensitively": "contoso-con-ce-monitoring-ng"
                             }
                           ]
                         },
@@ -2737,7 +2737,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-ng"
+                              "matchInsensitively": "contoso-con-ce-infrafw-ng"
                             }
                           ]
                         },
@@ -2749,7 +2749,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-ng"
+                              "matchInsensitively": "contoso-con-ce-apps-ng"
                             }
                           ]
                         }
@@ -2769,9 +2769,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-pep",
+      "name": "contoso-naming-pep",
       "properties": {
-        "displayName": "CustomerName naming - pep",
+        "displayName": "Contoso naming - pep",
         "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -2809,7 +2809,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-pep"
+                              "matchInsensitively": "contoso-con-cc-hub-pep"
                             }
                           ]
                         },
@@ -2821,7 +2821,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-pep"
+                              "matchInsensitively": "contoso-con-cc-core-pep"
                             }
                           ]
                         },
@@ -2833,7 +2833,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-pep"
+                              "matchInsensitively": "contoso-con-cc-monitoring-pep"
                             }
                           ]
                         },
@@ -2845,7 +2845,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-pep"
+                              "matchInsensitively": "contoso-con-cc-infrafw-pep"
                             }
                           ]
                         },
@@ -2857,7 +2857,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-pep"
+                              "matchInsensitively": "contoso-con-cc-apps-pep"
                             }
                           ]
                         },
@@ -2869,7 +2869,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-pep"
+                              "matchInsensitively": "contoso-con-ce-hub-pep"
                             }
                           ]
                         },
@@ -2881,7 +2881,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-pep"
+                              "matchInsensitively": "contoso-con-ce-core-pep"
                             }
                           ]
                         },
@@ -2893,7 +2893,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-pep"
+                              "matchInsensitively": "contoso-con-ce-monitoring-pep"
                             }
                           ]
                         },
@@ -2905,7 +2905,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-pep"
+                              "matchInsensitively": "contoso-con-ce-infrafw-pep"
                             }
                           ]
                         },
@@ -2917,7 +2917,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-pep"
+                              "matchInsensitively": "contoso-con-ce-apps-pep"
                             }
                           ]
                         }
@@ -2937,9 +2937,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-ipg",
+      "name": "contoso-naming-ipg",
       "properties": {
-        "displayName": "CustomerName naming - ipg",
+        "displayName": "Contoso naming - ipg",
         "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -2977,7 +2977,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-ipg"
+                              "matchInsensitively": "contoso-con-cc-hub-ipg"
                             }
                           ]
                         },
@@ -2989,7 +2989,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-ipg"
+                              "matchInsensitively": "contoso-con-cc-core-ipg"
                             }
                           ]
                         },
@@ -3001,7 +3001,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-ipg"
+                              "matchInsensitively": "contoso-con-cc-monitoring-ipg"
                             }
                           ]
                         },
@@ -3013,7 +3013,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-ipg"
+                              "matchInsensitively": "contoso-con-cc-infrafw-ipg"
                             }
                           ]
                         },
@@ -3025,7 +3025,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-ipg"
+                              "matchInsensitively": "contoso-con-cc-apps-ipg"
                             }
                           ]
                         },
@@ -3037,7 +3037,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-ipg"
+                              "matchInsensitively": "contoso-con-ce-hub-ipg"
                             }
                           ]
                         },
@@ -3049,7 +3049,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-ipg"
+                              "matchInsensitively": "contoso-con-ce-core-ipg"
                             }
                           ]
                         },
@@ -3061,7 +3061,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-ipg"
+                              "matchInsensitively": "contoso-con-ce-monitoring-ipg"
                             }
                           ]
                         },
@@ -3073,7 +3073,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-ipg"
+                              "matchInsensitively": "contoso-con-ce-infrafw-ipg"
                             }
                           ]
                         },
@@ -3085,7 +3085,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-ipg"
+                              "matchInsensitively": "contoso-con-ce-apps-ipg"
                             }
                           ]
                         }
@@ -3105,9 +3105,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-nw",
+      "name": "contoso-naming-nw",
       "properties": {
-        "displayName": "CustomerName naming - nw",
+        "displayName": "Contoso naming - nw",
         "description": "Microsoft CAF abbreviation; provider-generated naming needs review",
         "mode": "All",
         "metadata": {
@@ -3145,7 +3145,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-nw"
+                              "matchInsensitively": "contoso-con-cc-hub-nw"
                             }
                           ]
                         },
@@ -3157,7 +3157,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-nw"
+                              "matchInsensitively": "contoso-con-cc-core-nw"
                             }
                           ]
                         },
@@ -3169,7 +3169,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-nw"
+                              "matchInsensitively": "contoso-con-cc-monitoring-nw"
                             }
                           ]
                         },
@@ -3181,7 +3181,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-nw"
+                              "matchInsensitively": "contoso-con-cc-infrafw-nw"
                             }
                           ]
                         },
@@ -3193,7 +3193,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-nw"
+                              "matchInsensitively": "contoso-con-cc-apps-nw"
                             }
                           ]
                         },
@@ -3205,7 +3205,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-nw"
+                              "matchInsensitively": "contoso-con-ce-hub-nw"
                             }
                           ]
                         },
@@ -3217,7 +3217,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-nw"
+                              "matchInsensitively": "contoso-con-ce-core-nw"
                             }
                           ]
                         },
@@ -3229,7 +3229,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-nw"
+                              "matchInsensitively": "contoso-con-ce-monitoring-nw"
                             }
                           ]
                         },
@@ -3241,7 +3241,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-nw"
+                              "matchInsensitively": "contoso-con-ce-infrafw-nw"
                             }
                           ]
                         },
@@ -3253,7 +3253,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-nw"
+                              "matchInsensitively": "contoso-con-ce-apps-nw"
                             }
                           ]
                         }
@@ -3273,9 +3273,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-log",
+      "name": "contoso-naming-log",
       "properties": {
-        "displayName": "CustomerName naming - log",
+        "displayName": "Contoso naming - log",
         "description": "Microsoft CAF mapping; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -3313,7 +3313,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-log"
+                              "matchInsensitively": "contoso-con-cc-hub-log"
                             }
                           ]
                         },
@@ -3325,7 +3325,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-log"
+                              "matchInsensitively": "contoso-con-cc-core-log"
                             }
                           ]
                         },
@@ -3337,7 +3337,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-log"
+                              "matchInsensitively": "contoso-con-cc-monitoring-log"
                             }
                           ]
                         },
@@ -3349,7 +3349,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-log"
+                              "matchInsensitively": "contoso-con-cc-infrafw-log"
                             }
                           ]
                         },
@@ -3361,7 +3361,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-log"
+                              "matchInsensitively": "contoso-con-cc-apps-log"
                             }
                           ]
                         },
@@ -3373,7 +3373,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-log"
+                              "matchInsensitively": "contoso-con-ce-hub-log"
                             }
                           ]
                         },
@@ -3385,7 +3385,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-log"
+                              "matchInsensitively": "contoso-con-ce-core-log"
                             }
                           ]
                         },
@@ -3397,7 +3397,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-log"
+                              "matchInsensitively": "contoso-con-ce-monitoring-log"
                             }
                           ]
                         },
@@ -3409,7 +3409,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-log"
+                              "matchInsensitively": "contoso-con-ce-infrafw-log"
                             }
                           ]
                         },
@@ -3421,7 +3421,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-log"
+                              "matchInsensitively": "contoso-con-ce-apps-log"
                             }
                           ]
                         }
@@ -3441,9 +3441,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-aa",
+      "name": "contoso-naming-aa",
       "properties": {
-        "displayName": "CustomerName naming - aa",
+        "displayName": "Contoso naming - aa",
         "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -3481,7 +3481,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-aa"
+                              "matchInsensitively": "contoso-con-cc-hub-aa"
                             }
                           ]
                         },
@@ -3493,7 +3493,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-aa"
+                              "matchInsensitively": "contoso-con-cc-core-aa"
                             }
                           ]
                         },
@@ -3505,7 +3505,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-aa"
+                              "matchInsensitively": "contoso-con-cc-monitoring-aa"
                             }
                           ]
                         },
@@ -3517,7 +3517,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-aa"
+                              "matchInsensitively": "contoso-con-cc-infrafw-aa"
                             }
                           ]
                         },
@@ -3529,7 +3529,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-aa"
+                              "matchInsensitively": "contoso-con-cc-apps-aa"
                             }
                           ]
                         },
@@ -3541,7 +3541,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-aa"
+                              "matchInsensitively": "contoso-con-ce-hub-aa"
                             }
                           ]
                         },
@@ -3553,7 +3553,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-aa"
+                              "matchInsensitively": "contoso-con-ce-core-aa"
                             }
                           ]
                         },
@@ -3565,7 +3565,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-aa"
+                              "matchInsensitively": "contoso-con-ce-monitoring-aa"
                             }
                           ]
                         },
@@ -3577,7 +3577,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-aa"
+                              "matchInsensitively": "contoso-con-ce-infrafw-aa"
                             }
                           ]
                         },
@@ -3589,7 +3589,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-aa"
+                              "matchInsensitively": "contoso-con-ce-apps-aa"
                             }
                           ]
                         }
@@ -3609,9 +3609,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-id",
+      "name": "contoso-naming-id",
       "properties": {
-        "displayName": "CustomerName naming - id",
+        "displayName": "Contoso naming - id",
         "description": "Microsoft CAF abbreviation; full pattern proposed",
         "mode": "All",
         "metadata": {
@@ -3649,7 +3649,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-hub-id"
+                              "matchInsensitively": "contoso-con-cc-hub-id"
                             }
                           ]
                         },
@@ -3661,7 +3661,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-core-id"
+                              "matchInsensitively": "contoso-con-cc-core-id"
                             }
                           ]
                         },
@@ -3673,7 +3673,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-monitoring-id"
+                              "matchInsensitively": "contoso-con-cc-monitoring-id"
                             }
                           ]
                         },
@@ -3685,7 +3685,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-infrafw-id"
+                              "matchInsensitively": "contoso-con-cc-infrafw-id"
                             }
                           ]
                         },
@@ -3697,7 +3697,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-cc-apps-id"
+                              "matchInsensitively": "contoso-con-cc-apps-id"
                             }
                           ]
                         },
@@ -3709,7 +3709,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-hub-id"
+                              "matchInsensitively": "contoso-con-ce-hub-id"
                             }
                           ]
                         },
@@ -3721,7 +3721,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-core-id"
+                              "matchInsensitively": "contoso-con-ce-core-id"
                             }
                           ]
                         },
@@ -3733,7 +3733,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-monitoring-id"
+                              "matchInsensitively": "contoso-con-ce-monitoring-id"
                             }
                           ]
                         },
@@ -3745,7 +3745,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-infrafw-id"
+                              "matchInsensitively": "contoso-con-ce-infrafw-id"
                             }
                           ]
                         },
@@ -3757,7 +3757,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01-con-ce-apps-id"
+                              "matchInsensitively": "contoso-con-ce-apps-id"
                             }
                           ]
                         }
@@ -3777,9 +3777,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-cr",
+      "name": "contoso-naming-cr",
       "properties": {
-        "displayName": "CustomerName naming - cr",
+        "displayName": "Contoso naming - cr",
         "description": "Microsoft CAF abbreviation; compact pattern proposed",
         "mode": "All",
         "metadata": {
@@ -3817,7 +3817,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01concchubcr"
+                              "matchInsensitively": "contosoconcchubcr"
                             }
                           ]
                         },
@@ -3829,7 +3829,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01concccorecr"
+                              "matchInsensitively": "contosoconcccorecr"
                             }
                           ]
                         },
@@ -3841,7 +3841,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01conccmonitoringcr"
+                              "matchInsensitively": "contosoconccmonitoringcr"
                             }
                           ]
                         },
@@ -3853,7 +3853,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01conccinfrafwcr"
+                              "matchInsensitively": "contosoconccinfrafwcr"
                             }
                           ]
                         },
@@ -3865,7 +3865,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01conccappscr"
+                              "matchInsensitively": "contosoconccappscr"
                             }
                           ]
                         },
@@ -3877,7 +3877,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01concehubcr"
+                              "matchInsensitively": "contosoconcehubcr"
                             }
                           ]
                         },
@@ -3889,7 +3889,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01concecorecr"
+                              "matchInsensitively": "contosoconcecorecr"
                             }
                           ]
                         },
@@ -3901,7 +3901,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01concemonitoringcr"
+                              "matchInsensitively": "contosoconcemonitoringcr"
                             }
                           ]
                         },
@@ -3913,7 +3913,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01conceinfrafwcr"
+                              "matchInsensitively": "contosoconceinfrafwcr"
                             }
                           ]
                         },
@@ -3925,7 +3925,7 @@
                             },
                             {
                               "field": "name",
-                              "matchInsensitively": "cust01conceappscr"
+                              "matchInsensitively": "contosoconceappscr"
                             }
                           ]
                         }
@@ -3945,9 +3945,9 @@
     {
       "type": "Microsoft.Authorization/policyDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-subnet",
+      "name": "contoso-naming-subnet",
       "properties": {
-        "displayName": "CustomerName naming - subnet",
+        "displayName": "Contoso naming - subnet",
         "description": "Proposed allowlist for standalone and inline subnet names; includes Azure reserved subnet names.",
         "mode": "All",
         "metadata": {
@@ -4025,37 +4025,37 @@
     {
       "type": "Microsoft.Authorization/policySetDefinitions",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-initiative",
+      "name": "contoso-naming-initiative",
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-rg')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vm')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vnet')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nsg')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nic')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-lb')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vng')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-storage')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-rt')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-agw')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-kv')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pgsql')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-redis')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-fp')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-afw')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-bas')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pip')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-ng')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pep')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-ipg')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nw')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-log')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-aa')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-id')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-cr')]",
-        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-subnet')]"
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-rg')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-vm')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-vnet')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-nsg')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-nic')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-lb')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-vng')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-storage')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-rt')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-agw')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-kv')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-pgsql')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-redis')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-fp')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-afw')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-bas')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-pip')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-ng')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-pep')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-ipg')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-nw')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-log')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-aa')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-id')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-cr')]",
+        "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-subnet')]"
       ],
       "properties": {
-        "displayName": "CustomerName naming initiative",
+        "displayName": "Contoso naming initiative",
         "description": "Type-specific naming rules. Subnet has an independent effect for safe rollout.",
         "metadata": {
           "category": "Naming",
@@ -4083,7 +4083,7 @@
         },
         "policyDefinitions": [
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-rg')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-rg')]",
             "policyDefinitionReferenceId": "rg",
             "parameters": {
               "effect": {
@@ -4092,7 +4092,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vm')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-vm')]",
             "policyDefinitionReferenceId": "vm",
             "parameters": {
               "effect": {
@@ -4101,7 +4101,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vnet')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-vnet')]",
             "policyDefinitionReferenceId": "vnet",
             "parameters": {
               "effect": {
@@ -4110,7 +4110,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nsg')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-nsg')]",
             "policyDefinitionReferenceId": "nsg",
             "parameters": {
               "effect": {
@@ -4119,7 +4119,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nic')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-nic')]",
             "policyDefinitionReferenceId": "nic",
             "parameters": {
               "effect": {
@@ -4128,7 +4128,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-lb')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-lb')]",
             "policyDefinitionReferenceId": "lb",
             "parameters": {
               "effect": {
@@ -4137,7 +4137,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-vng')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-vng')]",
             "policyDefinitionReferenceId": "vng",
             "parameters": {
               "effect": {
@@ -4146,7 +4146,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-storage')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-storage')]",
             "policyDefinitionReferenceId": "storage",
             "parameters": {
               "effect": {
@@ -4155,7 +4155,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-rt')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-rt')]",
             "policyDefinitionReferenceId": "rt",
             "parameters": {
               "effect": {
@@ -4164,7 +4164,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-agw')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-agw')]",
             "policyDefinitionReferenceId": "agw",
             "parameters": {
               "effect": {
@@ -4173,7 +4173,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-kv')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-kv')]",
             "policyDefinitionReferenceId": "kv",
             "parameters": {
               "effect": {
@@ -4182,7 +4182,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pgsql')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-pgsql')]",
             "policyDefinitionReferenceId": "pgsql",
             "parameters": {
               "effect": {
@@ -4191,7 +4191,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-redis')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-redis')]",
             "policyDefinitionReferenceId": "redis",
             "parameters": {
               "effect": {
@@ -4200,7 +4200,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-fp')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-fp')]",
             "policyDefinitionReferenceId": "fp",
             "parameters": {
               "effect": {
@@ -4209,7 +4209,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-afw')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-afw')]",
             "policyDefinitionReferenceId": "afw",
             "parameters": {
               "effect": {
@@ -4218,7 +4218,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-bas')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-bas')]",
             "policyDefinitionReferenceId": "bas",
             "parameters": {
               "effect": {
@@ -4227,7 +4227,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pip')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-pip')]",
             "policyDefinitionReferenceId": "pip",
             "parameters": {
               "effect": {
@@ -4236,7 +4236,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-ng')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-ng')]",
             "policyDefinitionReferenceId": "ng",
             "parameters": {
               "effect": {
@@ -4245,7 +4245,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-pep')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-pep')]",
             "policyDefinitionReferenceId": "pep",
             "parameters": {
               "effect": {
@@ -4254,7 +4254,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-ipg')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-ipg')]",
             "policyDefinitionReferenceId": "ipg",
             "parameters": {
               "effect": {
@@ -4263,7 +4263,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-nw')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-nw')]",
             "policyDefinitionReferenceId": "nw",
             "parameters": {
               "effect": {
@@ -4272,7 +4272,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-log')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-log')]",
             "policyDefinitionReferenceId": "log",
             "parameters": {
               "effect": {
@@ -4281,7 +4281,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-aa')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-aa')]",
             "policyDefinitionReferenceId": "aa",
             "parameters": {
               "effect": {
@@ -4290,7 +4290,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-id')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-id')]",
             "policyDefinitionReferenceId": "id",
             "parameters": {
               "effect": {
@@ -4299,7 +4299,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-cr')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-cr')]",
             "policyDefinitionReferenceId": "cr",
             "parameters": {
               "effect": {
@@ -4308,7 +4308,7 @@
             }
           },
           {
-            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'cust01-naming-subnet')]",
+            "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policyDefinitions', 'contoso-naming-subnet')]",
             "policyDefinitionReferenceId": "subnet",
             "parameters": {
               "effect": {
@@ -4322,14 +4322,14 @@
     {
       "type": "Microsoft.Authorization/policyAssignments",
       "apiVersion": "2023-04-01",
-      "name": "cust01-naming-test",
+      "name": "contoso-naming-test",
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', 'cust01-naming-initiative')]"
+        "[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', 'contoso-naming-initiative')]"
       ],
       "properties": {
-        "displayName": "CustomerName naming assignment",
+        "displayName": "Contoso naming assignment",
         "description": "Customer naming assignment with separately controlled subnet rollout.",
-        "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', 'cust01-naming-initiative')]",
+        "policyDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', 'contoso-naming-initiative')]",
         "enforcementMode": "[parameters('enforcementMode')]",
         "notScopes": "[parameters('notScopes')]",
         "parameters": {
@@ -4355,7 +4355,7 @@
   "outputs": {
     "assignmentId": {
       "type": "string",
-      "value": "[subscriptionResourceId('Microsoft.Authorization/policyAssignments', 'cust01-naming-test')]"
+      "value": "[subscriptionResourceId('Microsoft.Authorization/policyAssignments', 'contoso-naming-test')]"
     }
   }
 }

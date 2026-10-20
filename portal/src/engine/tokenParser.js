@@ -19,24 +19,24 @@ export function toKebabCase(str) {
 
 export const AVAILABLE_TOKENS = [
   // Customer Abbreviation Tokens
-  { token: "{Org}", description: "TitleCase Customer Abbr (e.g., Cust01, Nova)", example: "Nova" },
-  { token: "{org}", description: "Lowercase Customer Abbr (e.g., cust01, nova)", example: "nova" },
-  { token: "{ORG}", description: "UPPERCASE Customer Abbr (e.g., CUST01, NOVA)", example: "NOVA" },
+  { token: "{Org}", description: "TitleCase Customer Abbr (e.g., Con, Contoso)", example: "Contoso" },
+  { token: "{org}", description: "Lowercase Customer Abbr (e.g., con, contoso)", example: "contoso" },
+  { token: "{ORG}", description: "UPPERCASE Customer Abbr (e.g., CON, CONTOSO)", example: "CON" },
 
   // Customer Full Name Tokens
-  { token: "{OrgName}", description: "Full TitleCase Customer Name (e.g., NovaaiDynamics)", example: "NovaaiDynamics" },
-  { token: "{orgname}", description: "Full Lowercase Customer Name (e.g., novaai-dynamics)", example: "novaai-dynamics" },
-  { token: "{ORGNAME}", description: "Full UPPERCASE Customer Name (e.g., NOVAAI-DYNAMICS)", example: "NOVAAI-DYNAMICS" },
+  { token: "{OrgName}", description: "Full TitleCase Customer Name (e.g., ContosoEnterprise)", example: "ContosoEnterprise" },
+  { token: "{orgname}", description: "Full Lowercase Customer Name (e.g., contoso-enterprise)", example: "contoso-enterprise" },
+  { token: "{ORGNAME}", description: "Full UPPERCASE Customer Name (e.g., CONTOSO-ENTERPRISE)", example: "CONTOSO-ENTERPRISE" },
 
   // Subscription Code Tokens
-  { token: "{SUB}", description: "UPPERCASE Subscription Code (e.g., CON, AIP)", example: "AIP" },
-  { token: "{sub}", description: "Lowercase Subscription Code (e.g., con, aip)", example: "aip" },
-  { token: "{Sub}", description: "TitleCase Subscription Code (e.g., Con, Aip)", example: "Aip" },
+  { token: "{SUB}", description: "UPPERCASE Subscription Code (e.g., CON, PRDA, AIP)", example: "CON" },
+  { token: "{sub}", description: "Lowercase Subscription Code (e.g., con, prda, aip)", example: "con" },
+  { token: "{Sub}", description: "TitleCase Subscription Code (e.g., Con, Prda, Aip)", example: "Con" },
 
   // Subscription Full Name Tokens
-  { token: "{SUBNAME}", description: "Full UPPERCASE Subscription Name (e.g., AI-FOUNDRY-PRODUCTION)", example: "AI-FOUNDRY-PRODUCTION" },
-  { token: "{subname}", description: "Full Lowercase Subscription Name (e.g., ai-foundry-production)", example: "ai-foundry-production" },
-  { token: "{SubName}", description: "Full TitleCase Subscription Name (e.g., AiFoundryProduction)", example: "AiFoundryProduction" },
+  { token: "{SUBNAME}", description: "Full UPPERCASE Subscription Name (e.g., CONNECTIVITY)", example: "CONNECTIVITY" },
+  { token: "{subname}", description: "Full Lowercase Subscription Name (e.g., connectivity)", example: "connectivity" },
+  { token: "{SubName}", description: "Full TitleCase Subscription Name (e.g., Connectivity)", example: "Connectivity" },
 
   // Environment Code Tokens
   { token: "{ENV}", description: "UPPERCASE Environment Code (e.g., PRD, DEV)", example: "PRD" },
@@ -320,9 +320,9 @@ export function getEnrichedResourceMeta(item) {
   // 2. Abbreviation match
   if (!cafMeta && abbr) {
     cafMeta = AZURE_NAMING_CATALOG.find((c) => {
-      const cAirgate = (c.airgate_abbreviation || "").toLowerCase();
+      const cAirGate = (c.airgate_abbreviation || "").toLowerCase();
       const cCaf = (c.caf_abbreviation || "").toLowerCase();
-      return cAirgate === abbr || cCaf === abbr;
+      return cAirGate === abbr || cCaf === abbr;
     });
   }
 

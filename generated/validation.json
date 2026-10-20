@@ -4,8 +4,8 @@
   "deploymentResources": 28,
   "status": "passed",
   "configuration": {
-    "displayName": "CustomerName",
-    "organization": "cust01",
+    "displayName": "Contoso",
+    "organization": "contoso",
     "effect": "Audit",
     "subnetEffect": "Audit",
     "enforcementMode": "Default"

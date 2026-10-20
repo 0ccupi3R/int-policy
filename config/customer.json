@@ -1,7 +1,7 @@
 {
-  "displayName": "CustomerName",
-  "organization": "cust01",
-  "policyPrefix": "cust01-naming",
+  "displayName": "Contoso",
+  "organization": "contoso",
+  "policyPrefix": "contoso-naming",
   "subscriptionCode": "con",
   "regions": {
     "canadacentral": "cc",

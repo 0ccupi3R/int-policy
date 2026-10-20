@@ -12,4 +12,4 @@ Connect-AzAccount
 Set-AzContext -SubscriptionId $SubscriptionId
 $Errors = Test-AzDeployment -Location canadacentral -TemplateFile ./generated/main.json -TemplateParameterFile ./generated/parameters.json -effect Audit -subnetEffect Audit -enforcementMode Default
 if ($Errors) { $Errors | Format-List *; throw 'Azure validation failed; deployment stopped.' }
-New-AzSubscriptionDeployment -Name cust01-naming-v2-1 -Location canadacentral -TemplateFile ./generated/main.json -TemplateParameterFile ./generated/parameters.json -effect Audit -subnetEffect Audit -enforcementMode Default
+New-AzSubscriptionDeployment -Name contoso-naming-v2-1 -Location canadacentral -TemplateFile ./generated/main.json -TemplateParameterFile ./generated/parameters.json -effect Audit -subnetEffect Audit -enforcementMode Default

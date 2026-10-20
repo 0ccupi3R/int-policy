@@ -4,12 +4,12 @@
 
 This runbook guides Cloud Architecture, Security, and Landing Zone Platform teams through designing, testing, and deploying enterprise-grade **Resource Naming Conventions** and **Granular Tag Governance** policies using **Azure Landing Zone Policy Studio**.
 
-To ground these concepts in realistic operations, this guide is structured around a real-world enterprise **Tabletop Exercise** featuring a fictional customer: **"NovaAI Dynamics"**, an enterprise rapidly scaling generative AI, RAG architectures, and foundation models on Microsoft Azure.
+To ground these concepts in realistic operations, this guide is structured around a real-world enterprise **Tabletop Exercise** featuring a fictional customer: **"Contoso AI Labs"**, an enterprise rapidly scaling generative AI, RAG architectures, and foundation models on Microsoft Azure.
 
 ---
 
 ## Table of Contents
-1. [The Tabletop Scenario: NovaAI Dynamics](#1-the-tabletop-scenario-novaai-dynamics)
+1. [The Tabletop Scenario: Contoso AI Labs](#1-the-tabletop-scenario-contoso-ai-labs)
 2. [Quick-Start: Launching the Studio](#2-quick-start-launching-the-studio)
 3. [Step 1: Workspace & Profile Configuration](#3-step-1-workspace--profile-configuration)
 4. [Step 2: Naming Convention Architecture & AI Workloads](#4-step-2-naming-convention-architecture--ai-workloads)
@@ -21,10 +21,10 @@ To ground these concepts in realistic operations, this guide is structured aroun
 
 ---
 
-## 1. The Tabletop Scenario: NovaAI Dynamics
+## 1. The Tabletop Scenario: Contoso AI Labs
 
 ### The Enterprise Profile
-- **Organization**: NovaAI Dynamics (`nova`)
+- **Organization**: Contoso AI Labs (`conai`)
 - **Landing Zone Subscription**: `AI-Foundry-Production` (`AIP`)
 - **Target Regions**: Canada Central (`cc`), Canada East (`ce`), East US 2 (`eus2`)
 - **Workload Portfolio**: Azure OpenAI (GPT-4o / Embeddings), Azure AI Search (Vector Retrieval), Azure Machine Learning Workspaces, Azure Databricks, and Core Supporting Infrastructure.
@@ -33,7 +33,7 @@ To ground these concepts in realistic operations, this guide is structured aroun
 1. **Shadow AI Prevention**: Developers must not spin up unapproved or unmanaged AI endpoints across arbitrary regions.
 2. **Cost Attribution for Expensive AI Infrastructure**: GPU compute clusters and token-based endpoints must be strictly tagged with valid `CostCenter` and `Owner` metadata.
 3. **Information Security & Model Governance**: Resources processing model weights or vector embeddings must declare a mandatory `DataClassification` tag (`Restricted`, `Confidential`, `Internal`, `Public`).
-4. **Predictable Resource Naming**: All assets must adhere to the standardized schema `{Org}-{SUB}-{ResourceGroup}-{abbreviation}` (e.g., `Novaai-AIP-RagApp-oai`).
+4. **Predictable Resource Naming**: All assets must adhere to the standardized schema `{Org}-{SUB}-{ResourceGroup}-{abbreviation}` (e.g., `Contoso-AIP-RagApp-oai`).
 
 ---
 
@@ -59,16 +59,16 @@ Every customer or landing zone environment has its own isolated profile in the S
 
 ```mermaid
 graph LR
-    A[Customer Name: NovaAI Dynamics] -->|{Org} Token| D[Novaai TitleCase]
-    B[Customer Abbr: nova] -->|{org} Token| E[nova lowercase]
+    A[Customer Name: Contoso AI Labs] -->|{Org} Token| D[Contoso TitleCase]
+    B[Customer Abbr: conai] -->|{org} Token| E[conai lowercase]
     C[Subscription Code: AIP] -->|{SUB} Token| F[AIP UPPERCASE]
-    D & E & F --> G[Resolved Resource Name: Novaai-AIP-RagApp-oai]
+    D & E & F --> G[Resolved Resource Name: Contoso-AIP-RagApp-oai]
 ```
 
 ### Profile Attributes
-Navigate to the top header and click **"Profile"** (or select **"NovaAI Dynamics (AIP)"** from the dropdown):
-- **Customer Name**: `NovaAI Dynamics` (Resolves `{Org}` to `Novaai`)
-- **Customer Abbreviation**: `nova` (Resolves `{org}` to `nova`, `{ORG}` to `NOVA`)
+Navigate to the top header and click **"Profile"** (or select **"Contoso AI Labs (AIP)"** from the dropdown):
+- **Customer Name**: `Contoso AI Labs` (Resolves `{Org}` to `Contoso`)
+- **Customer Abbreviation**: `conai` (Resolves `{org}` to `conai`, `{ORG}` to `CONAI`)
 - **Subscription Name**: `AI-Foundry-Production`
 - **Subscription Code**: `AIP` (Resolves `{SUB}` to `AIP`, `{sub}` to `aip`)
 - **Azure Regions Mapping**: `canadacentral: cc, canadaeast: ce, eastus2: eus2`
@@ -81,14 +81,14 @@ Navigate to the top header and click **"Profile"** (or select **"NovaAI Dynamics
 ### Dynamic Token Engine
 The Studio's token engine supports automatic casing transformations:
 
-| Token | Description | Resolved Example (NovaAI) |
+| Token | Description | Resolved Example (Contoso AI) |
 |---|---|---|
-| `{Org}` | TitleCase Customer Abbreviation | `Nova` |
-| `{org}` | Lowercase Customer Abbreviation | `nova` |
-| `{ORG}` | UPPERCASE Customer Abbreviation | `NOVA` |
-| `{OrgName}` | TitleCase Full Customer Name | `NovaaiDynamics` |
-| `{orgname}` | Lowercase Full Customer Name | `novaai-dynamics` |
-| `{ORGNAME}` | UPPERCASE Full Customer Name | `NOVAAI-DYNAMICS` |
+| `{Org}` | TitleCase Customer Abbreviation | `Con` |
+| `{org}` | Lowercase Customer Abbreviation | `conai` |
+| `{ORG}` | UPPERCASE Customer Abbreviation | `CONAI` |
+| `{OrgName}` | TitleCase Full Customer Name | `ContosoAILabs` |
+| `{orgname}` | Lowercase Full Customer Name | `contoso-ai-labs` |
+| `{ORGNAME}` | UPPERCASE Full Customer Name | `CONTOSO-AI-LABS` |
 | `{SUB}` | UPPERCASE Subscription Code | `AIP` |
 | `{sub}` | Lowercase Subscription Code | `aip` |
 | `{Sub}` | TitleCase Subscription Code | `Aip` |
@@ -141,7 +141,7 @@ Administrators can load pre-architected naming baselines for specific workloads 
    - **Full Enterprise CAF Suite** (36 comprehensive Azure resource types).
 3. **Dynamic Customer Resolution**: Inspect the live name compliance previews on the right panel. All template tokens (`{Org}`, `{SUB}`, `{Region}`) automatically resolve using the active customer's profile details.
 4. Click **"Apply Template to {Customer Name}"** to enforce the baseline.
-5. **Save Custom Baseline**: Save the current workspace rules as a named custom template (e.g. `NovaAI-Gov-Baseline-v1`) for reuse across subscriptions.
+5. **Save Custom Baseline**: Save the current workspace rules as a named custom template (e.g. `Contoso-Gov-Baseline-v1`) for reuse across subscriptions.
 
 ### Enforcement Modes
 For each resource type, administrators can toggle between:
@@ -223,7 +223,7 @@ Tag governance is organized into 3 distinct hierarchical scopes, from broad subs
 graph TD
     subgraph Subscription Scope [Broad Governance]
         S1["CostCenter: AI-RND-101, AI-PROD-202, DATA-ENG"]
-        S2["Owner: ai-leads@nova.ai, mlops-platform@nova.ai"]
+        S2["Owner: ai-leads@contoso.com, mlops-platform@contoso.com"]
         S3["ComplianceFramework: ISO42001-AI, SOC2-Type2, HIPAA, NA"]
     end
 
@@ -263,7 +263,7 @@ Navigate to **"3. Bicep & Artifact Inspector"**:
 - **`deploy.sh`**: Bash script for Azure CLI automated execution.
 
 ### Export Actions
-- Click **"Download Bicep"** to download `nova-aip-alz-policies-v1.0.0.bicep`.
+- Click **"Download Bicep"** to download `conai-aip-alz-policies-v1.0.0.bicep`.
 - Click **"Download Bundle (.zip)"** to package all templates, scripts, and documentation into a single zip archive.
 
 ---
@@ -274,8 +274,8 @@ Conduct these four tabletop exercises to train platform engineers and validate p
 
 ### Drill A: Validating a Compliant Azure OpenAI Deployment
 - **Scenario**: The MLOps team provisions a production Azure OpenAI resource in Canada Central.
-- **Target Name**: `Novaai-AIP-RagApp-oai`
-- **Resource Group**: `cust01-con-cc-apps-rg`
+- **Target Name**: `Contoso-AIP-RagApp-oai`
+- **Resource Group**: `con-con-cc-apps-rg`
 - **Location**: `canadacentral`
 - **Tags Supplied**:
   ```json
@@ -296,7 +296,7 @@ Conduct these four tabletop exercises to train platform engineers and validate p
 - **Attempted Name**: `my-test-search-cluster`
 - **Location**: `canadacentral`
 - **Expected Outcome**: **CAUGHT (Non-Compliant)**.
-  - The name violates `{org}-{sub}-{region}-srch` (expected `nova-aip-cc-srch`).
+  - The name violates `{org}-{sub}-{region}-srch` (expected `conai-aip-cc-srch`).
   - Policy engine flags an audit finding or blocks creation with `RequestDisallowedByPolicy`.
 
 ### Drill C: Emergent AI Tool Onboarding
@@ -305,7 +305,7 @@ Conduct these four tabletop exercises to train platform engineers and validate p
   1. Open Naming Studio.
   2. Locate `Azure Databricks Workspace`.
   3. Verify pattern `{Org}-{SUB}-{ResourceGroup}-dbw`.
-  4. Test candidate name `Novaai-AIP-Lakehouse-dbw` in Live Sandbox.
+  4. Test candidate name `Contoso-AIP-Lakehouse-dbw` in Live Sandbox.
   5. Verify green checkmark.
   6. Click **Download Bicep** and commit to repository.
 
@@ -314,10 +314,10 @@ Conduct these four tabletop exercises to train platform engineers and validate p
 - **Action**: Pass the sandbox Resource Group ID to the `notScopes` parameter during deployment:
   ```bash
   az deployment sub create \
-    --name "nova-aip-policies" \
+    --name "conai-aip-policies" \
     --location canadacentral \
     --template-file main.bicep \
-    --parameters notScopes='["/subscriptions/YOUR-SUB-ID/resourceGroups/nova-aip-sandbox-rg"]'
+    --parameters notScopes='["/subscriptions/YOUR-SUB-ID/resourceGroups/conai-aip-sandbox-rg"]'
   ```
 
 ---
@@ -337,7 +337,7 @@ az deployment sub validate \
 
 # 2. Deploy Policy Bundle
 az deployment sub create \
-  --name "nova-aip-governance-v1" \
+  --name "conai-aip-governance-v1" \
   --location canadacentral \
   --template-file main.bicep \
   --parameters namingEffect=Audit subnetEffect=Audit tagEffect=Audit

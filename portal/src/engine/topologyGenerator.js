@@ -484,6 +484,279 @@ export function evaluateRgNode(customer, catalog, subscription, rg) {
 }
 
 /**
+ * Computes the next available two-digit instance string (e.g. "01", "02")
+ * for a given resource type and purpose in a Resource Group.
+ */
+export function getNextAvailableInstance(rg, resourceTypeKey, purpose = "") {
+  const existingInstances = new Set();
+  const targetKey = (resourceTypeKey || "").toLowerCase();
+  const targetPurpose = (purpose || "").toLowerCase();
+
+  (rg?.resources || []).forEach((r) => {
+    const rKey = (r.resourceTypeKey || r.resourceType || "").toLowerCase();
+    const rPurpose = (r.purpose || rg?.purpose || "").toLowerCase();
+    if (rKey === targetKey && (!targetPurpose || rPurpose === targetPurpose)) {
+      const num = parseInt(r.instance, 10);
+      if (!isNaN(num)) {
+        existingInstances.add(num);
+      }
+    }
+  });
+
+  for (let i = 1; i <= 99; i++) {
+    if (!existingInstances.has(i)) {
+      return i.toString().padStart(2, "0");
+    }
+  }
+  return "01";
+}
+
+/**
+ * Validates a Subscription candidate against Azure naming rules and duplicate conflicts.
+ */
+export function validateSubscriptionInput(subData, existingSubscriptions = [], currentSubId = null) {
+  const errors = [];
+  const warnings = [];
+
+  const name = (subData?.name || "").trim();
+  const code = (subData?.code || "").trim();
+  const environment = (subData?.environment || "").trim();
+  const location = (subData?.location || "").trim();
+
+  // 1. Subscription Name Constraints
+  if (!name) {
+    errors.push("Subscription Name is required.");
+  } else {
+    if (name.length < 1 || name.length > 64) {
+      errors.push(`Subscription Name must be between 1 and 64 characters (current: ${name.length}).`);
+    }
+    if (/^[.\s]/.test(name) || /[.\s]$/.test(name)) {
+      errors.push("Subscription Name cannot begin or end with a space or period.");
+    }
+    // Allowed characters: alphanumeric, spaces, hyphens, underscores, periods, parentheses
+    if (!/^[a-zA-Z0-9_\-\.\s\(\)]+$/.test(name)) {
+      errors.push("Subscription Name contains invalid characters. Only letters, numbers, spaces, hyphens, underscores, periods, and parentheses are allowed.");
+    }
+  }
+
+  // 2. Subscription Code Constraints (used in tokens like {SUB})
+  if (!code) {
+    errors.push("Subscription Code is required.");
+  } else {
+    if (code.length < 2 || code.length > 10) {
+      errors.push(`Subscription Code must be between 2 and 10 characters (current: ${code.length}).`);
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(code)) {
+      errors.push("Subscription Code must be alphanumeric only (no spaces or special characters).");
+    }
+  }
+
+  // 3. Duplicate checks across existing subscriptions
+  const otherSubs = (existingSubscriptions || []).filter((s) => s && s.id !== currentSubId);
+  const duplicateNameSub = otherSubs.find((s) => (s.name || "").trim().toLowerCase() === name.toLowerCase());
+  const duplicateCodeSub = otherSubs.find((s) => (s.code || "").trim().toLowerCase() === code.toLowerCase());
+
+  let isDuplicate = false;
+  let duplicateError = null;
+
+  if (name && duplicateNameSub) {
+    isDuplicate = true;
+    duplicateError = `A Subscription with name '${name}' already exists in the topology.`;
+    errors.push(duplicateError);
+  } else if (code && duplicateCodeSub) {
+    isDuplicate = true;
+    duplicateError = `Subscription code '${code}' is already used by Subscription '${duplicateCodeSub.name}'.`;
+    errors.push(duplicateError);
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+    isDuplicate,
+    duplicateError,
+    sanitized: {
+      name,
+      code: code.toUpperCase(),
+      environment: environment || "prod",
+      location: location || "canadacentral"
+    }
+  };
+}
+
+/**
+ * Validates a Resource Group candidate against Azure ARM constraints and duplicate conflicts.
+ */
+export function validateResourceGroupInput(rgData, subscription, customer, catalog, currentRgId = null) {
+  const errors = [];
+  const warnings = [];
+
+  const purpose = (rgData?.purpose || "").trim().toLowerCase();
+  const nameOverride = (rgData?.name || "").trim();
+  const location = rgData?.location || subscription?.location || customer?.defaultRegion || "canadacentral";
+
+  if (!purpose && !nameOverride) {
+    errors.push("Resource Group purpose or custom name is required.");
+  }
+
+  // Evaluate candidate name
+  const rgMeta = findResourceInCatalog(catalog, "rg") || {
+    key: "rg",
+    name: "Resource Group",
+    abbreviation: "rg",
+    resourceType: "Microsoft.Resources/resourceGroups",
+    minLength: 1,
+    maxLength: 90
+  };
+
+  let candidateName = "";
+  if (nameOverride) {
+    candidateName = nameOverride;
+  } else {
+    const pattern = customer?.namingRules?.customPatterns?.rg || "{Org}-{SUB}-{ResourceGroup}-rg";
+    const sampleContext = {
+      subCode: subscription?.code || "SUB",
+      subName: subscription?.name || "Subscription",
+      environment: subscription?.environment || "prod",
+      rg: purpose || "core",
+      region: (customer?.regions && customer.regions[location]) || "cc",
+      purpose: purpose || "core"
+    };
+
+    try {
+      candidateName = toSampleName(pattern, customer, rgMeta, sampleContext);
+    } catch {
+      candidateName = `${customer?.abbreviation || "cust"}-${subscription?.code || "sub"}-${purpose || "core"}-rg`;
+    }
+  }
+
+  // Azure Platform Constraints for RG
+  const platformValidation = validateAzurePlatformConstraints(candidateName, rgMeta);
+  if (!platformValidation.valid) {
+    platformValidation.errors.forEach((e) => errors.push(e));
+  }
+
+  // Duplicate check within subscription
+  const otherRgs = (subscription?.resourceGroups || []).filter((r) => r && r.id !== currentRgId);
+  const duplicateRg = otherRgs.find((other) => {
+    const evalOther = evaluateRgNode(customer, catalog, subscription, other);
+    return (evalOther.evaluatedName || "").trim().toLowerCase() === candidateName.toLowerCase();
+  });
+
+  let isDuplicate = false;
+  let duplicateError = null;
+
+  if (duplicateRg) {
+    isDuplicate = true;
+    duplicateError = `A Resource Group with name '${candidateName}' already exists in subscription '${subscription?.name || "this subscription"}'.`;
+    errors.push(duplicateError);
+  }
+
+  return {
+    valid: errors.length === 0,
+    evaluatedName: candidateName,
+    validation: platformValidation,
+    isDuplicate,
+    duplicateError,
+    errors,
+    warnings: [...warnings, ...(platformValidation.warnings || [])]
+  };
+}
+
+/**
+ * Validates a Resource candidate against Azure ARM constraints and duplicate conflicts.
+ */
+export function validateResourceInput(resData, rg, subscription, customer, catalog, currentResId = null) {
+  const errors = [];
+  const warnings = [];
+
+  const resourceTypeKey = resData?.resourceTypeKey || resData?.resourceType || "storage";
+  const purpose = (resData?.purpose || rg?.purpose || "core").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  const instance = (resData?.instance || "01").replace(/[^0-9]/g, "").slice(0, 2).padStart(2, "0");
+  const osType = resData?.osType || "Windows";
+
+  // Evaluate candidate resource node
+  const tempResource = {
+    id: currentResId || "temp-eval-id",
+    resourceTypeKey,
+    purpose,
+    instance,
+    osType,
+    tags: resData?.tags || {}
+  };
+
+  const evalRes = evaluateResourceNode(customer, catalog, subscription, rg, tempResource);
+  const candidateName = evalRes.evaluatedName;
+
+  // Azure Platform Constraints
+  if (!evalRes.validation.valid) {
+    evalRes.validation.errors.forEach((e) => errors.push(e));
+  }
+
+  // 1. Duplicate check within same RG
+  const otherResInRg = (rg?.resources || []).filter((r) => r && r.id !== currentResId);
+  const duplicateInRg = otherResInRg.find((other) => {
+    const evalOther = evaluateResourceNode(customer, catalog, subscription, rg, other);
+    return (evalOther.evaluatedName || "").trim().toLowerCase() === candidateName.toLowerCase();
+  });
+
+  // 2. Duplicate check across entire topology for globally or subscription-wide unique services
+  const isGlobalUnique =
+    resourceTypeKey === "storage" ||
+    resourceTypeKey === "sa" ||
+    resourceTypeKey === "st" ||
+    resourceTypeKey === "kv" ||
+    resourceTypeKey === "cr" ||
+    resourceTypeKey === "cosmos";
+
+  let duplicateGlobal = null;
+  if (isGlobalUnique && customer?.topology?.subscriptions) {
+    for (const sub of customer.topology.subscriptions) {
+      for (const group of sub.resourceGroups || []) {
+        for (const res of group.resources || []) {
+          if (res.id === currentResId) continue;
+          if (group.id === rg?.id && res.id === currentResId) continue;
+          const evalOther = evaluateResourceNode(customer, catalog, sub, group, res);
+          if ((evalOther.evaluatedName || "").trim().toLowerCase() === candidateName.toLowerCase()) {
+            duplicateGlobal = { subName: sub.name, rgName: group.purpose || group.name };
+            break;
+          }
+        }
+        if (duplicateGlobal) break;
+      }
+      if (duplicateGlobal) break;
+    }
+  }
+
+  let isDuplicate = false;
+  let duplicateError = null;
+
+  if (duplicateInRg) {
+    isDuplicate = true;
+    duplicateError = `A resource with name '${candidateName}' already exists in Resource Group '${rg?.purpose || rg?.name || "current group"}'.`;
+    errors.push(duplicateError);
+  } else if (duplicateGlobal) {
+    isDuplicate = true;
+    duplicateError = `Azure requires globally unique names for ${evalRes.resourceMeta?.name || resourceTypeKey}. Name '${candidateName}' is already used in ${duplicateGlobal.subName} / ${duplicateGlobal.rgName}.`;
+    errors.push(duplicateError);
+  }
+
+  const nextSuggestedInstance = getNextAvailableInstance(rg, resourceTypeKey, purpose);
+
+  return {
+    valid: errors.length === 0,
+    evaluatedName: candidateName,
+    validation: evalRes.validation,
+    isDuplicate,
+    duplicateError,
+    errors,
+    warnings: [...warnings, ...(evalRes.validation.warnings || [])],
+    nextSuggestedInstance,
+    resourceMeta: evalRes.resourceMeta
+  };
+}
+
+/**
  * Generates modern Bicep Parameters (.bicepparam)
  */
 export function generateBicepParameters(customer, topology, catalog) {

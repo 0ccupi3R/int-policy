@@ -6,7 +6,11 @@ import {
   generateArmParameters,
   generateCompanionResourcesBicep,
   getBaselineTopology,
-  getAirGateDefaultPlatformTopology
+  getAirGateDefaultPlatformTopology,
+  validateSubscriptionInput,
+  validateResourceGroupInput,
+  validateResourceInput,
+  getNextAvailableInstance
 } from "../engine/topologyGenerator.js";
 import {
   Layers,
@@ -27,7 +31,10 @@ import {
   RotateCcw,
   Zap,
   X,
-  Check
+  Check,
+  Edit3,
+  Search,
+  Sparkles
 } from "lucide-react";
 
 export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowToast }) {
@@ -70,19 +77,32 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   // Preset Confirmation Modal state: "airgate" | "reset" | null
   const [presetModal, setPresetModal] = useState(null);
 
+  // Creation & Configuration Modals
+  // Subscription Modal state: { mode: "add"|"edit", id, name, code, environment, location } | null
+  const [subModal, setSubModal] = useState(null);
+
+  // Resource Group Modal state: { purpose, customPurpose, nameOverride, location, initialResourceType } | null
+  const [rgModal, setRgModal] = useState(null);
+
+  // Resource Modal state: { rgId, resourceTypeKey, purpose, instance, osType, searchQuery } | null
+  const [resModal, setResModal] = useState(null);
+
   // Dismiss modals on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         if (deleteModal) setDeleteModal(null);
         if (presetModal) setPresetModal(null);
+        if (subModal) setSubModal(null);
+        if (rgModal) setRgModal(null);
+        if (resModal) setResModal(null);
       }
     };
-    if (deleteModal || presetModal) {
+    if (deleteModal || presetModal || subModal || rgModal || resModal) {
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
     }
-  }, [deleteModal, presetModal]);
+  }, [deleteModal, presetModal, subModal, rgModal, resModal]);
 
   // Ensure activeSubIndex stays in bounds if subscriptions are deleted
   const safeSubIndex = Math.min(activeSubIndex, Math.max(0, (topology.subscriptions?.length || 1) - 1));
@@ -114,32 +134,92 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   // ----------------------------------------------------------------------------
   // Subscription Handlers
   // ----------------------------------------------------------------------------
-  const handleAddSubscription = () => {
-    const nextNum = (topology.subscriptions.length + 1).toString().padStart(2, "0");
-    const newSub = {
-      id: `sub-${Date.now()}`,
-      name: `Workload-${nextNum}`,
-      code: `WL${nextNum}`,
-      environment: customer.environment || "prod",
-      location: customer.defaultRegion || "canadacentral",
-      resourceGroups: [
-        {
-          id: `rg-app-${Date.now()}`,
-          purpose: "apps",
-          name: "",
-          location: customer.defaultRegion || "canadacentral",
-          resources: [
-            { id: `res-vm-${Date.now()}`, resourceTypeKey: "vm", purpose: "apps", instance: "01" },
-            { id: `res-sa-${Date.now()}`, resourceTypeKey: "storage", purpose: "apps", instance: "01" }
-          ]
-        }
-      ]
-    };
+  const openAddSubscriptionModal = () => {
+    let nextNum = topology.subscriptions.length + 1;
+    let candidateName = `Workload-${nextNum.toString().padStart(2, "0")}`;
+    let candidateCode = `WL${nextNum.toString().padStart(2, "0")}`;
+    while (
+      topology.subscriptions.some(
+        (s) => s.name?.toLowerCase() === candidateName.toLowerCase() || s.code?.toLowerCase() === candidateCode.toLowerCase()
+      )
+    ) {
+      nextNum++;
+      candidateName = `Workload-${nextNum.toString().padStart(2, "0")}`;
+      candidateCode = `WL${nextNum.toString().padStart(2, "0")}`;
+    }
 
-    const newSubs = [...topology.subscriptions, newSub];
-    handleUpdateTopology({ ...topology, subscriptions: newSubs });
-    setActiveSubIndex(newSubs.length - 1);
-    onShowToast(`Created Subscription ${newSub.name} (${newSub.code})!`);
+    setSubModal({
+      mode: "add",
+      name: candidateName,
+      code: candidateCode,
+      environment: customer.environment || "prod",
+      location: customer.defaultRegion || "canadacentral"
+    });
+  };
+
+  const openEditSubscriptionModal = () => {
+    setSubModal({
+      mode: "edit",
+      subIndex: safeSubIndex,
+      id: activeSub.id,
+      name: activeSub.name || "",
+      code: activeSub.code || "",
+      environment: activeSub.environment || "prod",
+      location: activeSub.location || "canadacentral"
+    });
+  };
+
+  const handleSaveSubscription = () => {
+    if (!subModal) return;
+    const validation = validateSubscriptionInput(
+      subModal,
+      topology.subscriptions,
+      subModal.mode === "edit" ? activeSub.id : null
+    );
+    if (!validation.valid) {
+      onShowToast(validation.duplicateError || validation.errors[0] || "Invalid subscription details");
+      return;
+    }
+
+    if (subModal.mode === "add") {
+      const newSub = {
+        id: `sub-${Date.now()}`,
+        name: validation.sanitized.name,
+        code: validation.sanitized.code,
+        environment: validation.sanitized.environment,
+        location: validation.sanitized.location,
+        resourceGroups: [
+          {
+            id: `rg-app-${Date.now()}`,
+            purpose: "apps",
+            name: "",
+            location: validation.sanitized.location,
+            resources: [
+              { id: `res-vm-${Date.now()}`, resourceTypeKey: "vm", purpose: "apps", instance: "01", osType: "Windows" },
+              { id: `res-sa-${Date.now()}`, resourceTypeKey: "storage", purpose: "apps", instance: "01" }
+            ]
+          }
+        ]
+      };
+      const newSubs = [...topology.subscriptions, newSub];
+      handleUpdateTopology({ ...topology, subscriptions: newSubs });
+      setActiveSubIndex(newSubs.length - 1);
+      onShowToast(`Created Subscription ${newSub.name} (${newSub.code})!`);
+    } else {
+      const updatedSubs = topology.subscriptions.map((s, idx) => {
+        if (idx !== safeSubIndex) return s;
+        return {
+          ...s,
+          name: validation.sanitized.name,
+          code: validation.sanitized.code,
+          environment: validation.sanitized.environment,
+          location: validation.sanitized.location
+        };
+      });
+      handleUpdateTopology({ ...topology, subscriptions: updatedSubs });
+      onShowToast(`Updated Subscription ${validation.sanitized.name}!`);
+    }
+    setSubModal(null);
   };
 
   const requestDeleteSubscription = (subIdx) => {
@@ -189,17 +269,54 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   // ----------------------------------------------------------------------------
   // Resource Group Handlers
   // ----------------------------------------------------------------------------
-  const handleAddRg = () => {
-    const defaultPurpose = "apps";
+  const openAddRgModal = () => {
+    const standardPurposes = customer.purposes && customer.purposes.length > 0
+      ? customer.purposes
+      : ["apps", "data", "services", "monitoring", "identity", "security", "ai", "hub", "core"];
+    const existingPurposes = new Set((activeSub.resourceGroups || []).map((r) => (r.purpose || "").toLowerCase()));
+    const suggestedPurpose = standardPurposes.find((p) => !existingPurposes.has(p.toLowerCase())) || "services";
+
+    setRgModal({
+      purpose: suggestedPurpose,
+      customPurpose: "",
+      nameOverride: "",
+      location: activeSub.location || customer.defaultRegion || "canadacentral",
+      initialResourceType: "vnet"
+    });
+  };
+
+  const handleSaveRg = () => {
+    if (!rgModal) return;
+    const effectivePurpose = rgModal.purpose === "__custom__" ? rgModal.customPurpose.trim().toLowerCase() : rgModal.purpose;
+    const validation = validateResourceGroupInput(
+      { purpose: effectivePurpose, name: rgModal.nameOverride, location: rgModal.location },
+      activeSub,
+      customer,
+      catalog
+    );
+
+    if (!validation.valid) {
+      onShowToast(validation.duplicateError || validation.errors[0] || "Invalid Resource Group configuration");
+      return;
+    }
+
     const newRg = {
       id: `rg-${Date.now()}`,
-      purpose: defaultPurpose,
-      name: "",
-      location: activeSub.location || "canadacentral",
+      purpose: effectivePurpose,
+      name: rgModal.nameOverride.trim(),
+      location: rgModal.location,
       tags: {},
-      resources: [
-        { id: `res-${Date.now()}-1`, resourceTypeKey: "vnet", purpose: defaultPurpose, instance: "01" }
-      ]
+      resources: rgModal.initialResourceType && rgModal.initialResourceType !== "none"
+        ? [
+            {
+              id: `res-${Date.now()}-1`,
+              resourceTypeKey: rgModal.initialResourceType,
+              purpose: effectivePurpose,
+              instance: "01",
+              osType: rgModal.initialResourceType === "vm" ? "Windows" : undefined
+            }
+          ]
+        : []
     };
 
     const updatedSubs = topology.subscriptions.map((sub, idx) => {
@@ -212,7 +329,8 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
     setExpandedRgs((prev) => ({ ...prev, [newRg.id]: true }));
     handleUpdateTopology({ ...topology, subscriptions: updatedSubs });
-    onShowToast(`Added Resource Group (${defaultPurpose})!`);
+    onShowToast(`Created Resource Group (${validation.evaluatedName})!`);
+    setRgModal(null);
   };
 
   const handleUpdateRg = (rgId, updates) => {
@@ -242,12 +360,51 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   // ----------------------------------------------------------------------------
   // Resource Handlers
   // ----------------------------------------------------------------------------
-  const handleAddResource = (rgId) => {
+  const openAddResourceModal = (rgId) => {
+    const targetRg = resourceGroups.find((r) => r.id === rgId);
+    const defaultPurpose = targetRg?.purpose || "core";
+    const defaultType = "storage";
+    const nextInst = getNextAvailableInstance(targetRg, defaultType, defaultPurpose);
+
+    setResModal({
+      rgId,
+      resourceTypeKey: defaultType,
+      purpose: defaultPurpose,
+      instance: nextInst,
+      osType: "Windows",
+      searchQuery: ""
+    });
+  };
+
+  const handleSaveResource = () => {
+    if (!resModal) return;
+    const targetRg = resourceGroups.find((r) => r.id === resModal.rgId);
+    if (!targetRg) return;
+
+    const validation = validateResourceInput(
+      {
+        resourceTypeKey: resModal.resourceTypeKey,
+        purpose: resModal.purpose,
+        instance: resModal.instance,
+        osType: resModal.osType
+      },
+      targetRg,
+      activeSub,
+      customer,
+      catalog
+    );
+
+    if (!validation.valid) {
+      onShowToast(validation.duplicateError || validation.errors[0] || "Invalid resource configuration");
+      return;
+    }
+
     const newRes = {
       id: `res-${Date.now()}`,
-      resourceTypeKey: "storage",
-      purpose: "core",
-      instance: "01",
+      resourceTypeKey: resModal.resourceTypeKey,
+      purpose: resModal.purpose.toLowerCase().replace(/[^a-z0-9]/g, ""),
+      instance: resModal.instance.padStart(2, "0"),
+      osType: (resModal.resourceTypeKey === "vm" || validation.resourceMeta?.resourceType?.toLowerCase().includes("virtualmachines")) ? resModal.osType : undefined,
       tags: {}
     };
 
@@ -256,7 +413,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
       return {
         ...sub,
         resourceGroups: (sub.resourceGroups || []).map((rg) => {
-          if (rg.id !== rgId) return rg;
+          if (rg.id !== resModal.rgId) return rg;
           return {
             ...rg,
             resources: [...(rg.resources || []), newRes]
@@ -267,7 +424,8 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
     handleUpdateTopology({ ...topology, subscriptions: updatedSubs });
     setSelectedResId(newRes.id);
-    onShowToast("Added new resource to Resource Group!");
+    onShowToast(`Added resource: ${validation.evaluatedName}!`);
+    setResModal(null);
   };
 
   const handleUpdateResource = (rgId, resId, updates) => {
@@ -580,12 +738,22 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
             <button
               className="btn btn-secondary btn-sm"
-              onClick={handleAddSubscription}
+              onClick={openAddSubscriptionModal}
               style={{ fontSize: "0.75rem", padding: "4px 8px" }}
               title="Add another subscription to topology"
             >
               <Plus size={13} />
               <span>Add Sub</span>
+            </button>
+
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={openEditSubscriptionModal}
+              style={{ fontSize: "0.75rem", padding: "4px 8px" }}
+              title="Edit current subscription properties"
+            >
+              <Edit3 size={13} />
+              <span>Edit Sub</span>
             </button>
 
             {topology.subscriptions.length > 1 && (
@@ -643,7 +811,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
             <button
               className="btn btn-primary btn-sm"
-              onClick={handleAddRg}
+              onClick={openAddRgModal}
               style={{ display: "flex", alignItems: "center", gap: "6px" }}
             >
               <Plus size={14} />
@@ -658,13 +826,16 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
             const isRgTagEditorOpen = expandedTagEditors[rg.id] ?? false;
             const resCount = rg.resources?.length || 0;
             const hasRgOverrides = rg.tags && Object.keys(rg.tags).length > 0;
+            const isDuplicateRg = resourceGroups.some(
+              (other) => other.id !== rg.id && evaluateRgNode(customer, catalog, activeSub, other).evaluatedName.toLowerCase() === evalRg.evaluatedName.toLowerCase()
+            );
 
             return (
               <div
                 key={rg.id}
                 className="glass-card"
                 style={{
-                  border: "1px solid var(--border-subtle)",
+                  border: isDuplicateRg ? "1px solid var(--accent-rose)" : "1px solid var(--border-subtle)",
                   borderRadius: "var(--radius-md)",
                   overflow: "hidden",
                   transition: "all 0.2s ease"
@@ -674,7 +845,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                 <div
                   style={{
                     padding: "14px 18px",
-                    background: "rgba(255, 255, 255, 0.02)",
+                    background: isDuplicateRg ? "rgba(244, 63, 94, 0.05)" : "rgba(255, 255, 255, 0.02)",
                     borderBottom: isExpanded ? "1px solid var(--border-subtle)" : "none",
                     display: "flex",
                     justifyContent: "space-between",
@@ -697,13 +868,22 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                             fontFamily: "var(--font-mono)",
                             fontSize: "0.95rem",
                             fontWeight: "700",
-                            color: "#38bdf8"
+                            color: isDuplicateRg ? "var(--accent-rose)" : "#38bdf8"
                           }}
                         >
                           {evalRg.evaluatedName}
                         </span>
 
-                        {evalRg.validation.valid ? (
+                        {isDuplicateRg ? (
+                          <span
+                            className="chip"
+                            style={{ fontSize: "0.7rem", padding: "2px 8px", background: "rgba(244, 63, 94, 0.15)", color: "var(--accent-rose)", borderColor: "rgba(244, 63, 94, 0.4)" }}
+                            title="A Resource Group with this evaluated name already exists in this subscription"
+                          >
+                            <AlertTriangle size={12} />
+                            <span>Already Exists (Duplicate Name)</span>
+                          </span>
+                        ) : evalRg.validation.valid ? (
                           <span className="chip chip-emerald" style={{ fontSize: "0.7rem", padding: "2px 8px" }}>
                             <CheckCircle2 size={12} />
                             <span>Valid RG</span>
@@ -759,7 +939,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                     <button
                       className="btn btn-secondary btn-sm"
-                      onClick={() => handleAddResource(rg.id)}
+                      onClick={() => openAddResourceModal(rg.id)}
                       style={{ fontSize: "0.75rem", padding: "4px 8px", display: "flex", alignItems: "center", gap: "4px" }}
                       title="Add resource to this group"
                     >
@@ -949,6 +1129,9 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         {(rg.resources || []).map((resource) => {
                           const evalRes = evaluateResourceNode(customer, catalog, activeSub, rg, resource);
+                          const isDuplicateRes = (rg.resources || []).some(
+                            (other) => other.id !== resource.id && evaluateResourceNode(customer, catalog, activeSub, rg, other).evaluatedName.toLowerCase() === evalRes.evaluatedName.toLowerCase()
+                          );
                           const isSelected = selectedResId === resource.id;
                           const isResTagEditorOpen = expandedTagEditors[resource.id] ?? false;
                           const hasResOverrides = resource.tags && Object.keys(resource.tags).length > 0;
@@ -958,8 +1141,8 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                               key={resource.id}
                               style={{
                                 padding: "12px 14px",
-                                background: isSelected ? "rgba(6, 182, 212, 0.08)" : "rgba(17, 24, 39, 0.6)",
-                                border: isSelected ? "1px solid var(--azure-cyan)" : "1px solid var(--border-subtle)",
+                                background: isDuplicateRes ? "rgba(244, 63, 94, 0.05)" : isSelected ? "rgba(6, 182, 212, 0.08)" : "rgba(17, 24, 39, 0.6)",
+                                border: isDuplicateRes ? "1px solid var(--accent-rose)" : isSelected ? "1px solid var(--azure-cyan)" : "1px solid var(--border-subtle)",
                                 borderRadius: "var(--radius-sm)",
                                 display: "flex",
                                 flexDirection: "column",
@@ -1127,7 +1310,16 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                     <span style={{ fontSize: "0.7rem", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                                       Canonical Resource Name
                                     </span>
-                                    {evalRes.validation.valid ? (
+                                    {isDuplicateRes ? (
+                                      <span
+                                        className="chip"
+                                        style={{ fontSize: "0.68rem", padding: "1px 6px", background: "rgba(244, 63, 94, 0.15)", color: "var(--accent-rose)", borderColor: "rgba(244, 63, 94, 0.4)" }}
+                                        title="Another resource in this Resource Group has the same evaluated name"
+                                      >
+                                        <AlertTriangle size={11} />
+                                        <span>Already Exists in RG</span>
+                                      </span>
+                                    ) : evalRes.validation.valid ? (
                                       <span className="chip chip-emerald" style={{ fontSize: "0.68rem", padding: "1px 6px" }}>
                                         <CheckCircle2 size={11} />
                                         <span>
@@ -1149,15 +1341,22 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                       fontFamily: "var(--font-mono)",
                                       fontSize: "0.85rem",
                                       fontWeight: "600",
-                                      color: evalRes.validation.valid ? "#38bdf8" : "#f59e0b",
+                                      color: isDuplicateRes ? "var(--accent-rose)" : evalRes.validation.valid ? "#38bdf8" : "#f59e0b",
                                       wordBreak: "break-all"
                                     }}
                                   >
                                     {evalRes.evaluatedName}
                                   </div>
 
+                                  {/* Duplicate Warning if duplicate */}
+                                  {isDuplicateRes && (
+                                    <div style={{ fontSize: "0.7rem", color: "var(--accent-rose)", marginTop: "3px", fontWeight: "600" }}>
+                                      ⚠️ Duplicate Name: Name already exists in this Resource Group.
+                                    </div>
+                                  )}
+
                                   {/* Error/Warning Explanation if any */}
-                                  {!evalRes.validation.valid && evalRes.validation.errors?.length > 0 && (
+                                  {!isDuplicateRes && !evalRes.validation.valid && evalRes.validation.errors?.length > 0 && (
                                     <div style={{ fontSize: "0.7rem", color: "#f87171", marginTop: "3px" }}>
                                       {evalRes.validation.errors[0]}
                                     </div>
@@ -1553,6 +1752,785 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
           </div>
         </div>
       )}
+
+      {/* Subscription Modal (Add / Edit) */}
+      {subModal && (() => {
+        const isEdit = subModal.mode === "edit";
+        const validation = validateSubscriptionInput(
+          subModal,
+          topology.subscriptions,
+          isEdit ? activeSub.id : null
+        );
+
+        return (
+          <div className="modal-overlay" onClick={() => setSubModal(null)}>
+            <div
+              className="modal-card"
+              style={{ maxWidth: "540px", borderLeft: "4px solid var(--azure-cyan)" }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="sub-modal-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <Globe size={22} color="var(--azure-cyan)" />
+                  <div>
+                    <h3 id="sub-modal-title" style={{ fontSize: "1.1rem", fontWeight: "700" }}>
+                      {isEdit ? "Edit Subscription" : "Add Subscription to Topology"}
+                    </h3>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                      Configure subscription scope, token code, and Azure deployment tier.
+                    </span>
+                  </div>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={() => setSubModal(null)} style={{ padding: "4px 8px" }}>
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {/* Subscription Name */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                    Subscription Name:
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="e.g. Workload-Analytics, SharedServices"
+                    value={subModal.name}
+                    onChange={(e) => setSubModal({ ...subModal, name: e.target.value })}
+                    style={{ fontSize: "0.85rem", padding: "6px 10px" }}
+                  />
+                  <span style={{ fontSize: "0.7rem", color: "var(--text-dim)" }}>
+                    1–64 characters (alphanumerics, spaces, hyphens, underscores, periods).
+                  </span>
+                </div>
+
+                {/* Subscription Code & Environment */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                      Subscription Code ({"{SUB}"}):
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      placeholder="e.g. WL, APP, SHD"
+                      value={subModal.code}
+                      onChange={(e) => setSubModal({ ...subModal, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10) })}
+                      style={{ fontSize: "0.85rem", padding: "6px 10px", fontFamily: "var(--font-mono)" }}
+                    />
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-dim)" }}>
+                      2–10 uppercase chars, resolves in naming tokens.
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                      Environment Tier:
+                    </label>
+                    <select
+                      className="input-field"
+                      value={subModal.environment}
+                      onChange={(e) => setSubModal({ ...subModal, environment: e.target.value })}
+                      style={{ fontSize: "0.85rem", padding: "6px 10px" }}
+                    >
+                      <option value="prod">Production (prod)</option>
+                      <option value="nonprod">Non-Production (nonprod)</option>
+                      <option value="dev">Development (dev)</option>
+                      <option value="stage">Staging (stage)</option>
+                      <option value="test">Testing (test)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Location / Region */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                    Default Deployment Region:
+                  </label>
+                  <select
+                    className="input-field"
+                    value={subModal.location}
+                    onChange={(e) => setSubModal({ ...subModal, location: e.target.value })}
+                    style={{ fontSize: "0.85rem", padding: "6px 10px" }}
+                  >
+                    {customer.regions ? (
+                      Object.entries(customer.regions).map(([regKey, code]) => (
+                        <option key={regKey} value={regKey}>
+                          {regKey} ({code})
+                        </option>
+                      ))
+                    ) : (
+                      <option value="canadacentral">canadacentral (cc)</option>
+                    )}
+                  </select>
+                </div>
+
+                {/* Real-time Preview & Validation Card */}
+                <div
+                  style={{
+                    padding: "12px",
+                    background: "rgba(0, 0, 0, 0.25)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: "var(--radius-sm)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", textTransform: "uppercase" }}>
+                      Preview Subscription Tab
+                    </span>
+                    <span className="chip chip-azure" style={{ fontSize: "0.7rem", padding: "2px 8px" }}>
+                      <Globe size={11} />
+                      <span>{subModal.name || "Untitled"} ({subModal.code || "---"})</span>
+                      <span style={{ opacity: 0.8 }}>[{subModal.environment}]</span>
+                    </span>
+                  </div>
+
+                  {/* Duplicate or Constraint Alert */}
+                  {validation.isDuplicate ? (
+                    <div
+                      style={{
+                        background: "var(--status-danger-bg)",
+                        border: "1px solid var(--status-danger-border)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        color: "var(--status-danger-text)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      <AlertTriangle size={15} color="var(--accent-rose)" style={{ flexShrink: 0 }} />
+                      <span><strong>Already Exists:</strong> {validation.duplicateError}</span>
+                    </div>
+                  ) : !validation.valid && validation.errors.length > 0 ? (
+                    <div
+                      style={{
+                        background: "rgba(245, 158, 11, 0.12)",
+                        border: "1px solid rgba(245, 158, 11, 0.35)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        color: "#fde68a",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      <AlertTriangle size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
+                      <span>{validation.errors[0]}</span>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        background: "rgba(16, 185, 129, 0.12)",
+                        border: "1px solid rgba(16, 185, 129, 0.35)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        color: "#6ee7b7",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      <CheckCircle2 size={15} color="var(--status-success)" style={{ flexShrink: 0 }} />
+                      <span>Subscription name and code are compliant & available in this topology.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn btn-secondary btn-sm" onClick={() => setSubModal(null)}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={handleSaveSubscription}
+                  disabled={!validation.valid}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    opacity: validation.valid ? 1 : 0.5,
+                    cursor: validation.valid ? "pointer" : "not-allowed"
+                  }}
+                >
+                  <Check size={14} />
+                  <span>{isEdit ? "Save Changes" : "Create Subscription"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Resource Group Modal (Add) */}
+      {rgModal && (() => {
+        const effectivePurpose = rgModal.purpose === "__custom__" ? rgModal.customPurpose.trim().toLowerCase() : rgModal.purpose;
+        const validation = validateResourceGroupInput(
+          { purpose: effectivePurpose, name: rgModal.nameOverride, location: rgModal.location },
+          activeSub,
+          customer,
+          catalog
+        );
+
+        const standardPurposes = customer.purposes && customer.purposes.length > 0
+          ? customer.purposes
+          : ["apps", "data", "services", "monitoring", "identity", "security", "ai", "hub", "core"];
+
+        return (
+          <div className="modal-overlay" onClick={() => setRgModal(null)}>
+            <div
+              className="modal-card"
+              style={{ maxWidth: "560px", borderLeft: "4px solid var(--azure-cyan)" }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="rg-modal-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <Layers size={22} color="var(--azure-cyan)" />
+                  <div>
+                    <h3 id="rg-modal-title" style={{ fontSize: "1.1rem", fontWeight: "700" }}>
+                      Add Resource Group to {activeSub.name}
+                    </h3>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                      Configure purpose token or custom name with live Azure ARM constraint verification.
+                    </span>
+                  </div>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={() => setRgModal(null)} style={{ padding: "4px 8px" }}>
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {/* Purpose Token */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                    Resource Group Purpose Token:
+                  </label>
+                  <select
+                    className="input-field"
+                    value={rgModal.purpose}
+                    onChange={(e) => setRgModal({ ...rgModal, purpose: e.target.value })}
+                    style={{ fontSize: "0.85rem", padding: "6px 10px" }}
+                  >
+                    {standardPurposes.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                    <option value="__custom__">✨ Custom Purpose...</option>
+                  </select>
+                </div>
+
+                {/* Custom Purpose Input if selected */}
+                {rgModal.purpose === "__custom__" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                      Custom Purpose Name:
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      placeholder="e.g. analytics, batch, telemetry"
+                      value={rgModal.customPurpose}
+                      onChange={(e) =>
+                        setRgModal({
+                          ...rgModal,
+                          customPurpose: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "")
+                        })
+                      }
+                      style={{ fontSize: "0.85rem", padding: "6px 10px" }}
+                    />
+                  </div>
+                )}
+
+                {/* Optional Name Override & Region */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                      Region:
+                    </label>
+                    <select
+                      className="input-field"
+                      value={rgModal.location}
+                      onChange={(e) => setRgModal({ ...rgModal, location: e.target.value })}
+                      style={{ fontSize: "0.85rem", padding: "6px 10px" }}
+                    >
+                      {customer.regions ? (
+                        Object.entries(customer.regions).map(([regKey, code]) => (
+                          <option key={regKey} value={regKey}>
+                            {regKey} ({code})
+                          </option>
+                        ))
+                      ) : (
+                        <option value="canadacentral">canadacentral (cc)</option>
+                      )}
+                    </select>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                      Initial Resource:
+                    </label>
+                    <select
+                      className="input-field"
+                      value={rgModal.initialResourceType}
+                      onChange={(e) => setRgModal({ ...rgModal, initialResourceType: e.target.value })}
+                      style={{ fontSize: "0.85rem", padding: "6px 10px" }}
+                    >
+                      <option value="vnet">Virtual Network (vnet)</option>
+                      <option value="storage">Storage Account (storage)</option>
+                      <option value="vm">Virtual Machine (vm)</option>
+                      <option value="kv">Key Vault (kv)</option>
+                      <option value="none">None (Empty Resource Group)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Optional Custom Name Override */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-muted)" }}>
+                    Custom Name Override (Optional):
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="Leave blank to use naming rule pattern ({Org}-{SUB}-{ResourceGroup}-rg)"
+                    value={rgModal.nameOverride}
+                    onChange={(e) => setRgModal({ ...rgModal, nameOverride: e.target.value })}
+                    style={{ fontSize: "0.85rem", padding: "6px 10px", fontFamily: "var(--font-mono)" }}
+                  />
+                </div>
+
+                {/* Real-time Canonical RG Name Evaluation Card */}
+                <div
+                  style={{
+                    padding: "12px",
+                    background: "rgba(0, 0, 0, 0.25)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: "var(--radius-sm)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", textTransform: "uppercase" }}>
+                      Canonical Evaluated Resource Group Name
+                    </span>
+                    <span className={`chip ${validation.valid ? "chip-emerald" : "chip-amber"}`} style={{ fontSize: "0.7rem", padding: "2px 8px" }}>
+                      {validation.valid ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
+                      <span>{validation.valid ? "Compliant" : "Violation"} ({validation.evaluatedName.length}/90 chars)</span>
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "1rem",
+                      fontWeight: "700",
+                      color: validation.isDuplicate ? "var(--accent-rose)" : validation.valid ? "#38bdf8" : "#f59e0b",
+                      wordBreak: "break-all"
+                    }}
+                  >
+                    {validation.evaluatedName}
+                  </div>
+
+                  {/* Duplicate or Constraint Alert */}
+                  {validation.isDuplicate ? (
+                    <div
+                      style={{
+                        background: "var(--status-danger-bg)",
+                        border: "1px solid var(--status-danger-border)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        color: "var(--status-danger-text)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      <AlertTriangle size={15} color="var(--accent-rose)" style={{ flexShrink: 0 }} />
+                      <span><strong>Already Exists:</strong> {validation.duplicateError}</span>
+                    </div>
+                  ) : !validation.valid && validation.errors.length > 0 ? (
+                    <div
+                      style={{
+                        background: "rgba(245, 158, 11, 0.12)",
+                        border: "1px solid rgba(245, 158, 11, 0.35)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        color: "#fde68a",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      <AlertTriangle size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
+                      <span>{validation.errors[0]}</span>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        background: "rgba(16, 185, 129, 0.12)",
+                        border: "1px solid rgba(16, 185, 129, 0.35)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        color: "#6ee7b7",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      <CheckCircle2 size={15} color="var(--status-success)" style={{ flexShrink: 0 }} />
+                      <span>Resource Group name is compliant & unique in this subscription.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn btn-secondary btn-sm" onClick={() => setRgModal(null)}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={handleSaveRg}
+                  disabled={!validation.valid}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    opacity: validation.valid ? 1 : 0.5,
+                    cursor: validation.valid ? "pointer" : "not-allowed"
+                  }}
+                >
+                  <Check size={14} />
+                  <span>Add Resource Group</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Resource Modal (Add) */}
+      {resModal && (() => {
+        const targetRg = resourceGroups.find((r) => r.id === resModal.rgId);
+        const validation = validateResourceInput(
+          {
+            resourceTypeKey: resModal.resourceTypeKey,
+            purpose: resModal.purpose,
+            instance: resModal.instance,
+            osType: resModal.osType
+          },
+          targetRg,
+          activeSub,
+          customer,
+          catalog
+        );
+
+        const filteredCatalog = catalog.filter((c) => {
+          if (!resModal.searchQuery) return true;
+          const q = resModal.searchQuery.toLowerCase();
+          return (
+            (c.name || "").toLowerCase().includes(q) ||
+            (c.key || "").toLowerCase().includes(q) ||
+            (c.abbreviation || "").toLowerCase().includes(q) ||
+            (c.resourceType || "").toLowerCase().includes(q)
+          );
+        });
+
+        const isVm = resModal.resourceTypeKey === "vm" || validation.resourceMeta?.resourceType?.toLowerCase().includes("virtualmachines");
+
+        return (
+          <div className="modal-overlay" onClick={() => setResModal(null)}>
+            <div
+              className="modal-card"
+              style={{ maxWidth: "600px", borderLeft: "4px solid var(--azure-cyan)" }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="res-modal-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <Sparkles size={22} color="var(--azure-cyan)" />
+                  <div>
+                    <h3 id="res-modal-title" style={{ fontSize: "1.1rem", fontWeight: "700" }}>
+                      Add Resource to {targetRg?.purpose || "Resource Group"}
+                    </h3>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                      Pick from 200+ Azure types with auto-suggested non-conflicting instances and real-time validation.
+                    </span>
+                  </div>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={() => setResModal(null)} style={{ padding: "4px 8px" }}>
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {/* Resource Type Search & Dropdown */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                      Azure Resource Type:
+                    </label>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>
+                      {catalog.length} catalog types available
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <div style={{ position: "relative", flex: 1 }}>
+                      <Search size={14} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-dim)" }} />
+                      <input
+                        type="text"
+                        className="input-field"
+                        placeholder="Filter types by name, abbr, or provider..."
+                        value={resModal.searchQuery || ""}
+                        onChange={(e) => setResModal({ ...resModal, searchQuery: e.target.value })}
+                        style={{ paddingLeft: "30px", fontSize: "0.8rem", width: "100%" }}
+                      />
+                    </div>
+
+                    <select
+                      className="input-field"
+                      value={resModal.resourceTypeKey}
+                      onChange={(e) => {
+                        const newKey = e.target.value;
+                        const nextInst = getNextAvailableInstance(targetRg, newKey, resModal.purpose);
+                        setResModal({
+                          ...resModal,
+                          resourceTypeKey: newKey,
+                          instance: nextInst,
+                          osType: newKey === "vm" ? "Windows" : resModal.osType
+                        });
+                      }}
+                      style={{ fontSize: "0.8rem", fontWeight: "600", fontFamily: "var(--font-mono)", maxWidth: "260px" }}
+                    >
+                      {filteredCatalog.map((catItem) => (
+                        <option key={catItem.key || catItem.id} value={catItem.key || catItem.abbreviation}>
+                          {catItem.name} ({catItem.abbreviation || catItem.key})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Role / Purpose & Instance Number */}
+                <div style={{ display: "grid", gridTemplateColumns: isVm ? "1fr 1fr 1fr" : "1.2fr 1fr", gap: "12px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                      Role / Purpose Token:
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      placeholder="e.g. apps, core, db, web"
+                      value={resModal.purpose}
+                      onChange={(e) => {
+                        const newPurp = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "");
+                        const nextInst = getNextAvailableInstance(targetRg, resModal.resourceTypeKey, newPurp);
+                        setResModal({ ...resModal, purpose: newPurp, instance: nextInst });
+                      }}
+                      style={{ fontSize: "0.85rem", padding: "6px 10px" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                        Instance:
+                      </label>
+                      {validation.isDuplicate && (
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => setResModal({ ...resModal, instance: validation.nextSuggestedInstance })}
+                          style={{ fontSize: "0.68rem", padding: "1px 6px", color: "var(--azure-cyan)" }}
+                          title="Switch to next available instance"
+                        >
+                          Auto-Fill {validation.nextSuggestedInstance}
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={resModal.instance}
+                      onChange={(e) =>
+                        setResModal({
+                          ...resModal,
+                          instance: e.target.value.replace(/[^0-9]/g, "").slice(0, 2)
+                        })
+                      }
+                      style={{ fontSize: "0.85rem", padding: "6px 10px", textAlign: "center", fontFamily: "var(--font-mono)" }}
+                    />
+                  </div>
+
+                  {isVm && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                        OS Type:
+                      </label>
+                      <select
+                        className="input-field"
+                        value={resModal.osType || "Windows"}
+                        onChange={(e) => setResModal({ ...resModal, osType: e.target.value })}
+                        style={{ fontSize: "0.8rem", padding: "6px 8px", fontWeight: "600" }}
+                      >
+                        <option value="Windows">🪟 Windows (15 max)</option>
+                        <option value="Linux">🐧 Linux (64 max)</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* Real-time Canonical Name Preview Card */}
+                <div
+                  style={{
+                    padding: "12px",
+                    background: "rgba(0, 0, 0, 0.25)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: "var(--radius-sm)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", textTransform: "uppercase" }}>
+                      Canonical Evaluated Resource Name
+                    </span>
+                    <span className={`chip ${validation.valid ? "chip-emerald" : "chip-amber"}`} style={{ fontSize: "0.7rem", padding: "2px 8px" }}>
+                      {validation.valid ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
+                      <span>
+                        {validation.valid ? "Compliant" : "Violation"} ({validation.evaluatedName.length}/{validation.validation.maxLength || (isVm && resModal.osType === "Windows" ? 15 : 64)} chars)
+                      </span>
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "1rem",
+                      fontWeight: "700",
+                      color: validation.isDuplicate ? "var(--accent-rose)" : validation.valid ? "#38bdf8" : "#f59e0b",
+                      wordBreak: "break-all"
+                    }}
+                  >
+                    {validation.evaluatedName}
+                  </div>
+
+                  {/* Duplicate or Constraint Alert */}
+                  {validation.isDuplicate ? (
+                    <div
+                      style={{
+                        background: "var(--status-danger-bg)",
+                        border: "1px solid var(--status-danger-border)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        color: "var(--status-danger-text)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "8px"
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <AlertTriangle size={15} color="var(--accent-rose)" style={{ flexShrink: 0 }} />
+                        <span><strong>Already Exists:</strong> {validation.duplicateError}</span>
+                      </div>
+                      {validation.nextSuggestedInstance && (
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => setResModal({ ...resModal, instance: validation.nextSuggestedInstance })}
+                          style={{ fontSize: "0.72rem", padding: "2px 8px", background: "rgba(255,255,255,0.15)", color: "#fff" }}
+                        >
+                          Use Next Instance ({validation.nextSuggestedInstance})
+                        </button>
+                      )}
+                    </div>
+                  ) : !validation.valid && validation.errors.length > 0 ? (
+                    <div
+                      style={{
+                        background: "rgba(245, 158, 11, 0.12)",
+                        border: "1px solid rgba(245, 158, 11, 0.35)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        color: "#fde68a",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      <AlertTriangle size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
+                      <span>{validation.errors[0]}</span>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        background: "rgba(16, 185, 129, 0.12)",
+                        border: "1px solid rgba(16, 185, 129, 0.35)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        color: "#6ee7b7",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      <CheckCircle2 size={15} color="var(--status-success)" style={{ flexShrink: 0 }} />
+                      <span>Resource name is compliant with Azure constraints & unique in this scope.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn btn-secondary btn-sm" onClick={() => setResModal(null)}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={handleSaveResource}
+                  disabled={!validation.valid}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    opacity: validation.valid ? 1 : 0.5,
+                    cursor: validation.valid ? "pointer" : "not-allowed"
+                  }}
+                >
+                  <Check size={14} />
+                  <span>Add Resource</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

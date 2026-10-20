@@ -232,7 +232,7 @@ export async function downloadZipBundle(customer, catalog) {
   zip.file("customer-config.json", customerJson);
   zip.file("README.md", readmeContent);
 
-  // Topology Provisioning & Parameter Files ("1 Bullet, Two Kills")
+  // Topology Provisioning & Parameter Files (Unified Governance Engine)
   zip.file("resources.bicepparam", bicepParamsContent);
   zip.file("resources.bicep", companionBicepContent);
   zip.file("resource-parameters.json", JSON.stringify(armParamsObj, null, 2));

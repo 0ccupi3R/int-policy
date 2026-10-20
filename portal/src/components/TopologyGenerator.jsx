@@ -492,7 +492,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
               Resource Topology & Parameter Generator
             </h2>
             <span className="chip chip-azure" style={{ fontSize: "0.75rem" }}>
-              1 Bullet, Two Kills
+              Unified Governance Engine
             </span>
             <span className="chip" style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", background: "rgba(255,255,255,0.06)" }}>
               {totalResourcesCount} Resources
@@ -508,8 +508,8 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
             )}
           </div>
           <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>
-            Scaffold your Subscription → Resource Group → Leaf Resource topology. Generates both
-            compliant canonical resource names and complete multi-tier governance tags simultaneously.
+            Scaffold your Subscription → Resource Group → Leaf Resource topology with automated canonical
+            resource naming and multi-tier governance tag inheritance.
           </p>
         </div>
 
@@ -1109,7 +1109,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                 </div>
                               </div>
 
-                              {/* Row 2: "1 BULLET, TWO KILLS" Real-time Evaluation */}
+                              {/* Row 2: Real-time Evaluation (Naming & Governance Tags) */}
                               <div
                                 style={{
                                   display: "grid",
@@ -1121,11 +1121,11 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                   alignItems: "center"
                                 }}
                               >
-                                {/* KILL 1: Canonical Compliant Name */}
+                                {/* Canonical Resource Name */}
                                 <div>
                                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
                                     <span style={{ fontSize: "0.7rem", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                      Kill 1: Generated Canonical Name
+                                      Canonical Resource Name
                                     </span>
                                     {evalRes.validation.valid ? (
                                       <span className="chip chip-emerald" style={{ fontSize: "0.68rem", padding: "1px 6px" }}>
@@ -1164,14 +1164,14 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                   )}
                                 </div>
 
-                                {/* KILL 2: Governance Tags Multi-Tier Inheritance */}
+                                {/* Effective Governance Tags */}
                                 <div>
                                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
                                     <span style={{ fontSize: "0.7rem", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                      Kill 2: Resolved Governance Tags ({Object.keys(evalRes.tags).length})
+                                      Effective Governance Tags ({Object.keys(evalRes.tags).length})
                                     </span>
                                     <span style={{ fontSize: "0.68rem", color: "var(--azure-cyan)" }}>
-                                      Sub + RG + Resource + NA Default
+                                      Subscription + RG + Resource + NA Default
                                     </span>
                                   </div>
 

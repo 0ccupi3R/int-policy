@@ -1,4 +1,4 @@
-// Resource Topology & Bicep/ARM Parameter Generator ("1 Bullet, Two Kills")
+// Resource Topology & Bicep/ARM Parameter Generator (Unified Governance Engine)
 // Automatically resolves canonical compliant resource names and 3-tier tag inheritance
 
 import {

@@ -230,7 +230,7 @@ export function App() {
             <FolderTree size={18} />
             <span>3. Resource Topology & Parameters</span>
             <span className="tab-badge" style={{ background: "rgba(6, 182, 212, 0.2)", color: "#38bdf8" }}>
-              1 Bullet 2 Kills
+              Unified Engine
             </span>
           </button>
 

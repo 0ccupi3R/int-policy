@@ -1,0 +1,23 @@
+{
+  "name": "int-policy",
+  "version": "2.1.0",
+  "description": "Azure Landing Zone Policy Studio: Resource Naming Conventions and Granular Tag Governance",
+  "scripts": {
+    "dev": "npm run dev --prefix portal",
+    "build": "npm run build --prefix portal",
+    "preview": "npm run preview --prefix portal",
+    "test:offline": "python3 tools/generate.py && python3 tests/offline.py",
+    "test:regression": "python3 tests/regression.py"
+  },
+  "keywords": [
+    "azure",
+    "azure-landing-zones",
+    "alz",
+    "azure-policy",
+    "bicep",
+    "naming-convention",
+    "tag-governance"
+  ],
+  "author": "AirGate / Customer Cloud Engineering",
+  "license": "MIT"
+}

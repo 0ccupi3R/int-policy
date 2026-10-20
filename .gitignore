@@ -1,0 +1,22 @@
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Node dependencies & builds
+node_modules/
+portal/node_modules/
+portal/dist/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Temp & scratch files
+*.tmp
+*.log
+portal/scratch/
+__pycache__/
+*.pyc
+azure_test_results.json
+azure_combined_test_results.json

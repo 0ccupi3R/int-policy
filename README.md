@@ -1,96 +1,124 @@
-# CustomerName naming policies v2.1
+# Azure Landing Zone Policy Studio
 
-Clean replacement package using CustomerName/cust01 test values. It contains 25 existing type-specific naming definitions plus one integrated subnet definition, one initiative, and one subscription assignment.
+A modern, config-driven Azure Policy automation suite and visual web studio for designing, testing, and deploying enterprise-grade **Resource Naming Conventions** and **Granular Tag Governance** across Azure Landing Zones (ALZ).
 
-## Safety defaults
-- Existing rules: Audit
-- Subnet rule: Audit
-- Assignment enforcementMode: Default
+Aligned with the **Microsoft Cloud Adoption Framework (CAF)** and Azure Landing Zones Enterprise-Scale architecture.
 
-Audit reports non-compliance but does not block requests. To enforce Deny after review, pass `effect=Deny`. Keep `subnetEffect=Audit` until inline and standalone subnet behavior has been tested in Azure.
+---
 
-## Structure
-Only these maintained inputs should be edited:
-- `config/customer.json`: customer tokens, effect values, subnet allowlist.
-- `config/types.json`: normal type catalogue.
-- `tools/generate.py`: generator logic.
-- `tests/offline.py` and `tests/regression.py`: validation.
+## Key Features
 
-Never manually edit `generated/*`. Regenerate it.
+1. **Multi-Customer Workspace Engine**:
+   - Easily manage and switch between customer profiles (Customer Name, Abbreviation, Subscription Name, Subscription Code like `CON` or `PRDA`, Target Regions, and Semantic Versioning like `v1.0.0`).
+   - Customer configurations are persistently saved in local storage and exportable as JSON profiles.
 
-## Generate and test
+2. **Naming Convention Studio**:
+   - **Dynamic Token Pattern Engine**: Define pattern syntax using smart tokens with automatic case rules:
+     - `{Org}`: TitleCase customer abbreviation (e.g. `Cust01`, `Nova`)
+     - `{org}`: lowercase customer abbreviation (e.g. `cust01`, `nova`)
+     - `{ORG}`: UPPERCASE customer abbreviation (e.g. `CUST01`, `NOVA`)
+     - `{OrgName}` / `{orgname}` / `{ORGNAME}`: Full customer name (e.g. `NovaaiDynamics`, `novaai-dynamics`, `NOVAAI-DYNAMICS`)
+     - `{SUB}`: UPPERCASE subscription code (e.g. `CON`, `AIP`)
+     - `{sub}`: lowercase subscription code (e.g. `con`, `aip`)
+     - `{SUBNAME}` / `{subname}` / `{SubName}`: Full subscription name (e.g. `AI-FOUNDRY-PRODUCTION`, `Connectivity`)
+     - `{ENV}` / `{env}`: Environment short code (e.g. `PRD`, `prd`, `DEV`, `dev`)
+     - `{ENVNAME}` / `{envname}`: Full environment name (e.g. `PRODUCTION`, `production`)
+     - `{ResourceGroup}` / `{RG}` / `{RGNAME}`: Resource Group wildcard (`*`) in Azure Policy
+     - `{Region}` / `{region}` / `{REGION}`: Region codes (e.g. `Cc`, `cc`, `CC`)
+     - `{Role}` / `{role}`: Server or VM role (e.g. `dc`, `web`, `app`)
+     - `##`: Two-digit instance numbering (`01-99`)
+   - **Extensible Resource Type Catalog**: 30+ preloaded official Azure resource types with an **"Add Custom Resource Type"** modal for custom types.
+   - **Enforcement Modes**:
+     - 🟢 **Custom Pattern**: Strictly enforces customer pattern.
+     - 🟡 **Microsoft CAF Standard**: Falls back to official Microsoft CAF naming pattern (`<type>-<workload>-<env>-<region>-<instance>`).
+     - ⚪ **Direct Creation (Unrestricted)**: Omits policy definition so the resource type can be created directly with any name.
+   - **Interactive Live Name Sandbox**: Type any candidate name and test in real time whether it complies with policy rules.
+   - **Subnet Allowlist Manager**: Safe allowlist for standalone subnets and inline `Microsoft.Network/virtualNetworks` subnets, with quick-add presets for Azure reserved subnets (`GatewaySubnet`, `AzureBastionSubnet`, `AzureFirewallSubnet`).
+
+3. **Granular Tag Governance Studio**:
+   - **Hierarchical Governance**:
+     - 🏢 **Subscription Scope**: Broad financial & ownership governance (e.g. `CostCenter`, `Owner`, `BusinessUnit`).
+     - 📁 **Resource Group Scope**: Lifecycle & project governance (e.g. `Environment`, `Workload`, `CostCenter`, `Owner`).
+     - 📦 **Resource Scope**: Granular operational governance with `mode: Indexed` (e.g. `Environment`, `Application`, `DataClassification`, `Criticality`, `BackupPolicy`).
+   - **Flexible Requirement & Fallback**:
+     - **Required**: Tag must be present and value must match the allowed list.
+     - **Optional**: Tag is not required; if omitted or provided as `NA` / `N/A`, it is accepted; if provided with a custom value, it must be in the approved list.
+   - **Comma-Separated Allowed Values**: Fast text input with automatic badge chip rendering.
+   - **CAF Baseline Quick-Import**: Import standard recommended tags with one click.
+
+4. **One-Click Bicep & Artifact Downloader**:
+   - **Instant Bicep Generator**: Generates clean, production-ready, modular `main.bicep` code with version metadata.
+   - **Interactive Code Inspector**: Live syntax-highlighted tabs for `main.bicep`, `main.json` (ARM), `parameters.json`, `Deploy-Audit.ps1`, `deploy.sh`, and `customer.json`.
+   - **One-Click Download**:
+     - 🚀 **Download Bicep**: Downloads `<customer>-<subName>-policy-v<version>.bicep` directly.
+     - 📦 **Download ZIP Bundle**: Packages `main.bicep`, `main.json`, `parameters.json`, `Deploy-Audit.ps1`, `deploy.sh`, and `README.md`.
+
+---
+
+## Getting Started
+
+### 1. Launch the Web Portal
 ```bash
-chmod u+w . config generated tests tools
-python3 tools/generate.py && python3 tests/offline.py
-python3 tests/regression.py
+# Start the local development server
+npm run dev
 ```
-Generation removes prior output first. Tests compare hashes and reject stale or modified output.
+Open your browser at **`http://localhost:5173/`**.
 
-## Subnet naming
-The integrated subnet policy has reference ID `subnet`. It checks:
-1. standalone `Microsoft.Network/virtualNetworks/subnets` requests; and
-2. subnet names submitted inside a `Microsoft.Network/virtualNetworks` request.
+### 2. Build for Production
+```bash
+# Build the optimized production bundle
+npm run build
+```
+The static assets are compiled into `portal/dist/` and can be hosted on Azure Static Web Apps, an internal storage container, or accessed locally.
 
-Allowed names are maintained at `config/customer.json -> subnetNaming.allowedNames`. The supplied names are sample/proposed values plus required Azure service subnet names. Review the list before Deny.
+---
 
-Subnet is not automatically added to the existing VM/NIC/PIP exemption. Add reference ID `subnet` only if the approved waiver genuinely includes subnet naming.
+## Deployment to Azure
 
-## Azure CLI validation and deployment
+### Option A: Deploy via Azure CLI
 ```bash
 SUBSCRIPTION_ID="YOUR-SUBSCRIPTION-ID"
 az account set --subscription "$SUBSCRIPTION_ID"
 
+# Validate
 az deployment sub validate \
-  --subscription "$SUBSCRIPTION_ID" \
   --location canadacentral \
-  --template-file generated/main.json \
-  --parameters @generated/parameters.json \
-  effect=Audit subnetEffect=Audit enforcementMode=Default
-```
+  --template-file main.bicep \
+  --parameters namingEffect=Audit subnetEffect=Audit tagEffect=Audit
 
-Deploy only after validation succeeds:
-```bash
+# Deploy
 az deployment sub create \
-  --subscription "$SUBSCRIPTION_ID" \
-  --name cust01-naming-v2-1 \
+  --name "alz-policy-bundle" \
   --location canadacentral \
-  --template-file generated/main.json \
-  --parameters @generated/parameters.json \
-  effect=Audit subnetEffect=Audit enforcementMode=Default
+  --template-file main.bicep \
+  --parameters namingEffect=Audit subnetEffect=Audit tagEffect=Audit
 ```
 
-For existing rules in Deny while subnet remains Audit:
+### Option B: Deploy via PowerShell
+```powershell
+.\Deploy-Audit.ps1 -SubscriptionId "YOUR-SUBSCRIPTION-ID" -NamingEffect Audit -SubnetEffect Audit -TagEffect Audit
+```
+
+---
+
+## Offline CI/CD Testing & CLI Validation
+
+For automated pipelines, run the local AST condition-tree tests:
 ```bash
-az deployment sub create \
-  --subscription "$SUBSCRIPTION_ID" \
-  --name cust01-naming-v2-1 \
-  --location canadacentral \
-  --template-file generated/main.json \
-  --parameters @generated/parameters.json \
-  effect=Deny subnetEffect=Audit enforcementMode=Default
+npm run test:offline
+npm run test:regression
 ```
 
-## Verify
-```bash
-SCOPE="/subscriptions/$SUBSCRIPTION_ID"
-az policy assignment show \
-  --name cust01-naming-test \
-  --scope "$SCOPE" \
-  --query "{Effect:parameters.effect.value,SubnetEffect:parameters.subnetEffect.value,Enforcement:enforcementMode}" \
-  --output json
-```
+## Documentation & Tabletop Guides
 
-## Existing exemption
-The package doesn't delete or replace exemptions. Your existing RG exemption for references `vm`, `nic`, and `pip` remains an Azure child resource. It is not stored in this generic customer-neutral package.
+- 📘 **[Enterprise User Guide & Tabletop Runbook](file:///Users/mrkhan/Tools/int-policy/USER_GUIDE.md)**: A complete enterprise walkthrough simulating onboarding **NovaAI Dynamics** (AI Landing Zone with Azure OpenAI, AI Search, and ML Workspaces), detailed tabletop drills, and operator troubleshooting.
+- 📋 **[Quality Assurance & Verification Protocols](file:///Users/mrkhan/Tools/int-policy/QA.md)**: Mandatory QA checklist, tabletop sign-off rubric, and deployment verification standards.
 
-## Limits
-Unknown types are unaffected. ENV is excluded. Subnet uses an explicit allowlist rather than a generated `{purpose}` pattern. Disk naming isn't covered. The VM portal still requires networking; subnet policy does not create a VNet or subnet. VM SKU/capacity errors are unrelated to naming policy. Global name availability and all provider-specific reserved-name conditions aren't checked locally.
+---
 
-## Validation status
-Local generator, condition-tree tests, stale-output tests, configuration regression tests, and package structure checks were executed during creation. Azure Resource Manager validation, Azure Policy engine behavior, PowerShell execution, and Bicep compilation must be performed in your environment.
+## Architecture References
+- [Microsoft Cloud Adoption Framework (CAF) Resource Naming](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming)
+- [Microsoft CAF Resource Abbreviations](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations)
+- [Microsoft CAF Resource Tagging Strategy](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging)
+- [Azure Policy Definition Structure](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule)
 
-## Microsoft references
-- Azure Policy rule structure: https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule
-- Array policy authoring: https://learn.microsoft.com/en-us/azure/governance/policy/how-to/author-policies-for-arrays
-- Azure Policy exemptions: https://learn.microsoft.com/en-us/azure/governance/policy/concepts/exemption-structure
-- Azure resource name restrictions: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules

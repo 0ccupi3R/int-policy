@@ -1,0 +1,1767 @@
+import React, { useState } from "react";
+import {
+  AVAILABLE_TOKENS,
+  toSampleName,
+  validateCandidateName,
+  getEnrichedResourceMeta,
+  validateAzurePlatformConstraints,
+  validatePatternStructure,
+  autoFixPatternForResource
+} from "../engine/tokenParser.js";
+import { AZURE_NAMING_CATALOG, getEffectiveAbbreviation } from "../data/azureNamingCatalog.js";
+import {
+  BUILTIN_NAMING_TEMPLATES,
+  getCustomTemplates,
+  saveCustomTemplate,
+  deleteCustomTemplate
+} from "../data/namingTemplates.js";
+import {
+  Layers,
+  Search,
+  Plus,
+  CheckCircle,
+  XCircle,
+  HelpCircle,
+  Sparkles,
+  Network,
+  RotateCcw,
+  Check,
+  FileCode,
+  BookOpen,
+  Sliders,
+  ShieldCheck,
+  AlertTriangle,
+  ExternalLink,
+  LayoutTemplate,
+  Bookmark,
+  Save,
+  Trash2,
+  Zap,
+  Info
+} from "lucide-react";
+
+export function NamingStudio({
+  customer,
+  catalog,
+  onUpdateCustomer,
+  onAddResourceType,
+  onShowToast
+}) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  // Live Sandbox state
+  const [testName, setTestName] = useState("");
+  const [testTypeKey, setTestTypeKey] = useState("vm");
+  const [testRegion, setTestRegion] = useState(
+    customer.regions ? Object.values(customer.regions)[0] : "cc"
+  );
+  const [testPurpose, setTestPurpose] = useState(
+    customer.purpose || (customer.purposes && customer.purposes[0]) || "core"
+  );
+
+  // Add Resource Type Modal
+  const [showAddTypeModal, setShowAddTypeModal] = useState(false);
+  const [cafSearchQuery, setCafSearchQuery] = useState("");
+  const [selectedCafItem, setSelectedCafItem] = useState(null);
+
+  // Curated Naming Templates & Baselines Modal
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("airgate-core");
+  const [customTemplates, setCustomTemplates] = useState(() => getCustomTemplates());
+  const [newTemplateName, setNewTemplateName] = useState("");
+  const [newTemplateDesc, setNewTemplateDesc] = useState("");
+  const [newType, setNewType] = useState({
+    key: "",
+    name: "",
+    resourceType: "",
+    abbreviation: "",
+    category: "Custom",
+    defaultPattern: "{Org}-{SUB}-{ResourceGroup}-{abbreviation}",
+    minLength: 1,
+    maxLength: 64,
+    allowedCharacters: "Alphanumerics and hyphens",
+    pattern: "^[a-zA-Z0-9-]{1,64}$",
+    scope: "Resource group",
+    taggable: true,
+    is_override: false,
+    caf_abbreviation: "",
+    airgate_abbreviation: "",
+    doc_url: "",
+    description: "Custom user-defined Azure resource type."
+  });
+
+  const handleSelectCafItem = (cafItem) => {
+    const isOverride = cafItem.is_override;
+    const abbr = cafItem.airgate_abbreviation || cafItem.caf_abbreviation;
+    setNewType({
+      key: abbr,
+      name: cafItem.name,
+      resourceType: cafItem.provider,
+      abbreviation: abbr,
+      category: cafItem.category,
+      defaultPattern: `{Org}-{SUB}-{ResourceGroup}-${abbr}`,
+      minLength: cafItem.minLength || 1,
+      maxLength: cafItem.maxLength || 64,
+      allowedCharacters: cafItem.allowedCharacters || "Alphanumerics and hyphens",
+      pattern: cafItem.pattern || `^[a-zA-Z0-9-_]{${cafItem.minLength || 1},${cafItem.maxLength || 64}}$`,
+      scope: cafItem.scope || "Resource group",
+      taggable: cafItem.taggable !== false,
+      caf_abbreviation: cafItem.caf_abbreviation,
+      airgate_abbreviation: cafItem.airgate_abbreviation,
+      is_override: isOverride,
+      doc_url: cafItem.doc_url || "",
+      description: `${cafItem.name} (${cafItem.category}) - ${cafItem.scope} scope.`
+    });
+    setSelectedCafItem(cafItem);
+    setCafSearchQuery("");
+  };
+
+  const namingRules = customer.namingRules || {};
+  const customPatterns = namingRules.customPatterns || {};
+  const unrestrictedTypes = namingRules.unrestrictedTypes || [];
+  const subnetAllowed = namingRules.subnetNaming?.allowedNames || [];
+  const [newSubnetName, setNewSubnetName] = useState("");
+
+  const categories = ["All", ...new Set(catalog.map((c) => c.category || "General"))];
+
+  const filteredCatalog = catalog.filter((item) => {
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.resourceType.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Handler for updating a type's custom pattern
+  const handlePatternChange = (key, newPattern) => {
+    const updated = {
+      ...customer,
+      namingRules: {
+        ...namingRules,
+        customPatterns: {
+          ...customPatterns,
+          [key]: newPattern
+        }
+      }
+    };
+    onUpdateCustomer(updated);
+  };
+
+  // Bulk Apply AirGate Patterns to All Resources
+  const handleApplyAirGateToAll = () => {
+    const updatedPatterns = { ...customPatterns };
+    catalog.forEach((item) => {
+      updatedPatterns[item.key] = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+    });
+    onUpdateCustomer({
+      ...customer,
+      namingRules: { ...namingRules, customPatterns: updatedPatterns }
+    });
+    onShowToast("Applied AirGate standard patterns to all resource types!");
+  };
+
+  // Bulk Apply Microsoft CAF Patterns to All Resources
+  const handleApplyCafToAll = () => {
+    const updatedPatterns = { ...customPatterns };
+    catalog.forEach((item) => {
+      updatedPatterns[item.key] = item.cafPattern || `${item.abbreviation}-{workload}-{env}-{region}`;
+    });
+    onUpdateCustomer({
+      ...customer,
+      namingRules: { ...namingRules, customPatterns: updatedPatterns }
+    });
+    onShowToast("Applied Microsoft CAF default patterns to all resource types!");
+  };
+
+  // Template Application Handler
+  const handleApplyTemplate = (template) => {
+    const newCustomPatterns = { ...customPatterns };
+
+    if (template.patterns && Object.keys(template.patterns).length > 0) {
+      Object.entries(template.patterns).forEach(([k, pat]) => {
+        newCustomPatterns[k] = pat;
+      });
+    } else {
+      catalog.forEach((item) => {
+        newCustomPatterns[item.key] = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+      });
+    }
+
+    let newUnrestricted = [...unrestrictedTypes];
+    if (template.resourceKeys && template.resourceKeys.length > 0) {
+      newUnrestricted = catalog
+        .filter((item) => !template.resourceKeys.includes(item.key))
+        .map((item) => item.key);
+    } else {
+      newUnrestricted = [];
+    }
+
+    const updated = {
+      ...customer,
+      namingRules: {
+        ...namingRules,
+        customPatterns: newCustomPatterns,
+        unrestrictedTypes: newUnrestricted,
+        subnetNaming: {
+          ...namingRules.subnetNaming,
+          allowedNames: template.subnetAllowed || subnetAllowed
+        }
+      }
+    };
+
+    onUpdateCustomer(updated);
+    setShowTemplateModal(false);
+    onShowToast(`Applied baseline template "${template.name}" to ${customer.name}!`);
+  };
+
+  // Save Current Workspace as Custom Template
+  const handleSaveCurrentAsTemplate = () => {
+    if (!newTemplateName.trim()) return;
+    const newTpl = {
+      id: `tpl-${Date.now()}`,
+      name: newTemplateName.trim(),
+      category: "Custom",
+      badge: `${catalog.filter((i) => !unrestrictedTypes.includes(i.key)).length} Types`,
+      description: newTemplateDesc.trim() || `Custom naming baseline saved from ${customer.name}.`,
+      patterns: { ...customPatterns },
+      resourceKeys: catalog.filter((i) => !unrestrictedTypes.includes(i.key)).map((i) => i.key),
+      subnetAllowed: [...subnetAllowed]
+    };
+    const updatedList = saveCustomTemplate(newTpl);
+    setCustomTemplates(updatedList);
+    setSelectedTemplateId(newTpl.id);
+    setNewTemplateName("");
+    setNewTemplateDesc("");
+    onShowToast(`Saved custom baseline template "${newTpl.name}"!`);
+  };
+
+  const handleDeleteTemplate = (id) => {
+    const updated = deleteCustomTemplate(id);
+    setCustomTemplates(updated);
+    setSelectedTemplateId("airgate-core");
+    onShowToast("Template removed.");
+  };
+
+  // Handler for toggling unrestricted / direct creation
+  const handleToggleUnrestricted = (key) => {
+    const isUnrestricted = unrestrictedTypes.includes(key);
+    const newUnrestricted = isUnrestricted
+      ? unrestrictedTypes.filter((k) => k !== key)
+      : [...unrestrictedTypes, key];
+
+    const updated = {
+      ...customer,
+      namingRules: {
+        ...namingRules,
+        unrestrictedTypes: newUnrestricted
+      }
+    };
+    onUpdateCustomer(updated);
+    onShowToast(
+      isUnrestricted
+        ? `Re-enforced naming policy for ${key.toUpperCase()}`
+        : `Allowed direct creation for ${key.toUpperCase()} (unrestricted)`
+    );
+  };
+
+  // Subnet Allowlist handlers
+  const handleAddSubnetName = (name) => {
+    const clean = name.trim();
+    if (!clean || subnetAllowed.includes(clean)) return;
+
+    const updated = {
+      ...customer,
+      namingRules: {
+        ...namingRules,
+        subnetNaming: {
+          ...namingRules.subnetNaming,
+          allowedNames: [...subnetAllowed, clean]
+        }
+      }
+    };
+    onUpdateCustomer(updated);
+    setNewSubnetName("");
+    onShowToast(`Added subnet '${clean}' to allowlist`);
+  };
+
+  const handleRemoveSubnetName = (name) => {
+    const updated = {
+      ...customer,
+      namingRules: {
+        ...namingRules,
+        subnetNaming: {
+          ...namingRules.subnetNaming,
+          allowedNames: subnetAllowed.filter((n) => n !== name)
+        }
+      }
+    };
+    onUpdateCustomer(updated);
+  };
+
+  // Live Sandbox validation calculation
+  const currentTestItem = catalog.find((i) => i.key === testTypeKey) || catalog[0];
+  const currentTestPattern =
+    customPatterns[testTypeKey] || namingRules.globalPattern || currentTestItem?.defaultPattern;
+  const isTestItemUnrestricted = unrestrictedTypes.includes(testTypeKey);
+  const effectivePurpose = testPurpose || customer.purpose || (customer.purposes && customer.purposes[0]) || "core";
+  const testValidation = validateCandidateName(
+    testName,
+    currentTestPattern,
+    customer,
+    currentTestItem,
+    testRegion,
+    effectivePurpose
+  );
+
+  // Calculate platform violations across all active/enforced resources
+  const platformViolations = catalog
+    .filter((item) => !unrestrictedTypes.includes(item.key))
+    .map((item) => {
+      const airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+      const pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
+      const meta = getEnrichedResourceMeta(item);
+      const sampleName = toSampleName(pattern, customer, item, { purpose: effectivePurpose });
+      const sampleVal = validateAzurePlatformConstraints(sampleName, meta);
+      const structVal = validatePatternStructure(pattern, meta);
+      const isValid = sampleVal.valid && structVal.valid;
+      return {
+        item,
+        pattern,
+        meta,
+        sampleName,
+        sampleVal,
+        structVal,
+        isValid,
+        autoFix: autoFixPatternForResource(pattern, meta)
+      };
+    })
+    .filter((v) => !v.isValid);
+
+  const handleAutoFixAll = () => {
+    const updatedPatterns = { ...customPatterns };
+    platformViolations.forEach((v) => {
+      if (v.autoFix && v.autoFix !== v.pattern) {
+        updatedPatterns[v.item.key] = v.autoFix;
+      }
+    });
+    const updated = {
+      ...customer,
+      namingRules: {
+        ...namingRules,
+        customPatterns: updatedPatterns
+      }
+    };
+    onUpdateCustomer(updated);
+    if (onShowToast) {
+      onShowToast(`Auto-fixed ${platformViolations.length} resource pattern(s) to comply with Azure platform limits.`);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      {/* Azure Platform Constraints Global Warning Banner */}
+      {platformViolations.length > 0 && (
+        <div
+          className="glass-panel"
+          style={{
+            padding: "16px 20px",
+            background: "linear-gradient(135deg, rgba(244, 63, 94, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%)",
+            border: "1px solid rgba(244, 63, 94, 0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            boxShadow: "0 4px 20px rgba(244, 63, 94, 0.15)"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "8px",
+                background: "rgba(244, 63, 94, 0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--accent-rose)"
+              }}
+            >
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "#fca5a5" }}>
+                {platformViolations.length} Resource Naming Pattern{platformViolations.length > 1 ? "s" : ""} Violate Azure Platform Constraints
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                Azure ARM will fail resource creation if names exceed length bounds or contain forbidden characters (e.g., Storage Accounts reject hyphens & uppercase).
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              fontWeight: "600",
+              fontSize: "0.8rem"
+            }}
+            onClick={handleAutoFixAll}
+          >
+            <Zap size={15} /> Auto-Fix All Violations ({platformViolations.length})
+          </button>
+        </div>
+      )}
+
+      {/* 1. Global Pattern Bar & Dynamic Token Chips */}
+      <div className="glass-panel" style={{ padding: "24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+          <div>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Layers size={20} color="var(--azure-cyan)" />
+              Naming Convention Pattern Engine
+            </h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginTop: "4px" }}>
+              Build dynamic naming rules with smart tokens. Abbreviation tokens: <code>{`{Org}`}</code>, <code>{`{org}`}</code>, <code>{`{SUB}`}</code>, <code>{`{ENV}`}</code>, <code>{`{RG}`}</code>. Full-name tokens: <code>{`{ORGNAME}`}</code>, <code>{`{SUBNAME}`}</code>, <code>{`{ENVNAME}`}</code>, <code>{`{ResourceGroup}`}</code> (wildcards evaluate to <code>*</code> in Azure Policy).
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => setShowTemplateModal(true)}
+              title="Load a curated naming baseline (AirGate Core, AI Workloads, Microservices) or save custom template"
+            >
+              <LayoutTemplate size={16} />
+              <span>Baselines & Templates</span>
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={() => setShowAddTypeModal(true)}>
+              <Plus size={16} />
+              <span>Add Resource Type</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Token Chips */}
+        <div>
+          <span className="form-label" style={{ marginBottom: "8px" }}>Quick-Insert Tokens</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {AVAILABLE_TOKENS.map((t) => (
+              <button
+                key={t.token}
+                className="token-chip-btn"
+                title={`${t.description} -> Example: ${t.example}`}
+                onClick={() => {
+                  navigator.clipboard.writeText(t.token);
+                  onShowToast(`Copied token ${t.token} to clipboard!`);
+                }}
+              >
+                <span>{t.token}</span>
+                <span style={{ opacity: 0.6, fontSize: "0.75rem", marginLeft: "4px" }}>({t.example})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Interactive Live Sandbox Validator */}
+      <div
+        className="glass-panel"
+        style={{
+          padding: "20px 24px",
+          background: "linear-gradient(135deg, rgba(17, 24, 39, 0.8) 0%, rgba(14, 165, 233, 0.08) 100%)",
+          border: "1px solid rgba(6, 182, 212, 0.3)"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+          <Sparkles size={18} color="var(--azure-cyan)" />
+          <h3 style={{ fontSize: "1rem", fontWeight: "700" }}>Live Name Compliance Sandbox</h3>
+          <span className="chip chip-azure" style={{ marginLeft: "auto" }}>Real-time Policy Evaluator</span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "180px 120px 140px 1fr", gap: "12px", alignItems: "center" }}>
+          <div>
+            <label className="form-label">Resource Type</label>
+            <select
+              className="form-input"
+              value={testTypeKey}
+              onChange={(e) => setTestTypeKey(e.target.value)}
+            >
+              {catalog.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.name} ({c.abbreviation})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="form-label">Region</label>
+            <select
+              className="form-input"
+              value={testRegion}
+              onChange={(e) => setTestRegion(e.target.value)}
+            >
+              {Object.entries(customer.regions || {}).map(([loc, code]) => (
+                <option key={loc} value={code}>
+                  {loc} ({code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="form-label">Purpose</label>
+            <select
+              className="form-input"
+              value={testPurpose}
+              onChange={(e) => setTestPurpose(e.target.value)}
+            >
+              {(customer.purposes && customer.purposes.length > 0
+                ? customer.purposes
+                : ["hub", "core", "monitoring", "infrafw", "apps"]
+              ).map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="form-label">Test Candidate Name</label>
+            <input
+              type="text"
+              className="form-input form-input-mono"
+              placeholder={`e.g. ${toSampleName(currentTestPattern, customer, currentTestItem, { region: testRegion, purpose: effectivePurpose })}`}
+              value={testName}
+              onChange={(e) => setTestName(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Validation Result Box */}
+        {testName.trim() && (
+          <div
+            style={{
+              marginTop: "14px",
+              padding: "12px 16px",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              background: isTestItemUnrestricted
+                ? "rgba(100, 116, 139, 0.15)"
+                : testValidation.valid
+                ? "rgba(16, 185, 129, 0.15)"
+                : "rgba(244, 63, 94, 0.15)",
+              border: `1px solid ${
+                isTestItemUnrestricted
+                  ? "rgba(100, 116, 139, 0.3)"
+                  : testValidation.valid
+                  ? "rgba(16, 185, 129, 0.4)"
+                  : "rgba(244, 63, 94, 0.4)"
+              }`
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", flex: 1 }}>
+              {isTestItemUnrestricted ? (
+                <HelpCircle size={20} color="#94a3b8" style={{ marginTop: "2px", flexShrink: 0 }} />
+              ) : testValidation.valid ? (
+                <CheckCircle size={20} color="#10b981" style={{ marginTop: "2px", flexShrink: 0 }} />
+              ) : (
+                <XCircle size={20} color="#f43f5e" style={{ marginTop: "2px", flexShrink: 0 }} />
+              )}
+
+              <div>
+                <div style={{ fontWeight: "700", fontSize: "0.9rem" }}>
+                  {isTestItemUnrestricted
+                    ? "UNRESTRICTED: Direct creation allowed without naming restrictions."
+                    : testValidation.valid
+                    ? "COMPLIANT: Allowed by Azure Policy & Valid Azure ARM Name"
+                    : !testValidation.platformValid
+                    ? "ARM PLATFORM REJECTION: Fails Azure Physical Constraints"
+                    : "NON-COMPLIANT: Would be blocked or audited by Azure Policy"}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                  {testValidation.reason}
+                </div>
+                {testValidation.errors && testValidation.errors.length > 1 && (
+                  <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: "0.75rem", color: "#fca5a5" }}>
+                    {testValidation.errors.map((e, idx) => (
+                      <li key={idx}>{e}</li>
+                    ))}
+                  </ul>
+                )}
+                {testValidation.warnings && testValidation.warnings.length > 0 && (
+                  <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#fef08a" }}>
+                    ⚠️ {testValidation.warnings.join("; ")}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {testValidation.length !== undefined && !isTestItemUnrestricted && (
+              <span
+                className="chip"
+                style={{
+                  fontSize: "0.72rem",
+                  padding: "4px 8px",
+                  fontFamily: "var(--font-mono)",
+                  background:
+                    testValidation.length > testValidation.maxLength ||
+                    testValidation.length < testValidation.minLength
+                      ? "rgba(244, 63, 94, 0.25)"
+                      : "rgba(16, 185, 129, 0.2)",
+                  color:
+                    testValidation.length > testValidation.maxLength ||
+                    testValidation.length < testValidation.minLength
+                      ? "var(--accent-rose)"
+                      : "var(--accent-emerald)",
+                  border: `1px solid ${
+                    testValidation.length > testValidation.maxLength ||
+                    testValidation.length < testValidation.minLength
+                      ? "rgba(244, 63, 94, 0.4)"
+                      : "rgba(16, 185, 129, 0.4)"
+                  }`
+                }}
+              >
+                {testValidation.length} / {testValidation.maxLength} chars
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 3. Subnet Allowlist Special Module */}
+      <div className="glass-panel" style={{ padding: "20px 24px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+          <Network size={18} color="var(--azure-cyan)" />
+          <h3 style={{ fontSize: "1.05rem", fontWeight: "700" }}>Subnet Naming Allowlist</h3>
+          <span className="chip chip-purple" style={{ marginLeft: "auto" }}>Standalone & Inline Array Rules</span>
+        </div>
+
+        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "14px" }}>
+          In Azure Landing Zones, subnets require approved naming allowlists rather than open regex patterns to avoid breaking Azure reserved subnets (e.g., GatewaySubnet, AzureFirewallSubnet).
+        </p>
+
+        {/* Subnet Chips */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
+          {subnetAllowed.map((name) => (
+            <span key={name} className="chip chip-emerald" style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
+              <span>{name}</span>
+              <button
+                onClick={() => handleRemoveSubnetName(name)}
+                style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", marginLeft: "4px" }}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+
+        {/* Add Subnet Input & Quick Presets */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <input
+            type="text"
+            className="form-input form-input-mono"
+            style={{ maxWidth: "300px" }}
+            placeholder="Add subnet (e.g. snet-database)"
+            value={newSubnetName}
+            onChange={(e) => setNewSubnetName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAddSubnetName(newSubnetName);
+            }}
+          />
+          <button className="btn btn-secondary btn-sm" onClick={() => handleAddSubnetName(newSubnetName)}>
+            Add Subnet
+          </button>
+
+          <span style={{ color: "var(--text-dim)", fontSize: "0.8rem", margin: "0 6px" }}>| Quick Add:</span>
+          {["GatewaySubnet", "AzureBastionSubnet", "AzureFirewallSubnet"].map((preset) => (
+            <button
+              key={preset}
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: "0.75rem", padding: "4px 8px" }}
+              disabled={subnetAllowed.includes(preset)}
+              onClick={() => handleAddSubnetName(preset)}
+            >
+              + {preset}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 4. Resource Types Catalogue & Pattern Rules */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+          <div>
+            <h3 style={{ fontSize: "1.15rem", fontWeight: "700" }}>
+              Resource Type Naming Rules ({filteredCatalog.length} Types)
+            </h3>
+            <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
+              Customize pattern per resource type, switch to CAF default, or exempt for direct creation.
+            </span>
+          </div>
+
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+            {/* Bulk Apply Buttons */}
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button
+                type="button"
+                className="btn btn-sm btn-secondary"
+                style={{ fontSize: "0.75rem", padding: "6px 12px", display: "flex", alignItems: "center", gap: "5px" }}
+                onClick={handleApplyAirGateToAll}
+                title="Reset all resource types to AirGate Standard pattern: {Org}-{SUB}-{ResourceGroup}-{abbr}"
+              >
+                <Sliders size={13} color="var(--azure-cyan)" />
+                Apply AirGate to All
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-secondary"
+                style={{ fontSize: "0.75rem", padding: "6px 12px", display: "flex", alignItems: "center", gap: "5px" }}
+                onClick={handleApplyCafToAll}
+                title="Switch all resource types to Microsoft CAF pattern: {abbr}-{workload}-{env}-{region}"
+              >
+                <RotateCcw size={13} color="var(--accent-purple)" />
+                Apply Azure CAF to All
+              </button>
+            </div>
+
+            {/* Search */}
+            <div style={{ position: "relative" }}>
+              <Search size={15} style={{ position: "absolute", left: "10px", top: "12px", color: "var(--text-dim)" }} />
+              <input
+                type="text"
+                className="form-input"
+                style={{ paddingLeft: "32px", width: "200px", fontSize: "0.85rem" }}
+                placeholder="Search types..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Category Filter */}
+            <select
+              className="form-input"
+              style={{ width: "auto", fontSize: "0.85rem" }}
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Resource Cards Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: "16px" }}>
+          {filteredCatalog.map((item) => {
+            const meta = getEnrichedResourceMeta(item);
+            const isUnrestricted = unrestrictedTypes.includes(item.key);
+            const airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+            const cafPattern = item.cafPattern || `${item.abbreviation}-{workload}-{env}-{region}`;
+            const pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
+            const isAirGate = pattern === airgatePattern;
+            const isCaf = pattern === cafPattern;
+            const sampleName = toSampleName(pattern, customer, item, { purpose: effectivePurpose });
+
+            const sampleVal = validateAzurePlatformConstraints(sampleName, meta);
+            const structVal = validatePatternStructure(pattern, meta);
+            const hasError = !isUnrestricted && (!sampleVal.valid || !structVal.valid);
+            const autoFixSuggestion = hasError ? autoFixPatternForResource(pattern, meta) : null;
+            const charCount = sampleName ? sampleName.length : 0;
+            const isLengthExceeded = meta.maxLength && charCount > meta.maxLength;
+            const isLengthTooShort = meta.minLength && charCount < meta.minLength;
+
+            return (
+              <div
+                key={item.key}
+                className="glass-panel"
+                style={{
+                  padding: "18px 20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                  opacity: isUnrestricted ? 0.65 : 1,
+                  border: isUnrestricted
+                    ? "1px dashed var(--border-subtle)"
+                    : hasError
+                    ? "1px solid rgba(244, 63, 94, 0.5)"
+                    : "1px solid var(--border-subtle)",
+                  boxShadow: hasError ? "0 0 16px rgba(244, 63, 94, 0.12)" : undefined
+                }}
+              >
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontWeight: "700", fontSize: "1rem" }}>{item.name}</span>
+                      <span className="chip chip-azure" style={{ padding: "2px 8px", fontSize: "0.7rem" }}>
+                        {item.abbreviation}
+                      </span>
+                      <span className="chip" style={{ padding: "2px 8px", fontSize: "0.7rem" }}>
+                        {item.category}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: "2px" }}>
+                      {item.resourceType}
+                    </div>
+                    {/* Constraints Pill */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+                      <span
+                        className="chip"
+                        style={{
+                          fontSize: "0.68rem",
+                          padding: "2px 8px",
+                          background: "rgba(255, 255, 255, 0.05)",
+                          color: "var(--text-muted)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px"
+                        }}
+                        title={`Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters}`}
+                      >
+                        <span style={{ color: "var(--azure-cyan)", fontWeight: "600" }}>
+                          📏 {meta.minLength}–{meta.maxLength} chars
+                        </span>
+                        <span style={{ opacity: 0.5 }}>•</span>
+                        <span>{meta.allowedCharacters}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Mode Selector */}
+                  <button
+                    className={`btn btn-sm ${isUnrestricted ? "btn-secondary" : "btn-outline-azure"}`}
+                    style={{ fontSize: "0.75rem", padding: "4px 10px" }}
+                    onClick={() => handleToggleUnrestricted(item.key)}
+                  >
+                    {isUnrestricted ? "⚪ Direct Creation" : "🟢 Enforced"}
+                  </button>
+                </div>
+
+                {/* Pattern Input */}
+                {!isUnrestricted && (
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                      <span className="form-label" style={{ margin: 0 }}>Pattern Syntax</span>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <span
+                          className={`chip ${isAirGate ? "chip-azure" : isCaf ? "chip-purple" : "chip"}`}
+                          style={{
+                            fontSize: "0.65rem",
+                            padding: "2px 7px",
+                            background: isAirGate
+                              ? "rgba(6, 182, 212, 0.15)"
+                              : isCaf
+                              ? "rgba(168, 85, 247, 0.15)"
+                              : "rgba(255, 255, 255, 0.08)",
+                            color: isAirGate
+                              ? "var(--azure-cyan)"
+                              : isCaf
+                              ? "#c084fc"
+                              : "var(--text-muted)"
+                          }}
+                        >
+                          {isAirGate ? "AirGate Standard" : isCaf ? "Azure CAF" : "Custom Pattern"}
+                        </span>
+                        <button
+                          type="button"
+                          className={`btn btn-sm ${isAirGate ? "btn-outline-azure" : "btn-secondary"}`}
+                          style={{
+                            fontSize: "0.7rem",
+                            padding: "3px 8px",
+                            height: "22px",
+                            lineHeight: "1",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "3px",
+                            borderColor: isAirGate ? "var(--azure-cyan)" : undefined
+                          }}
+                          onClick={() => handlePatternChange(item.key, airgatePattern)}
+                          title="Apply AirGate standard pattern: {Org}-{SUB}-{ResourceGroup}-{abbr}"
+                        >
+                          {isAirGate && <Check size={11} />}
+                          AirGate
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-sm ${isCaf ? "btn-outline-azure" : "btn-secondary"}`}
+                          style={{
+                            fontSize: "0.7rem",
+                            padding: "3px 8px",
+                            height: "22px",
+                            lineHeight: "1",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "3px",
+                            borderColor: isCaf ? "var(--accent-purple)" : undefined
+                          }}
+                          onClick={() => handlePatternChange(item.key, cafPattern)}
+                          title="Apply Microsoft CAF pattern: {abbr}-{workload}-{env}-{region}"
+                        >
+                          {isCaf && <Check size={11} />}
+                          Azure CAF
+                        </button>
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      className="form-input form-input-mono"
+                      style={{
+                        borderColor: hasError ? "var(--accent-rose)" : undefined,
+                        background: hasError ? "rgba(244, 63, 94, 0.04)" : undefined
+                      }}
+                      value={pattern}
+                      onChange={(e) => handlePatternChange(item.key, e.target.value)}
+                    />
+
+                    {/* Constraint Error Callout */}
+                    {hasError && (
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          padding: "8px 10px",
+                          borderRadius: "6px",
+                          background: "rgba(244, 63, 94, 0.12)",
+                          border: "1px solid rgba(244, 63, 94, 0.3)",
+                          fontSize: "0.75rem",
+                          color: "#fca5a5"
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                          <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: "2px", color: "var(--accent-rose)" }} />
+                          <div style={{ flex: 1 }}>
+                            <strong style={{ color: "#f87171" }}>Azure Constraint Violation:</strong>
+                            <ul style={{ margin: "3px 0 0 14px", padding: 0 }}>
+                              {[...structVal.errors, ...sampleVal.errors].slice(0, 2).map((err, idx) => (
+                                <li key={idx}>{err}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+
+                        {autoFixSuggestion && autoFixSuggestion !== pattern && (
+                          <div
+                            style={{
+                              marginTop: "8px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              paddingTop: "6px",
+                              borderTop: "1px solid rgba(244, 63, 94, 0.2)"
+                            }}
+                          >
+                            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                              Recommended pattern: <code style={{ color: "var(--azure-cyan)" }}>{autoFixSuggestion}</code>
+                            </span>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              style={{
+                                fontSize: "0.7rem",
+                                padding: "3px 8px",
+                                height: "22px",
+                                lineHeight: 1,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px"
+                              }}
+                              onClick={() => handlePatternChange(item.key, autoFixSuggestion)}
+                            >
+                              <Zap size={11} /> Auto-Fix
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Sample Preview */}
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                    background: hasError ? "rgba(244, 63, 94, 0.08)" : "rgba(0,0,0,0.3)",
+                    border: hasError ? "1px solid rgba(244, 63, 94, 0.25)" : "1px solid rgba(255,255,255,0.05)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0, overflow: "hidden" }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-dim)", flexShrink: 0 }}>Example:</span>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "0.85rem",
+                        color: isUnrestricted
+                          ? "var(--text-dim)"
+                          : hasError
+                          ? "var(--accent-rose)"
+                          : "var(--azure-cyan)",
+                        fontWeight: "600",
+                        textDecoration: hasError ? "line-through" : "none",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap"
+                      }}
+                      title={sampleName}
+                    >
+                      {isUnrestricted ? "(Unrestricted / Any Name Allowed)" : sampleName}
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                    {!isUnrestricted && (
+                      <span
+                        className="chip"
+                        style={{
+                          fontSize: "0.68rem",
+                          padding: "2px 6px",
+                          fontFamily: "var(--font-mono)",
+                          background:
+                            isLengthExceeded || isLengthTooShort
+                              ? "rgba(244, 63, 94, 0.2)"
+                              : "rgba(16, 185, 129, 0.15)",
+                          color:
+                            isLengthExceeded || isLengthTooShort
+                              ? "var(--accent-rose)"
+                              : "var(--accent-emerald)"
+                        }}
+                        title={`Current length: ${charCount} chars (Min: ${meta.minLength}, Max: ${meta.maxLength})`}
+                      >
+                        {charCount} / {meta.maxLength} chars
+                      </span>
+                    )}
+                    {!isUnrestricted && (
+                      <span
+                        style={{
+                          fontSize: "0.7rem",
+                          fontWeight: "600",
+                          color: hasError ? "var(--accent-rose)" : "var(--accent-emerald)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "3px"
+                        }}
+                      >
+                        {hasError ? <XCircle size={13} /> : <CheckCircle size={13} />}
+                        {hasError ? "Non-Compliant" : "Compliant"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Modal: Add Custom Resource Type with CAF & AirGate Catalogue Autofill */}
+      {showAddTypeModal && (
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: "680px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+            <div className="modal-header">
+              <div>
+                <h2 style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <BookOpen size={18} color="var(--azure-cyan)" />
+                  Add Azure Resource Type
+                </h2>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
+                  Search 200 Microsoft CAF & AirGate standards for instant autofill of abbreviations, providers & limitations.
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAddTypeModal(false);
+                  setSelectedCafItem(null);
+                  setCafSearchQuery("");
+                }}
+                style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* 1. Quick CAF Autocomplete Search */}
+              <div style={{ position: "relative" }}>
+                <label className="form-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Sparkles size={14} color="var(--azure-cyan)" />
+                    Quick Pick from 200 CAF & AirGate Resources
+                  </span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
+                    Type to search by name, abbreviation or provider
+                  </span>
+                </label>
+                <div style={{ position: "relative" }}>
+                  <Search size={15} style={{ position: "absolute", left: "10px", top: "12px", color: "var(--text-dim)" }} />
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ paddingLeft: "32px", fontSize: "0.85rem" }}
+                    placeholder="Search e.g. Databricks, OpenAI, Storage, Key Vault, Redis, PostgreSQL..."
+                    value={cafSearchQuery}
+                    onChange={(e) => setCafSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                {/* Autocomplete Dropdown List */}
+                {cafSearchQuery.trim().length > 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      right: 0,
+                      marginTop: "4px",
+                      background: "var(--bg-card)",
+                      border: "1px solid var(--border-glow)",
+                      borderRadius: "8px",
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+                      zIndex: 100,
+                      maxHeight: "240px",
+                      overflowY: "auto"
+                    }}
+                  >
+                    {AZURE_NAMING_CATALOG.filter((item) => {
+                      const q = cafSearchQuery.toLowerCase();
+                      return (
+                        item.name.toLowerCase().includes(q) ||
+                        item.caf_abbreviation.toLowerCase().includes(q) ||
+                        item.airgate_abbreviation.toLowerCase().includes(q) ||
+                        item.provider.toLowerCase().includes(q) ||
+                        item.category.toLowerCase().includes(q)
+                      );
+                    }).slice(0, 10).map((cafItem) => (
+                      <div
+                        key={cafItem.id}
+                        onClick={() => handleSelectCafItem(cafItem)}
+                        style={{
+                          padding: "10px 14px",
+                          borderBottom: "1px solid rgba(255,255,255,0.05)",
+                          cursor: "pointer",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          transition: "background 0.15s ease"
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0, 120, 212, 0.2)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      >
+                        <div>
+                          <div style={{ fontWeight: "600", fontSize: "0.85rem", color: "var(--text-main)" }}>
+                            {cafItem.name}
+                          </div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>
+                            {cafItem.provider}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          {cafItem.is_override ? (
+                            <span className="chip" style={{ background: "rgba(245, 158, 11, 0.2)", color: "#fbbf24", fontSize: "0.7rem", padding: "2px 6px" }}>
+                              AirGate: {cafItem.airgate_abbreviation}
+                            </span>
+                          ) : (
+                            <span className="chip chip-azure" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
+                              CAF: {cafItem.caf_abbreviation}
+                            </span>
+                          )}
+                          <span className="chip" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
+                            {cafItem.scope}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Platform Constraints & Governance Card */}
+              {(selectedCafItem || newType.name) && (
+                <div
+                  style={{
+                    padding: "14px 16px",
+                    borderRadius: "8px",
+                    background: "rgba(0, 120, 212, 0.08)",
+                    border: "1px solid rgba(0, 120, 212, 0.25)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Sliders size={16} color="var(--azure-cyan)" />
+                      <span style={{ fontWeight: "700", fontSize: "0.85rem" }}>
+                        Azure Platform Limitations & Constraints
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <span className="chip chip-azure" style={{ fontSize: "0.75rem" }}>
+                        Scope: {newType.scope || "Resource group"}
+                      </span>
+                      <span
+                        className="chip"
+                        style={{
+                          fontSize: "0.75rem",
+                          background: newType.taggable ? "rgba(16, 185, 129, 0.2)" : "rgba(245, 158, 11, 0.2)",
+                          color: newType.taggable ? "#34d399" : "#fbbf24"
+                        }}
+                      >
+                        {newType.taggable ? "✓ Supports Tags" : "⚠️ Untaggable Child"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "10px", fontSize: "0.8rem" }}>
+                    <div style={{ background: "rgba(0,0,0,0.25)", padding: "8px 10px", borderRadius: "6px" }}>
+                      <span style={{ color: "var(--text-dim)", display: "block" }}>Length Limit:</span>
+                      <span style={{ fontWeight: "600", fontFamily: "var(--font-mono)", color: "var(--azure-cyan)" }}>
+                        {newType.minLength || 1} to {newType.maxLength || 64} characters
+                      </span>
+                    </div>
+                    <div style={{ background: "rgba(0,0,0,0.25)", padding: "8px 10px", borderRadius: "6px" }}>
+                      <span style={{ color: "var(--text-dim)", display: "block" }}>Allowed Characters:</span>
+                      <span style={{ fontWeight: "600" }}>{newType.allowedCharacters || "Alphanumerics, hyphens"}</span>
+                    </div>
+                  </div>
+
+                  {newType.is_override && (
+                    <div
+                      style={{
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        background: "rgba(245, 158, 11, 0.12)",
+                        border: "1px solid rgba(245, 158, 11, 0.3)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        fontSize: "0.8rem"
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <AlertTriangle size={15} color="#fbbf24" />
+                        <span>
+                          AirGate Standard: <strong>{newType.airgate_abbreviation}</strong> (Official Microsoft CAF: <code>{newType.caf_abbreviation}</code>)
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-secondary"
+                          style={{ fontSize: "0.7rem", padding: "2px 8px" }}
+                          onClick={() =>
+                            setNewType({
+                              ...newType,
+                              abbreviation: newType.caf_abbreviation,
+                              key: newType.caf_abbreviation,
+                              defaultPattern: newType.defaultPattern.replace(newType.abbreviation, newType.caf_abbreviation)
+                            })
+                          }
+                        >
+                          Use CAF ({newType.caf_abbreviation})
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-azure"
+                          style={{ fontSize: "0.7rem", padding: "2px 8px" }}
+                          onClick={() =>
+                            setNewType({
+                              ...newType,
+                              abbreviation: newType.airgate_abbreviation,
+                              key: newType.airgate_abbreviation,
+                              defaultPattern: newType.defaultPattern.replace(newType.abbreviation, newType.airgate_abbreviation)
+                            })
+                          }
+                        >
+                          Use AirGate ({newType.airgate_abbreviation})
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 3. Form Inputs */}
+              <div>
+                <label className="form-label">Display Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Azure Databricks Workspace"
+                  value={newType.name}
+                  onChange={(e) => setNewType({ ...newType, name: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label className="form-label">Short Key</label>
+                  <input
+                    type="text"
+                    className="form-input form-input-mono"
+                    placeholder="e.g. dbw"
+                    value={newType.key}
+                    onChange={(e) => setNewType({ ...newType, key: e.target.value.toLowerCase() })}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label">Abbreviation</label>
+                  <input
+                    type="text"
+                    className="form-input form-input-mono"
+                    placeholder="e.g. dbw"
+                    value={newType.abbreviation}
+                    onChange={(e) => setNewType({ ...newType, abbreviation: e.target.value.toLowerCase() })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label">Azure Resource Provider String</label>
+                <input
+                  type="text"
+                  className="form-input form-input-mono"
+                  placeholder="e.g. Microsoft.Databricks/workspaces"
+                  value={newType.resourceType}
+                  onChange={(e) => setNewType({ ...newType, resourceType: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label className="form-label">Min Length</label>
+                  <input
+                    type="number"
+                    className="form-input form-input-mono"
+                    min="1"
+                    max="260"
+                    value={newType.minLength || 1}
+                    onChange={(e) => setNewType({ ...newType, minLength: parseInt(e.target.value, 10) || 1 })}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Max Length</label>
+                  <input
+                    type="number"
+                    className="form-input form-input-mono"
+                    min="1"
+                    max="260"
+                    value={newType.maxLength || 64}
+                    onChange={(e) => setNewType({ ...newType, maxLength: parseInt(e.target.value, 10) || 64 })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label">Allowed Characters Rule</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Alphanumerics, hyphens, underscores"
+                  value={newType.allowedCharacters || ""}
+                  onChange={(e) => setNewType({ ...newType, allowedCharacters: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Default Naming Pattern</label>
+                <input
+                  type="text"
+                  className="form-input form-input-mono"
+                  placeholder="{Org}-{SUB}-{ResourceGroup}-dbw"
+                  value={newType.defaultPattern}
+                  onChange={(e) => setNewType({ ...newType, defaultPattern: e.target.value })}
+                />
+              </div>
+
+              {/* Sample Preview */}
+              {newType.defaultPattern && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: "6px",
+                    background: "rgba(0,0,0,0.3)",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                  }}
+                >
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>Example Name:</span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.85rem",
+                      color: "var(--azure-cyan)",
+                      fontWeight: "600"
+                    }}
+                  >
+                    {toSampleName(newType.defaultPattern, customer, newType)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowAddTypeModal(false);
+                  setSelectedCafItem(null);
+                  setCafSearchQuery("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                disabled={!newType.key || !newType.name || !newType.resourceType}
+                onClick={() => {
+                  onAddResourceType(newType);
+                  setShowAddTypeModal(false);
+                  setSelectedCafItem(null);
+                  setCafSearchQuery("");
+                  onShowToast(`Added resource type ${newType.name} (${newType.abbreviation}) to Naming Rules!`);
+                }}
+              >
+                <Plus size={16} />
+                Add Resource Type to Naming Rules
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Curated Naming Baselines & Templates */}
+      {showTemplateModal && (
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: "900px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+            <div className="modal-header">
+              <div>
+                <h2 style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <LayoutTemplate size={18} color="var(--azure-cyan)" />
+                  Curated Naming Baselines & Workload Templates
+                </h2>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
+                  Load production-tested naming rules across your workloads or save custom baselines dynamically resolved for {customer.name}.
+                </span>
+              </div>
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "1.1rem" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body" style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: "20px", alignItems: "start" }}>
+              {/* Left Column: Template Selection List & Save Current */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-dim)", fontWeight: "600" }}>
+                  Available Baselines
+                </span>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {[...BUILTIN_NAMING_TEMPLATES, ...customTemplates].map((tpl) => {
+                    const isSelected = tpl.id === selectedTemplateId;
+                    const isCustom = tpl.category === "Custom";
+
+                    return (
+                      <div
+                        key={tpl.id}
+                        onClick={() => setSelectedTemplateId(tpl.id)}
+                        style={{
+                          padding: "12px 14px",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          background: isSelected ? "rgba(0, 120, 212, 0.15)" : "rgba(255, 255, 255, 0.03)",
+                          border: isSelected ? "1px solid var(--azure-cyan)" : "1px solid var(--border-subtle)",
+                          boxShadow: isSelected ? "0 0 12px rgba(6, 182, 212, 0.2)" : "none",
+                          transition: "all 0.15s ease"
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                          <span style={{ fontWeight: "700", fontSize: "0.9rem", color: isSelected ? "var(--azure-cyan)" : "var(--text-main)" }}>
+                            {tpl.name}
+                          </span>
+                          <span
+                            className="chip"
+                            style={{
+                              fontSize: "0.65rem",
+                              padding: "2px 6px",
+                              background: isCustom ? "rgba(168, 85, 247, 0.2)" : "rgba(6, 182, 212, 0.15)",
+                              color: isCustom ? "#c084fc" : "var(--azure-cyan)"
+                            }}
+                          >
+                            {tpl.badge || tpl.category}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: "0.75rem", color: "var(--text-dim)", margin: 0, lineHeight: "1.3" }}>
+                          {tpl.description}
+                        </p>
+                        {isCustom && (
+                          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "8px" }}>
+                            <button
+                              type="button"
+                              style={{
+                                background: "transparent",
+                                border: "none",
+                                color: "var(--accent-rose)",
+                                cursor: "pointer",
+                                fontSize: "0.7rem",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px"
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Delete custom template "${tpl.name}"?`)) {
+                                  handleDeleteTemplate(tpl.id);
+                                }
+                              }}
+                            >
+                              <Trash2 size={11} /> Remove
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Save Current Workspace as Custom Baseline */}
+                <div
+                  style={{
+                    padding: "14px",
+                    borderRadius: "8px",
+                    background: "rgba(0, 0, 0, 0.25)",
+                    border: "1px dashed var(--border-subtle)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                    marginTop: "6px"
+                  }}
+                >
+                  <span style={{ fontSize: "0.8rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "6px", color: "var(--text-main)" }}>
+                    <Save size={13} color="var(--azure-cyan)" />
+                    Save Current Rules as Baseline
+                  </span>
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ fontSize: "0.8rem", padding: "6px 10px" }}
+                    placeholder="Template Name (e.g. Acme ALZ v1)"
+                    value={newTemplateName}
+                    onChange={(e) => setNewTemplateName(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ fontSize: "0.8rem", padding: "6px 10px" }}
+                    placeholder="Short description..."
+                    value={newTemplateDesc}
+                    onChange={(e) => setNewTemplateDesc(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontSize: "0.75rem", padding: "6px 10px", width: "100%" }}
+                    disabled={!newTemplateName.trim()}
+                    onClick={handleSaveCurrentAsTemplate}
+                  >
+                    <Bookmark size={13} />
+                    Save Custom Baseline
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Template Deep-Dive & Live Dynamic Previews */}
+              {(() => {
+                const allTpls = [...BUILTIN_NAMING_TEMPLATES, ...customTemplates];
+                const activeTpl = allTpls.find((t) => t.id === selectedTemplateId) || allTpls[0];
+                if (!activeTpl) return null;
+
+                // Pick key catalog items to show sample resolution
+                const sampleItems = (activeTpl.resourceKeys && activeTpl.resourceKeys.length > 0)
+                  ? catalog.filter((i) => activeTpl.resourceKeys.includes(i.key)).slice(0, 6)
+                  : catalog.slice(0, 6);
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div style={{ padding: "16px", borderRadius: "8px", background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-subtle)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                        <span style={{ fontSize: "1.1rem", fontWeight: "700" }}>{activeTpl.name}</span>
+                        <span className="chip chip-azure" style={{ fontSize: "0.7rem", padding: "2px 8px" }}>
+                          {activeTpl.badge || activeTpl.category}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "12px", lineHeight: "1.4" }}>
+                        {activeTpl.description}
+                      </p>
+
+                      <div style={{ display: "flex", gap: "12px", fontSize: "0.75rem", color: "var(--text-dim)", flexWrap: "wrap" }}>
+                        <span>
+                          Enforced Types:{" "}
+                          <strong style={{ color: "var(--azure-cyan)" }}>
+                            {activeTpl.resourceKeys ? activeTpl.resourceKeys.length : catalog.length}
+                          </strong>
+                        </span>
+                        <span>•</span>
+                        <span>
+                          Unrestricted (Direct Creation):{" "}
+                          <strong style={{ color: "var(--text-muted)" }}>
+                            {activeTpl.resourceKeys ? catalog.length - activeTpl.resourceKeys.length : 0}
+                          </strong>
+                        </span>
+                        <span>•</span>
+                        <span>
+                          Subnets:{" "}
+                          <strong style={{ color: "var(--azure-cyan)" }}>
+                            {activeTpl.subnetAllowed ? activeTpl.subnetAllowed.length : 0}
+                          </strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Live Sample Previews for this Customer Profile */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-muted)" }}>
+                          Live Name Compliance for {customer.name} ({customer.abbreviation}):
+                        </span>
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>
+                          {customer.subscriptionName || "Production"} ({customer.subscriptionCode || "AIP"})
+                        </span>
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {sampleItems.map((item) => {
+                          const customPat = activeTpl.patterns ? activeTpl.patterns[item.key] : null;
+                          const patternToUse = customPat || item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+                          const sample = toSampleName(patternToUse, customer, item);
+
+                          return (
+                            <div
+                              key={item.key}
+                              style={{
+                                padding: "8px 12px",
+                                borderRadius: "6px",
+                                background: "rgba(0, 0, 0, 0.35)",
+                                border: "1px solid rgba(255, 255, 255, 0.05)",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center"
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ fontWeight: "600", fontSize: "0.85rem", color: "var(--text-main)" }}>
+                                  {item.name}
+                                </span>
+                                <span className="chip" style={{ fontSize: "0.65rem", padding: "1px 6px" }}>
+                                  {item.abbreviation}
+                                </span>
+                              </div>
+                              <span
+                                style={{
+                                  fontFamily: "var(--font-mono)",
+                                  fontSize: "0.85rem",
+                                  color: "var(--azure-cyan)",
+                                  fontWeight: "600"
+                                }}
+                              >
+                                {sample}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Subnet Governance Preview */}
+                    {activeTpl.subnetAllowed && activeTpl.subnetAllowed.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        <span style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-muted)" }}>
+                          Permitted Subnet Architecture:
+                        </span>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                          {activeTpl.subnetAllowed.map((snet) => (
+                            <span
+                              key={snet}
+                              className="chip"
+                              style={{
+                                fontSize: "0.75rem",
+                                padding: "3px 8px",
+                                fontFamily: "var(--font-mono)",
+                                background: "rgba(16, 185, 129, 0.12)",
+                                color: "#34d399",
+                                border: "1px solid rgba(16, 185, 129, 0.25)"
+                              }}
+                            >
+                              {snet}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "6px",
+                        background: "rgba(14, 165, 233, 0.08)",
+                        border: "1px solid rgba(14, 165, 233, 0.25)",
+                        fontSize: "0.75rem",
+                        color: "var(--azure-cyan)",
+                        lineHeight: "1.4"
+                      }}
+                    >
+                      💡 <strong>Dynamic customer resolution:</strong> Applying this template will bind formulas against {customer.name}'s codes ({`{Org}=`}{customer.abbreviation}, {`{SUB}=`}{customer.subscriptionCode || "AIP"}, {`{Region}=`}{Object.values(customer.regions || {})[0] || "cc"}).
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowTemplateModal(false)}>
+                Cancel
+              </button>
+              {(() => {
+                const allTpls = [...BUILTIN_NAMING_TEMPLATES, ...customTemplates];
+                const activeTpl = allTpls.find((t) => t.id === selectedTemplateId) || allTpls[0];
+                return (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      if (activeTpl) {
+                        handleApplyTemplate(activeTpl);
+                      }
+                    }}
+                  >
+                    <Check size={16} />
+                    Apply {activeTpl ? `"${activeTpl.name}"` : "Template"} to {customer.name}
+                  </button>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

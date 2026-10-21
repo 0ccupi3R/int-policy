@@ -407,26 +407,88 @@ flowchart LR
 
 ### Step 1: Discover & Export Live Client Tenant Inventory
 
-Run the following Azure CLI or PowerShell script against the client's Azure tenant:
+Run any of the following discovery methods against the client's Azure tenant:
 
-#### Azure CLI (Bash / macOS / Linux)
+#### Method A: Azure CLI / Python (Cross-Platform Bash, macOS, Linux, Cloud Shell)
 ```bash
 python3 -c "
-import subprocess, json
+import subprocess, json, datetime
+
 sub = json.loads(subprocess.check_output(['az', 'account', 'show', '-o', 'json']))
 rgs = json.loads(subprocess.check_output(['az', 'group', 'list', '-o', 'json']))
 res = json.loads(subprocess.check_output(['az', 'resource', 'list', '-o', 'json']))
 
-payload = {
-    'subscriptions': [{'subscriptionId': sub['id'], 'name': sub['name'], 'tags': sub.get('tags') or {}}],
-    'resourceGroups': [{'name': rg['name'], 'location': rg['location'], 'tags': rg.get('tags') or {}, 'subscriptionId': sub['id']} for rg in rgs],
-    'resources': [{'id': r['id'], 'name': r['name'], 'type': r['type'], 'resourceGroup': r['resourceGroup'], 'location': r['location'], 'tags': r.get('tags') or {}, 'subscriptionId': sub['id']} for r in res]
+inventory = {
+    'version': '1.0.0',
+    'discoveredAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    'subscriptions': [{
+        'id': sub['id'],
+        'subscriptionId': sub['id'],
+        'name': sub.get('name', 'Subscription'),
+        'state': sub.get('state', 'Enabled'),
+        'tags': sub.get('tags') or {}
+    }],
+    'resourceGroups': [{
+        'id': g['id'],
+        'name': g['name'],
+        'location': g['location'],
+        'subscriptionId': sub['id'],
+        'tags': g.get('tags') or {}
+    } for g in rgs],
+    'resources': [{
+        'id': r['id'],
+        'name': r['name'],
+        'type': r['type'],
+        'resourceGroup': r.get('resourceGroup', ''),
+        'location': r['location'],
+        'subscriptionId': sub['id'],
+        'tags': r.get('tags') or {}
+    } for r in res]
 }
-with open('inventory.json', 'w') as f:
-    json.dump(payload, f, indent=2)
-print(f'Discovered {len(payload[\"subscriptions\"])} Subs, {len(payload[\"resourceGroups\"])} RGs, {len(payload[\"resources\"])} Resources')
+
+with open('alz-brownfield-inventory.json', 'w') as f:
+    json.dump(inventory, f, indent=2)
+
+print(f'Discovery Complete! Saved {len(inventory[\"resourceGroups\"])} RGs and {len(inventory[\"resources\"])} Resources to alz-brownfield-inventory.json')
 "
 ```
+
+#### Method B: PowerShell (Auto-installs Az modules and checks login)
+```powershell
+# 1. Install required modules if missing
+if (-not (Get-Module -ListAvailable -Name Az.Accounts)) {
+    Install-Module -Name Az.Accounts -Scope CurrentUser -Force -AllowClobber
+}
+if (-not (Get-Module -ListAvailable -Name Az.Resources)) {
+    Install-Module -Name Az.Resources -Scope CurrentUser -Force -AllowClobber
+}
+
+# 2. Login check
+$ctx = Get-AzContext
+if (-not $ctx) { Connect-AzAccount; $ctx = Get-AzContext }
+
+# 3. Export
+$sub = $ctx | Select-Object @{N="id";E={$_.Subscription.Id}}, @{N="subscriptionId";E={$_.Subscription.Id}}, @{N="name";E={$_.Subscription.Name}}, @{N="state";E={$_.Subscription.State}}, @{N="tags";E={$_.Subscription.Tags}}
+$rgs = Get-AzResourceGroup | Select-Object @{N="id";E={$_.ResourceId}}, @{N="name";E={$_.ResourceGroupName}}, @{N="subscriptionId";E={$_.SubscriptionId}}, @{N="location";E={$_.Location}}, @{N="tags";E={$_.Tags}}
+$resources = Get-AzResource | Select-Object @{N="id";E={$_.ResourceId}}, @{N="name";E={$_.Name}}, @{N="type";E={$_.ResourceType}}, @{N="resourceGroup";E={$_.ResourceGroupName}}, @{N="location";E={$_.Location}}, @{N="subscriptionId";E={$_.SubscriptionId}}, @{N="tags";E={$_.Tags}}
+
+$inventory = @{
+    version = "1.0.0"
+    discoveredAt = (Get-Date -Format "o")
+    subscriptions = @($sub)
+    resourceGroups = @($rgs)
+    resources = @($resources)
+}
+
+$inventory | ConvertTo-Json -Depth 10 | Set-Content "alz-brownfield-inventory.json"
+Write-Host "Exported $($rgs.Count) RGs and $($resources.Count) Resources to alz-brownfield-inventory.json" -ForegroundColor Green
+```
+
+#### Method C: Quick Azure Resource Graph One-Liner
+```bash
+az graph query -q "Resources | project id, name, type, location, resourceGroup, subscriptionId, tags" --first 1000 > alz-brownfield-inventory.json
+```
+*(Policy Studio automatically detects Resource Graph format, parsing resource IDs to reconstruct the parent Resource Groups and Subscription hierarchy).*
 
 ---
 

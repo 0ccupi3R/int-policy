@@ -993,45 +993,41 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                     >
                       <span style={{ color: "var(--text-muted)" }}>Configure RG:</span>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <label htmlFor={`rg-purpose-${rg.id}`} style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Purpose Token:</label>
-                        <select
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Purpose Token:</span>
+                        <AuSelect
                           id={`rg-purpose-${rg.id}`}
                           name={`rg_purpose_${rg.id}`}
-                          aria-label={`Purpose token for resource group ${rg.name || rg.purpose}`}
-                          className="input-field"
+                          ariaLabel={`Purpose token for resource group ${rg.name || rg.purpose}`}
+                          className="au-select-compact"
+                          style={{ width: "130px" }}
                           value={rg.purpose || "core"}
-                          onChange={(e) => handleUpdateRg(rg.id, { purpose: e.target.value })}
-                          style={{ padding: "3px 8px", fontSize: "0.75rem", width: "130px" }}
-                        >
-                          {(customer.purposes || ["hub", "core", "monitoring", "infrafw", "apps"]).map((p) => (
-                            <option key={p} value={p}>
-                              {p}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(val) => handleUpdateRg(rg.id, { purpose: val })}
+                          options={(customer.purposes || ["hub", "core", "monitoring", "infrafw", "apps"]).map((p) => ({
+                            value: p,
+                            label: p
+                          }))}
+                        />
                       </div>
 
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <label htmlFor={`rg-region-${rg.id}`} style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Region:</label>
-                        <select
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Region:</span>
+                        <AuSelect
                           id={`rg-region-${rg.id}`}
                           name={`rg_region_${rg.id}`}
-                          aria-label={`Region for resource group ${rg.name || rg.purpose}`}
-                          className="input-field"
+                          ariaLabel={`Region for resource group ${rg.name || rg.purpose}`}
+                          className="au-select-compact"
+                          style={{ minWidth: "160px" }}
                           value={rg.location || activeSub.location || "canadacentral"}
-                          onChange={(e) => handleUpdateRg(rg.id, { location: e.target.value })}
-                          style={{ padding: "3px 8px", fontSize: "0.75rem", width: "140px" }}
-                        >
-                          {customer.regions ? (
-                            Object.entries(customer.regions).map(([regKey, code]) => (
-                              <option key={regKey} value={regKey}>
-                                {regKey} ({code})
-                              </option>
-                            ))
-                          ) : (
-                            <option value="canadacentral">canadacentral (cc)</option>
-                          )}
-                        </select>
+                          onChange={(val) => handleUpdateRg(rg.id, { location: val })}
+                          options={customer.regions ? (
+                            Object.entries(customer.regions).map(([regKey, code]) => ({
+                              value: regKey,
+                              label: `${regKey} (${code})`
+                            }))
+                          ) : [
+                            { value: "canadacentral", label: "canadacentral (cc)" }
+                          ]}
+                        />
                       </div>
                     </div>
 
@@ -1095,27 +1091,25 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                 </div>
 
                                 <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                                  <select
-                                    id={`rg-tag-override-${rg.id}-${tagKey}`}
-                                    name={`rg_tag_override_${rg.id}_${tagKey}`}
-                                    aria-label={`Override tag ${tagKey} for resource group ${rg.name}`}
-                                    className="input-field"
-                                    value={currentVal}
-                                    onChange={(e) => handleSetRgTagOverride(rg.id, tagKey, e.target.value)}
-                                    style={{ fontSize: "0.75rem", padding: "2px 6px", width: "100%" }}
-                                  >
-                                    <option value="">(Inherit: {inheritedVal})</option>
-                                    {allowed.map((val) => (
-                                      <option key={val} value={val}>
-                                        {val}
-                                      </option>
-                                    ))}
-                                  </select>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <AuSelect
+                                      id={`rg-tag-override-${rg.id}-${tagKey}`}
+                                      name={`rg_tag_override_${rg.id}_${tagKey}`}
+                                      ariaLabel={`Override tag ${tagKey} for resource group ${rg.name}`}
+                                      className="au-select-compact"
+                                      value={currentVal}
+                                      onChange={(val) => handleSetRgTagOverride(rg.id, tagKey, val)}
+                                      options={[
+                                        { value: "", label: `(Inherit: ${inheritedVal || "NA"})`, badge: "Inherit" },
+                                        ...allowed.map((val) => ({ value: val, label: val }))
+                                      ]}
+                                    />
+                                  </div>
                                   {currentVal && (
                                     <button
                                       className="btn btn-secondary btn-sm"
                                       onClick={() => handleSetRgTagOverride(rg.id, tagKey, "")}
-                                      style={{ padding: "2px 6px", fontSize: "0.7rem" }}
+                                      style={{ padding: "4px 6px", fontSize: "0.7rem", flexShrink: 0 }}
                                       title="Reset to Inherited"
                                     >
                                       <RotateCcw size={11} />
@@ -1181,35 +1175,28 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                 <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                                   {/* Resource Type Dropdown */}
                                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <label htmlFor={`res-type-${resource.id}`} style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Type:</label>
-                                    <select
+                                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>Type:</span>
+                                    <AuSelect
                                       id={`res-type-${resource.id}`}
                                       name={`res_type_${resource.id}`}
-                                      aria-label={`Select resource type for ${resource.name || "resource"}`}
-                                      className="input-field"
+                                      ariaLabel={`Select resource type for ${resource.name || "resource"}`}
+                                      className="au-select-compact"
+                                      searchable={true}
+                                      style={{ minWidth: "220px", maxWidth: "280px" }}
                                       value={resource.resourceTypeKey}
-                                      onChange={(e) => {
-                                        const newKey = e.target.value;
+                                      onChange={(newKey) => {
                                         const updates = { resourceTypeKey: newKey };
                                         if (newKey === "vm" && !resource.osType) {
                                           updates.osType = "Windows";
                                         }
                                         handleUpdateResource(rg.id, resource.id, updates);
                                       }}
-                                      style={{
-                                        padding: "4px 8px",
-                                        fontSize: "0.8rem",
-                                        fontWeight: "600",
-                                        fontFamily: "var(--font-mono)",
-                                        maxWidth: "260px"
-                                      }}
-                                    >
-                                      {catalog.map((catItem) => (
-                                        <option key={catItem.key || catItem.id} value={catItem.key || catItem.abbreviation}>
-                                          {catItem.name} ({catItem.abbreviation || catItem.key})
-                                        </option>
-                                      ))}
-                                    </select>
+                                      options={catalog.map((catItem) => ({
+                                        value: catItem.key || catItem.abbreviation,
+                                        label: `${catItem.name} (${catItem.abbreviation || catItem.key})`,
+                                        badge: catItem.abbreviation || catItem.key
+                                      }))}
+                                    />
                                   </div>
 
                                   {/* Purpose Override */}
@@ -1220,26 +1207,26 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                       name={`res_purpose_${resource.id}`}
                                       aria-label={`Role purpose for ${resource.name || "resource"}`}
                                       type="text"
-                                      className="input-field"
+                                      className="form-input form-input-mono"
                                       value={resource.purpose || rg.purpose || "core"}
                                       onChange={(e) =>
                                         handleUpdateResource(rg.id, resource.id, {
                                           purpose: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "")
                                         })
                                       }
-                                      style={{ width: "90px", padding: "4px 8px", fontSize: "0.8rem" }}
+                                      style={{ width: "95px", padding: "4px 8px", fontSize: "0.8rem" }}
                                     />
                                   </div>
 
                                   {/* Instance Number */}
                                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <label htmlFor={`res-instance-${resource.id}`} style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Instance:</label>
+                                    <label htmlFor={`res-instance-${resource.id}`} style={{ fontSize: "0.75rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>Instance:</label>
                                     <input
                                       id={`res-instance-${resource.id}`}
                                       name={`res_instance_${resource.id}`}
                                       aria-label={`Instance number for ${resource.name || "resource"}`}
                                       type="text"
-                                      className="input-field"
+                                      className="form-input form-input-mono"
                                       value={resource.instance || "01"}
                                       onChange={(e) =>
                                         handleUpdateResource(rg.id, resource.id, {
@@ -1253,29 +1240,24 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                   {/* OS Type Selector (Only for VM) */}
                                   {(resource.resourceTypeKey === "vm" || evalRes.resourceMeta.resourceType?.toLowerCase().includes("virtualmachines")) && (
                                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <label htmlFor={`res-os-${resource.id}`} style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>OS:</label>
-                                      <select
+                                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>OS:</span>
+                                      <AuSelect
                                         id={`res-os-${resource.id}`}
                                         name={`res_os_${resource.id}`}
-                                        aria-label={`Select OS type for VM ${resource.id}`}
-                                        className="input-field"
+                                        ariaLabel={`Select OS type for VM ${resource.id}`}
+                                        className="au-select-compact"
+                                        style={{ width: "165px" }}
                                         value={resource.osType || "Windows"}
-                                        onChange={(e) =>
+                                        onChange={(val) =>
                                           handleUpdateResource(rg.id, resource.id, {
-                                            osType: e.target.value
+                                            osType: val
                                           })
                                         }
-                                        style={{
-                                          padding: "4px 8px",
-                                          fontSize: "0.78rem",
-                                          fontWeight: "600",
-                                          borderColor: (resource.osType || "Windows") === "Windows" ? "var(--azure-cyan)" : "var(--accent-purple)",
-                                          background: "rgba(0,0,0,0.3)"
-                                        }}
-                                      >
-                                        <option value="Windows">🪟 Windows (15 max)</option>
-                                        <option value="Linux">🐧 Linux (64 max)</option>
-                                      </select>
+                                        options={[
+                                          { value: "Windows", label: "🪟 Windows (15 max)" },
+                                          { value: "Linux", label: "🐧 Linux (64 max)" }
+                                        ]}
+                                      />
                                     </div>
                                   )}
                                 </div>
@@ -1500,31 +1482,29 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                                           </div>
 
                                           <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                                            <select
-                                              id={`res-tag-override-${resource.id}-${tagKey}`}
-                                              name={`res_tag_override_${resource.id}_${tagKey}`}
-                                              aria-label={`Override tag ${tagKey} for resource ${resource.name || "resource"}`}
-                                              className="input-field"
-                                              value={currentVal}
-                                              onChange={(e) =>
-                                                handleSetResourceTagOverride(rg.id, resource.id, tagKey, e.target.value)
-                                              }
-                                              style={{ fontSize: "0.75rem", padding: "2px 6px", width: "100%" }}
-                                            >
-                                              <option value="">(Inherit: {effectiveVal})</option>
-                                              {allowed.map((val) => (
-                                                <option key={val} value={val}>
-                                                  {val}
-                                                </option>
-                                              ))}
-                                            </select>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                              <AuSelect
+                                                id={`res-tag-override-${resource.id}-${tagKey}`}
+                                                name={`res_tag_override_${resource.id}_${tagKey}`}
+                                                ariaLabel={`Override tag ${tagKey} for resource ${resource.name || "resource"}`}
+                                                className="au-select-compact"
+                                                value={currentVal}
+                                                onChange={(val) =>
+                                                  handleSetResourceTagOverride(rg.id, resource.id, tagKey, val)
+                                                }
+                                                options={[
+                                                  { value: "", label: `(Inherit: ${effectiveVal || "NA"})`, badge: "Inherit" },
+                                                  ...allowed.map((val) => ({ value: val, label: val }))
+                                                ]}
+                                              />
+                                            </div>
                                             {currentVal && (
                                               <button
                                                 className="btn btn-secondary btn-sm"
                                                 onClick={() =>
                                                   handleSetResourceTagOverride(rg.id, resource.id, tagKey, "")
                                                 }
-                                                style={{ padding: "2px 6px", fontSize: "0.7rem" }}
+                                                style={{ padding: "4px 6px", fontSize: "0.7rem", flexShrink: 0 }}
                                                 title="Reset to Inherited"
                                               >
                                                 <RotateCcw size={11} />
@@ -1799,7 +1779,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                   </label>
                   <input
                     type="text"
-                    className="input-field"
+                    className="form-input form-input-mono"
                     placeholder="e.g. Workload-Analytics, SharedServices"
                     value={subModal.name}
                     onChange={(e) => setSubModal({ ...subModal, name: e.target.value })}
@@ -1818,7 +1798,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                     </label>
                     <input
                       type="text"
-                      className="input-field"
+                      className="form-input form-input-mono"
                       placeholder="e.g. WL, APP, SHD"
                       value={subModal.code}
                       onChange={(e) => setSubModal({ ...subModal, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10) })}
@@ -2011,22 +1991,15 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
               <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                 {/* Purpose Token */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
-                    Resource Group Purpose Token:
-                  </label>
-                  <select
-                    className="input-field"
+                  <AuSelect
+                    label="Resource Group Purpose Token:"
                     value={rgModal.purpose}
-                    onChange={(e) => setRgModal({ ...rgModal, purpose: e.target.value })}
-                    style={{ fontSize: "0.85rem", padding: "6px 10px" }}
-                  >
-                    {standardPurposes.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                    <option value="__custom__">✨ Custom Purpose...</option>
-                  </select>
+                    onChange={(val) => setRgModal({ ...rgModal, purpose: val })}
+                    options={[
+                      ...standardPurposes.map((p) => ({ value: p, label: p })),
+                      { value: "__custom__", label: "✨ Custom Purpose...", badge: "Custom" }
+                    ]}
+                  />
                 </div>
 
                 {/* Custom Purpose Input if selected */}
@@ -2037,7 +2010,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                     </label>
                     <input
                       type="text"
-                      className="input-field"
+                      className="form-input form-input-mono"
                       placeholder="e.g. analytics, batch, telemetry"
                       value={rgModal.customPurpose}
                       onChange={(e) =>
@@ -2093,7 +2066,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                   </label>
                   <input
                     type="text"
-                    className="input-field"
+                    className="form-input form-input-mono"
                     placeholder="Leave blank to use naming rule pattern ({Org}-{SUB}-{ResourceGroup}-rg)"
                     value={rgModal.nameOverride}
                     onChange={(e) => setRgModal({ ...rgModal, nameOverride: e.target.value })}
@@ -2289,7 +2262,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                       <Search size={14} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-dim)" }} />
                       <input
                         type="text"
-                        className="input-field"
+                        className="form-input form-input-mono"
                         placeholder="Filter types by name, abbr, or provider..."
                         value={resModal.searchQuery || ""}
                         onChange={(e) => setResModal({ ...resModal, searchQuery: e.target.value })}
@@ -2328,7 +2301,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                     </label>
                     <input
                       type="text"
-                      className="input-field"
+                      className="form-input form-input-mono"
                       placeholder="e.g. apps, core, db, web"
                       value={resModal.purpose}
                       onChange={(e) => {
@@ -2358,7 +2331,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                     </div>
                     <input
                       type="text"
-                      className="input-field"
+                      className="form-input form-input-mono"
                       value={resModal.instance}
                       onChange={(e) =>
                         setResModal({

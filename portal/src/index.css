@@ -314,22 +314,47 @@
 
 /* Form Controls */
 
-.form-input {
+.form-input,
+.input-field,
+input[type="text"],
+input[type="number"],
+input[type="search"],
+input[type="password"],
+input[type="email"],
+input:not([type]) {
   width: 100%;
   padding: 0.55rem 0.8rem;
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-hairline);
+  background-color: var(--bg-canvas) !important;
+  border: 1px solid var(--border-hairline) !important;
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   font-family: var(--font-sans);
   font-size: 0.85rem;
   outline: none;
   transition: border-color var(--ease-snappy), box-shadow var(--ease-snappy);
 }
 
-.form-input:focus {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px var(--accent-tint);
+.form-input:focus,
+.input-field:focus,
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input:not([type]):focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px var(--accent-tint) !important;
+}
+
+/* Fallback dark styles for native select elements */
+select,
+select.input-field {
+  color-scheme: dark;
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-radius: var(--radius-sm);
+  outline: none;
 }
 
 .form-input-mono {
@@ -498,6 +523,27 @@
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Compact variation for dense data tables and inline cards */
+.au-select-compact .au-select-trigger {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+  min-height: 28px;
+}
+
+.au-select-compact .au-select-trigger-chevron {
+  font-size: 0.65rem;
+}
+
+.au-select-compact .au-select-option {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.au-select-compact .au-select-option-badge {
+  font-size: 0.62rem;
+  padding: 0.1rem 0.35rem;
 }
 
 /* Accessibility Focus Rings */

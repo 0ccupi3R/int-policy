@@ -498,10 +498,18 @@ body {
 
 .au-input,
 .au-select,
-.au-textarea {
-  background-color: var(--bg-canvas);
-  border: 1px solid var(--border-hairline);
-  color: var(--text-primary);
+.au-textarea,
+.input-field,
+.form-input,
+input[type="text"],
+input[type="number"],
+input[type="search"],
+input[type="password"],
+input[type="email"],
+input:not([type]) {
+  background-color: var(--bg-canvas) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-primary) !important;
   font-family: var(--font-sans);
   font-size: 0.875rem;
   padding: 0.6rem 0.85rem;
@@ -512,9 +520,28 @@ body {
 
 .au-input:focus,
 .au-select:focus,
-.au-textarea:focus {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px var(--accent-tint);
+.au-textarea:focus,
+.input-field:focus,
+.form-input:focus,
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input:not([type]):focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px var(--accent-tint) !important;
+}
+
+/* Dark color-scheme fallback for any un-migrated native select elements */
+select,
+select.input-field {
+  color-scheme: dark;
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-radius: var(--radius-sm);
+  outline: none;
 }
 
 .au-input-mono {
@@ -961,6 +988,27 @@ select, select option {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-hairline);
   color: var(--text-muted);
+}
+
+/* Compact variation for dense data tables and inline cards */
+.au-select-compact .au-select-trigger {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+  min-height: 28px;
+}
+
+.au-select-compact .au-select-trigger-chevron {
+  font-size: 0.65rem;
+}
+
+.au-select-compact .au-select-option {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.au-select-compact .au-select-option-badge {
+  font-size: 0.62rem;
+  padding: 0.1rem 0.35rem;
 }
 
 /* ==========================================================================

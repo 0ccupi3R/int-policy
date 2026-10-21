@@ -1,0 +1,29 @@
+{
+  "name": "@0ccupi3r/tactical-ui",
+  "version": "1.0.0",
+  "description": "Tactical HUD & Editorial Swiss Grid React UI Theme System",
+  "main": "index.ts",
+  "module": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./theme.css": "./theme.css",
+    "./tokens.json": "./tokens.json",
+    "./tailwind.preset.js": "./tailwind.preset.js"
+  },
+  "keywords": [
+    "react",
+    "design-system",
+    "theme",
+    "hud",
+    "tactical",
+    "swiss-grid",
+    "telemetry"
+  ],
+  "author": "0ccupi3R",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  }
+}

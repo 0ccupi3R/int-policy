@@ -30,10 +30,29 @@ export function App() {
           (c) => c.id === "cust01" || c.name === "CustomerName" || c.id === "nova-ai"
         );
         if (!hasLegacy && Array.isArray(parsed) && parsed.length > 0) {
-          const hasWoodgrove = parsed.some((c) => c.id === "woodgrove");
-          if (!hasWoodgrove) {
-            const woodgrove = DEFAULT_CUSTOMERS.find((c) => c.id === "woodgrove");
-            if (woodgrove) return [...parsed, woodgrove];
+          const defaultWoodgrove = DEFAULT_CUSTOMERS.find((c) => c.id === "woodgrove");
+          const woodgroveIdx = parsed.findIndex((c) => c.id === "woodgrove");
+          if (defaultWoodgrove) {
+            if (woodgroveIdx === -1) {
+              return [...parsed, defaultWoodgrove];
+            } else if (
+              !parsed[woodgroveIdx].topology ||
+              parsed[woodgroveIdx].topology?.subscriptions?.[0]?.resourceGroups?.some(rg => rg.name === "rg-wg-prod-apps") ||
+              !parsed[woodgroveIdx].topology?.subscriptions?.[0]?.resourceGroups?.some(rg => rg.name === "RG-CoreApp-Prod")
+            ) {
+              const updated = [...parsed];
+              updated[woodgroveIdx] = {
+                ...parsed[woodgroveIdx],
+                topology: defaultWoodgrove.topology,
+                brownfieldMetadata: defaultWoodgrove.brownfieldMetadata
+              };
+              try {
+                localStorage.setItem("alz_policy_customers", JSON.stringify(updated));
+              } catch {
+                // ignore
+              }
+              return updated;
+            }
           }
           return parsed;
         }
@@ -356,6 +375,7 @@ export function App() {
               onUpdateCustomer={handleUpdateCustomer}
               onShowToast={showToast}
               onNavigateToCatalogue={() => setActiveTab("catalogue")}
+              onNavigateToTopology={() => setActiveTab("topology")}
             />
           )}
 

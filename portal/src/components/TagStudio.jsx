@@ -174,7 +174,7 @@ function TagAllowedValuesEditor({ allowedValues = [], isRequired, activeScope, i
   );
 }
 
-export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateToCatalogue }) {
+export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateToCatalogue, onNavigateToTopology }) {
   const [activeScope, setActiveScope] = useState("resource"); // "subscription", "resourceGroup", "resource", "inheritance"
 
   const tags = customer.tags || { subscription: [], resourceGroup: [], resource: [] };
@@ -250,7 +250,17 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
   // Brownfield Discovered Client Tags State & Handlers
   const isBrownfield = customer.environmentParadigm === "brownfield";
   const discoveredTags = customer.brownfieldMetadata?.discoveredTags || [];
+  const discoveredRgs = customer.topology?.subscriptions?.flatMap((s) => s.resourceGroups || []) || [];
   const [showDiscoveredTags, setShowDiscoveredTags] = useState(true);
+
+  const getCasingStyle = (name) => {
+    if (!name) return "Standard";
+    if (name.includes("_")) return "snake_case";
+    if (name === name.toUpperCase() && !name.includes("_")) return "UPPERCASE";
+    if (name.includes("-") && /[A-Z]/.test(name) && /[a-z]/.test(name)) return "TitleCase / Hyphenated";
+    if (name === name.toLowerCase()) return "kebab-case";
+    return "MixedCase";
+  };
 
   const isTagGoverned = (key) => {
     const k = (key || "").toLowerCase();
@@ -801,6 +811,114 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Discovered Tenant Scopes (Resource Groups & Tag Audit) */}
+            {discoveredRgs.length > 0 && (
+              <div
+                style={{
+                  marginTop: "12px",
+                  paddingTop: "14px",
+                  borderTop: "1px solid rgba(217, 119, 6, 0.25)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px"
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <FolderTree size={16} style={{ color: "var(--accent-amber)" }} />
+                    <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                      Discovered Tenant Scopes ({discoveredRgs.length} Resource Groups Audited)
+                    </span>
+                  </div>
+                  {onNavigateToTopology && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: "0.72rem", padding: "3px 10px", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                      onClick={onNavigateToTopology}
+                    >
+                      <span>Inspect in 01 // Topology & Scopes</span>
+                      <span>→</span>
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "10px" }}>
+                  {discoveredRgs.map((rg) => {
+                    const rawTags = rg.tags || {};
+                    const tagCount = Object.keys(rawTags).length;
+                    const isUntagged = tagCount === 0;
+                    const casing = getCasingStyle(rg.name);
+                    const resCount = rg.resources?.length || 0;
+
+                    return (
+                      <div
+                        key={rg.id || rg.name}
+                        style={{
+                          padding: "10px 14px",
+                          background: isUntagged ? "rgba(244, 63, 94, 0.06)" : "var(--bg-card)",
+                          border: isUntagged ? "1px solid rgba(244, 63, 94, 0.4)" : "1px solid var(--border-hairline)",
+                          borderRadius: "var(--radius-sm)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "6px"
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                          <span
+                            style={{
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "0.86rem",
+                              fontWeight: 700,
+                              color: isUntagged ? "var(--accent-rose)" : "var(--accent-cyan)"
+                            }}
+                          >
+                            {rg.name}
+                          </span>
+                          <span
+                            className={`chip ${casing === "snake_case" ? "chip-purple" : casing === "UPPERCASE" ? "chip-amber" : "chip-blue"}`}
+                            style={{ fontSize: "0.65rem", padding: "1px 6px" }}
+                          >
+                            {casing}
+                          </span>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                          <span>Leaf Resources: <strong>{resCount}</strong></span>
+                          <span>•</span>
+                          {isUntagged ? (
+                            <span style={{ color: "var(--accent-rose)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              <AlertCircle size={12} />
+                              <span>Untagged in Client Tenant (0 Tags)</span>
+                            </span>
+                          ) : (
+                            <span style={{ color: "var(--accent-mint)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              <CheckCircle2 size={12} />
+                              <span>{tagCount} Discovered Tag{tagCount > 1 ? "s" : ""}</span>
+                            </span>
+                          )}
+                        </div>
+
+                        {!isUntagged ? (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "2px" }}>
+                            {Object.entries(rawTags).map(([k, v]) => (
+                              <span key={k} className="chip chip-subtle" style={{ fontSize: "0.66rem", padding: "1px 6px" }}>
+                                {k}: {String(v)}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: "0.68rem", color: "var(--accent-amber)", marginTop: "2px" }}>
+                            Requires Downward Inheritance or Tag Remediation Task
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

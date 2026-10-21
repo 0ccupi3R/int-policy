@@ -576,6 +576,66 @@ export const DEFAULT_CUSTOMERS = [
       rgToResource: ["Environment", "Application", "CostCenter"],
       defaultResourceNA: ["DataClassification"]
     },
+    topology: {
+      subscriptions: [
+        {
+          id: "sub-woodgrove-01",
+          name: "Visual Studio Enterprise Subscription",
+          code: "VISU",
+          environment: "prod",
+          location: "canadacentral",
+          tags: {
+            CostCenter: "CC-1010",
+            Owner: "alice@clientcorp.com"
+          },
+          resourceGroups: [
+            {
+              id: "RG-CoreApp-Prod",
+              name: "RG-CoreApp-Prod",
+              purpose: "core",
+              location: "canadacentral",
+              tags: {
+                CostCenter: "CC-1010",
+                Environment: "Production",
+                Owner: "alice@clientcorp.com"
+              },
+              resources: [
+                { id: "res-nsg-01", name: "nsg-prod-core-app", resourceTypeKey: "nsg", resourceType: "Microsoft.Network/networkSecurityGroups", purpose: "core", instance: "01", tags: { CostCenter: "CC-1010", SecurityTier: "Strict" } },
+                { id: "res-rt-01", name: "rt-legacy-core-egress", resourceTypeKey: "rt", resourceType: "Microsoft.Network/routeTables", purpose: "core", instance: "01", tags: {} },
+                { id: "res-sa-01", name: "stcoreappdatarjdwlg", resourceTypeKey: "storage", resourceType: "Microsoft.Storage/storageAccounts", purpose: "core", instance: "01", tags: { Application: "PaymentGateway", compliance: "pci" } },
+                { id: "res-vnet-01", name: "vnet-legacy-prod-core", resourceTypeKey: "vnet", resourceType: "Microsoft.Network/virtualNetworks", purpose: "core", instance: "01", tags: { CreatedBy: "terraform", env: "prod" } }
+              ]
+            },
+            {
+              id: "rg_marketing_legacy_dev",
+              name: "rg_marketing_legacy_dev",
+              purpose: "mkt",
+              location: "canadacentral",
+              tags: {
+                dept: "Marketing",
+                billing_id: "MKT-88"
+              },
+              resources: [
+                { id: "res-nsg-02", name: "nsg_mkt_dev_web", resourceTypeKey: "nsg", resourceType: "Microsoft.Network/networkSecurityGroups", purpose: "mkt", instance: "01", tags: {} },
+                { id: "res-vnet-02", name: "vnet_mkt_dev", resourceTypeKey: "vnet", resourceType: "Microsoft.Network/virtualNetworks", purpose: "mkt", instance: "01", tags: { dept: "Marketing" } },
+                { id: "res-sa-02", name: "stmktcamprjdwlg", resourceTypeKey: "storage", resourceType: "Microsoft.Storage/storageAccounts", purpose: "mkt", instance: "01", tags: { dept: "Marketing", temporary: "true" } }
+              ]
+            },
+            {
+              id: "SANDBOX-SHARED-SVCS",
+              name: "SANDBOX-SHARED-SVCS",
+              purpose: "sandbox",
+              location: "canadacentral",
+              tags: {},
+              resources: [
+                { id: "res-sa-03", name: "stshdopsrjdwlg", resourceTypeKey: "storage", resourceType: "Microsoft.Storage/storageAccounts", purpose: "sandbox", instance: "01", tags: { Owner: "admin@clientcorp.com" } },
+                { id: "res-rt-02", name: "RT-GLOBAL-INSPECT", resourceTypeKey: "rt", resourceType: "Microsoft.Network/routeTables", purpose: "sandbox", instance: "01", tags: {} }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     brownfieldMetadata: {
       importedAt: "2026-10-21T10:00:00Z",
       totalDiscoveredResources: 24,

@@ -37,7 +37,7 @@ export function GuidedStepper({ activeTab, onSelectTab, customer }) {
       hint: "Browse 200 Azure resource types, verify shortcodes, constraints, and mode: Indexed tagging support."
     },
     {
-      id: "inspector",
+      id: "code",
       num: "05",
       title: "IaC & Policy Export",
       hint: isBrownfield

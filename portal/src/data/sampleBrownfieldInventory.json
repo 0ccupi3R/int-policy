@@ -1,145 +1,146 @@
 {
   "version": "1.0.0",
-  "discoveredAt": "2026-10-21T14:30:00Z",
-  "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+  "discoveredAt": "2026-10-21T21:11:00Z",
+  "tenantId": "0d7f77d6-f0a6-4b8c-9720-82ba6c02f23d",
   "subscriptions": [
     {
-      "id": "sub-prod-01",
-      "name": "Production-Workloads",
-      "subscriptionId": "11111111-2222-3333-4444-555555555555",
+      "id": "sub-live-01",
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976",
+      "name": "Visual Studio Enterprise Subscription",
       "state": "Enabled",
       "tags": {
-        "CostCenter": "CC-PROD-100",
-        "Owner": "cloudops@woodgrove.com"
-      }
-    },
-    {
-      "id": "sub-shared-01",
-      "name": "Shared-Services",
-      "subscriptionId": "22222222-3333-4444-5555-666666666666",
-      "state": "Enabled",
-      "tags": {
-        "CostCenter": "CC-IT-900",
-        "Owner": "infra@woodgrove.com"
-      }
-    },
-    {
-      "id": "sub-security-01",
-      "name": "Security-Hub",
-      "subscriptionId": "33333333-4444-5555-6666-777777777777",
-      "state": "Enabled",
-      "tags": {
-        "CostCenter": "CC-SEC-800",
-        "Owner": "soc@woodgrove.com"
+        "CostCenter": "CC-1010",
+        "Owner": "alice@clientcorp.com"
       }
     }
   ],
   "resourceGroups": [
     {
-      "id": "rg-wg-prod-apps",
-      "name": "rg-wg-prod-apps",
-      "subscriptionId": "11111111-2222-3333-4444-555555555555",
-      "location": "eastus",
+      "id": "RG-CoreApp-Prod",
+      "name": "RG-CoreApp-Prod",
+      "location": "canadacentral",
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976",
       "tags": {
-        "Environment": "Prod",
-        "Application": "CoreBanking",
-        "CostCenter": "CC-PROD-100"
+        "CostCenter": "CC-1010",
+        "Environment": "Production",
+        "Owner": "alice@clientcorp.com"
       }
     },
     {
-      "id": "rg-wg-prod-data",
-      "name": "rg-wg-prod-data",
-      "subscriptionId": "11111111-2222-3333-4444-555555555555",
-      "location": "eastus",
+      "id": "rg_marketing_legacy_dev",
+      "name": "rg_marketing_legacy_dev",
+      "location": "canadacentral",
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976",
       "tags": {
-        "Environment": "Prod",
-        "Application": "DataLake",
-        "CostCenter": "CC-PROD-100"
+        "dept": "Marketing",
+        "billing_id": "MKT-88"
       }
     },
     {
-      "id": "rg-wg-shared-hub",
-      "name": "rg-wg-shared-hub",
-      "subscriptionId": "22222222-3333-4444-5555-666666666666",
-      "location": "eastus",
-      "tags": {
-        "Environment": "Shared",
-        "Application": "HubNetwork",
-        "CostCenter": "CC-IT-900"
-      }
-    },
-    {
-      "id": "rg-wg-sec-mgmt",
-      "name": "rg-wg-sec-mgmt",
-      "subscriptionId": "33333333-4444-5555-6666-777777777777",
-      "location": "eastus",
-      "tags": {
-        "Environment": "Prod",
-        "Application": "SecurityVaults",
-        "CostCenter": "CC-SEC-800"
-      }
+      "id": "SANDBOX-SHARED-SVCS",
+      "name": "SANDBOX-SHARED-SVCS",
+      "location": "canadacentral",
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976",
+      "tags": {}
     }
   ],
   "resources": [
     {
-      "id": "/subscriptions/22222222-3333-4444-5555-666666666666/resourceGroups/rg-wg-shared-hub/providers/Microsoft.Network/virtualNetworks/wg-prod-vnet-01",
-      "name": "wg-prod-vnet-01",
-      "type": "Microsoft.Network/virtualNetworks",
-      "location": "eastus",
-      "resourceGroup": "rg-wg-shared-hub",
-      "subscriptionId": "22222222-3333-4444-5555-666666666666",
-      "tags": {
-        "Environment": "Prod",
-        "Application": "HubNetwork"
-      }
-    },
-    {
-      "id": "/subscriptions/22222222-3333-4444-5555-666666666666/resourceGroups/rg-wg-shared-hub/providers/Microsoft.Network/networkSecurityGroups/wg-prod-nsg-01",
-      "name": "wg-prod-nsg-01",
+      "id": "/subscriptions/a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976/resourceGroups/RG-CoreApp-Prod/providers/Microsoft.Network/networkSecurityGroups/nsg-prod-core-app",
+      "name": "nsg-prod-core-app",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "location": "eastus",
-      "resourceGroup": "rg-wg-shared-hub",
-      "subscriptionId": "22222222-3333-4444-5555-666666666666",
+      "resourceGroup": "RG-CoreApp-Prod",
+      "location": "canadacentral",
       "tags": {
-        "Environment": "Prod"
-      }
+        "CostCenter": "CC-1010",
+        "SecurityTier": "Strict"
+      },
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976"
     },
     {
-      "id": "/subscriptions/11111111-2222-3333-4444-555555555555/resourceGroups/rg-wg-prod-apps/providers/Microsoft.Compute/virtualMachines/wgprodappvm01",
-      "name": "wgprodappvm01",
-      "type": "Microsoft.Compute/virtualMachines",
-      "location": "eastus",
-      "resourceGroup": "rg-wg-prod-apps",
-      "subscriptionId": "11111111-2222-3333-4444-555555555555",
-      "tags": {
-        "Environment": "Prod",
-        "Application": "CoreBanking",
-        "CostCenter": "CC-PROD-100"
-      }
+      "id": "/subscriptions/a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976/resourceGroups/RG-CoreApp-Prod/providers/Microsoft.Network/routeTables/rt-legacy-core-egress",
+      "name": "rt-legacy-core-egress",
+      "type": "Microsoft.Network/routeTables",
+      "resourceGroup": "RG-CoreApp-Prod",
+      "location": "canadacentral",
+      "tags": {},
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976"
     },
     {
-      "id": "/subscriptions/11111111-2222-3333-4444-555555555555/resourceGroups/rg-wg-prod-data/providers/Microsoft.Storage/storageAccounts/wgproddatasa01",
-      "name": "wgproddatasa01",
+      "id": "/subscriptions/a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976/resourceGroups/RG-CoreApp-Prod/providers/Microsoft.Storage/storageAccounts/stcoreappdatarjdwlg",
+      "name": "stcoreappdatarjdwlg",
       "type": "Microsoft.Storage/storageAccounts",
-      "location": "eastus",
-      "resourceGroup": "rg-wg-prod-data",
-      "subscriptionId": "11111111-2222-3333-4444-555555555555",
+      "resourceGroup": "RG-CoreApp-Prod",
+      "location": "canadacentral",
       "tags": {
-        "Environment": "Prod",
-        "DataClassification": "Confidential"
-      }
+        "Application": "PaymentGateway",
+        "compliance": "pci"
+      },
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976"
     },
     {
-      "id": "/subscriptions/33333333-4444-5555-6666-777777777777/resourceGroups/rg-wg-sec-mgmt/providers/Microsoft.KeyVault/vaults/kv-wg-prod-sec",
-      "name": "kv-wg-prod-sec",
-      "type": "Microsoft.KeyVault/vaults",
-      "location": "eastus",
-      "resourceGroup": "rg-wg-sec-mgmt",
-      "subscriptionId": "33333333-4444-5555-6666-777777777777",
+      "id": "/subscriptions/a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976/resourceGroups/RG-CoreApp-Prod/providers/Microsoft.Network/virtualNetworks/vnet-legacy-prod-core",
+      "name": "vnet-legacy-prod-core",
+      "type": "Microsoft.Network/virtualNetworks",
+      "resourceGroup": "RG-CoreApp-Prod",
+      "location": "canadacentral",
       "tags": {
-        "Environment": "Prod",
-        "CostCenter": "CC-SEC-800"
-      }
+        "CreatedBy": "terraform",
+        "env": "prod"
+      },
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976"
+    },
+    {
+      "id": "/subscriptions/a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976/resourceGroups/rg_marketing_legacy_dev/providers/Microsoft.Network/networkSecurityGroups/nsg_mkt_dev_web",
+      "name": "nsg_mkt_dev_web",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "resourceGroup": "rg_marketing_legacy_dev",
+      "location": "canadacentral",
+      "tags": {},
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976"
+    },
+    {
+      "id": "/subscriptions/a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976/resourceGroups/rg_marketing_legacy_dev/providers/Microsoft.Network/virtualNetworks/vnet_mkt_dev",
+      "name": "vnet_mkt_dev",
+      "type": "Microsoft.Network/virtualNetworks",
+      "resourceGroup": "rg_marketing_legacy_dev",
+      "location": "canadacentral",
+      "tags": {
+        "dept": "Marketing"
+      },
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976"
+    },
+    {
+      "id": "/subscriptions/a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976/resourceGroups/rg_marketing_legacy_dev/providers/Microsoft.Storage/storageAccounts/stmktcamprjdwlg",
+      "name": "stmktcamprjdwlg",
+      "type": "Microsoft.Storage/storageAccounts",
+      "resourceGroup": "rg_marketing_legacy_dev",
+      "location": "canadacentral",
+      "tags": {
+        "dept": "Marketing",
+        "temporary": "true"
+      },
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976"
+    },
+    {
+      "id": "/subscriptions/a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976/resourceGroups/SANDBOX-SHARED-SVCS/providers/Microsoft.Storage/storageAccounts/stshdopsrjdwlg",
+      "name": "stshdopsrjdwlg",
+      "type": "Microsoft.Storage/storageAccounts",
+      "resourceGroup": "SANDBOX-SHARED-SVCS",
+      "location": "canadacentral",
+      "tags": {
+        "Owner": "admin@clientcorp.com"
+      },
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976"
+    },
+    {
+      "id": "/subscriptions/a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976/resourceGroups/SANDBOX-SHARED-SVCS/providers/Microsoft.Network/routeTables/RT-GLOBAL-INSPECT",
+      "name": "RT-GLOBAL-INSPECT",
+      "type": "Microsoft.Network/routeTables",
+      "resourceGroup": "SANDBOX-SHARED-SVCS",
+      "location": "canadacentral",
+      "tags": {},
+      "subscriptionId": "a2e6a0ac-fc03-4f4b-9632-8b4b60ea0976"
     }
   ]
 }

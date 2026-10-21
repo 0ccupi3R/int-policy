@@ -66,7 +66,17 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   }, [activeSubIndex, customer.id]);
 
   const [selectedResId, setSelectedResId] = useState(null);
-  const [expandedRgs, setExpandedRgs] = useState({});
+  const [expandedRgs, setExpandedRgs] = useState(() => {
+    if (customer?.environmentParadigm === "brownfield") {
+      const init = {};
+      const rgs = customer.topology?.subscriptions?.flatMap((s) => s.resourceGroups || []) || [];
+      rgs.forEach((r) => {
+        init[r.id] = true;
+      });
+      return init;
+    }
+    return {};
+  });
 
   const [expandedTagEditors, setExpandedTagEditors] = useState({}); // { [id]: boolean }
   const [codeDrawerOpen, setCodeDrawerOpen] = useState(false);
@@ -913,6 +923,36 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                             <AlertTriangle size={12} />
                             <span>Constraint Violation</span>
                           </span>
+                        )}
+
+                        {customer.environmentParadigm === "brownfield" && (
+                          <span
+                            className={`chip ${evalRg.evaluatedName.includes('_') ? 'chip-purple' : evalRg.evaluatedName === evalRg.evaluatedName.toUpperCase() && !evalRg.evaluatedName.includes('_') ? 'chip-amber' : 'chip-blue'}`}
+                            style={{ fontSize: "0.68rem", padding: "1px 6px" }}
+                          >
+                            {evalRg.evaluatedName.includes('_') ? 'snake_case' : evalRg.evaluatedName === evalRg.evaluatedName.toUpperCase() && !evalRg.evaluatedName.includes('_') ? 'UPPERCASE' : 'TitleCase / Hyphenated'}
+                          </span>
+                        )}
+
+                        {customer.environmentParadigm === "brownfield" && (
+                          Object.keys(rg.tags || {}).length === 0 ? (
+                            <span
+                              className="chip chip-amber"
+                              style={{ fontSize: "0.68rem", padding: "1px 6px", display: "inline-flex", alignItems: "center", gap: "3px" }}
+                              title="This Resource Group is untagged in the client Azure tenant"
+                            >
+                              <AlertTriangle size={11} />
+                              <span>Untagged in Tenant</span>
+                            </span>
+                          ) : (
+                            <span
+                              className="chip chip-emerald"
+                              style={{ fontSize: "0.68rem", padding: "1px 6px" }}
+                              title={`Discovered tags in Azure: ${Object.entries(rg.tags || {}).map(([k, v]) => `${k}=${v}`).join(', ')}`}
+                            >
+                              {Object.keys(rg.tags || {}).length} Discovered Tag{Object.keys(rg.tags || {}).length > 1 ? 's' : ''}
+                            </span>
+                          )
                         )}
                       </div>
 

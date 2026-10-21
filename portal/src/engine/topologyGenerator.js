@@ -388,10 +388,14 @@ export function evaluateResourceNode(customer, catalog, subscription, rg, resour
 
   // 1. Calculate Name
   let evaluatedName = "";
-  try {
-    evaluatedName = toSampleName(pattern, customer, enrichedMeta, sampleContext);
-  } catch {
-    evaluatedName = `${customer.abbreviation || "cust"}-${subscription.code}-${rg.purpose}-${resourceMeta.abbreviation || "res"}`;
+  if (customer.environmentParadigm === "brownfield" && resource.name) {
+    evaluatedName = resource.name;
+  } else {
+    try {
+      evaluatedName = toSampleName(pattern, customer, enrichedMeta, sampleContext);
+    } catch {
+      evaluatedName = `${customer.abbreviation || "cust"}-${subscription.code}-${rg.purpose}-${resourceMeta.abbreviation || "res"}`;
+    }
   }
 
   // 2. Validate Platform Constraints
@@ -438,10 +442,14 @@ export function evaluateRgNode(customer, catalog, subscription, rg) {
   };
 
   let evaluatedName = "";
-  try {
-    evaluatedName = toSampleName(pattern, customer, rgMeta, sampleContext);
-  } catch {
-    evaluatedName = `${customer.abbreviation || "cust"}-${subscription.code}-${rg.purpose || "core"}-rg`;
+  if (customer.environmentParadigm === "brownfield" && rg.name) {
+    evaluatedName = rg.name;
+  } else {
+    try {
+      evaluatedName = toSampleName(pattern, customer, rgMeta, sampleContext);
+    } catch {
+      evaluatedName = `${customer.abbreviation || "cust"}-${subscription.code}-${rg.purpose || "core"}-rg`;
+    }
   }
 
   const validation = validateAzurePlatformConstraints(evaluatedName, rgMeta);

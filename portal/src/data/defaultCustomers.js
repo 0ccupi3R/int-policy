@@ -580,7 +580,16 @@ export const DEFAULT_CUSTOMERS = [
       importedAt: "2026-10-21T10:00:00Z",
       totalDiscoveredResources: 24,
       discoveredSubscriptionsCount: 3,
-      inferredPatternsCount: 5
+      inferredPatternsCount: 5,
+      discoveredTagsCount: 6,
+      discoveredTags: [
+        { key: "CostCenter", sampleValues: ["CC-PROD-100", "CC-IT-900"], foundInScopes: ["subscription", "resourceGroup"], count: 5 },
+        { key: "Owner", sampleValues: ["cloudops@woodgrove.com", "infra@woodgrove.com"], foundInScopes: ["subscription"], count: 3 },
+        { key: "Environment", sampleValues: ["Prod", "NonProd"], foundInScopes: ["resourceGroup"], count: 4 },
+        { key: "Application", sampleValues: ["CoreBanking", "DataLake"], foundInScopes: ["resourceGroup", "resource"], count: 4 },
+        { key: "billing_id", sampleValues: ["MKT-88", "FIN-102"], foundInScopes: ["resourceGroup"], count: 2 },
+        { key: "temporary", sampleValues: ["true", "false"], foundInScopes: ["resource"], count: 2 }
+      ]
     }
   }
 ];

@@ -385,3 +385,167 @@ jobs:
 | Tag Policy flagged on Subnets or Locks | Policy evaluated untaggable child resources. | Ensure resource tag policies use `mode: Indexed` (Studio generates this automatically). |
 | Resource Group missing tags | Resource Group was created without mandatory tags. | Resource Groups are evaluated with `mode: All` and `type: Microsoft.Resources/subscriptions/resourceGroups`. Add required tags during RG creation. |
 | Region code mismatch (`-cc-` vs `-ce-`) | Name specifies Canada Central (`cc`) but resource was targeted at Canada East (`ce`). | Align resource deployment region with the name tokens. |
+
+---
+
+## 10. Field Engineer Runbook: Brownfield Client Onboarding & Tag Remediation
+
+This runbook instructs a new field engineer on how to onboard a real or brownfield Azure customer whose environment has inconsistent naming, missing tags, and fragmented metadata.
+
+### Workflow Summary
+
+```mermaid
+flowchart LR
+    A[1. Live Discovery] --> B[2. Portal Ingestion]
+    B --> C[3. Naming Inference]
+    C --> D[4. Tag Repopulation & Governance]
+    D --> E[5. Run Remediation Script]
+    E --> F[6. Audit Policy Deploy]
+```
+
+---
+
+### Step 1: Discover & Export Live Client Tenant Inventory
+
+Run the following Azure CLI or PowerShell script against the client's Azure tenant:
+
+#### Azure CLI (Bash / macOS / Linux)
+```bash
+python3 -c "
+import subprocess, json
+sub = json.loads(subprocess.check_output(['az', 'account', 'show', '-o', 'json']))
+rgs = json.loads(subprocess.check_output(['az', 'group', 'list', '-o', 'json']))
+res = json.loads(subprocess.check_output(['az', 'resource', 'list', '-o', 'json']))
+
+payload = {
+    'subscriptions': [{'subscriptionId': sub['id'], 'name': sub['name'], 'tags': sub.get('tags') or {}}],
+    'resourceGroups': [{'name': rg['name'], 'location': rg['location'], 'tags': rg.get('tags') or {}, 'subscriptionId': sub['id']} for rg in rgs],
+    'resources': [{'id': r['id'], 'name': r['name'], 'type': r['type'], 'resourceGroup': r['resourceGroup'], 'location': r['location'], 'tags': r.get('tags') or {}, 'subscriptionId': sub['id']} for r in res]
+}
+with open('inventory.json', 'w') as f:
+    json.dump(payload, f, indent=2)
+print(f'Discovered {len(payload[\"subscriptions\"])} Subs, {len(payload[\"resourceGroups\"])} RGs, {len(payload[\"resources\"])} Resources')
+"
+```
+
+---
+
+### Step 2: Ingest Tenant into Policy Studio
+
+1. Open the Policy Studio at `http://localhost:5174` (or your deployed instance).
+2. Look at the top navigation bar:
+   - If onboarding a new client, click **"+ New"** ➔ Select **Brownfield (Existing Tenant)** ➔ Enter client name & abbreviation ➔ **Create Workspace**.
+   - If an existing workspace is active, ensure the badge reads `[BROWNFIELD]` (gold badge).
+3. In the top bar, click the amber button **"Ingest Tenant"**.
+4. Drag and drop `inventory.json` or paste the raw JSON into the text area.
+   *(For offline drills, click **"Load Sample Tenant"**).*
+5. Inspect the Pre-Flight Summary card:
+   - Verifies discovered Subscriptions, Resource Groups, Leaf Resources, and Unique Tags.
+6. Click **"Ingest Discovered Tenant & Build Topology"**.
+   - The portal transforms the inventory into a 3-tier hierarchy, automatically triggers reverse-engineering naming pattern inference, and routes you directly to `02 // NAMING STUDIO`.
+
+---
+
+### Step 3: Formalize Inferred Naming Conventions
+
+1. In `02 // NAMING STUDIO`, locate the **Brownfield Discovered Naming Patterns** banner:
+   - Displays all reverse-engineered patterns with `HIGH CONFIDENCE` badges (e.g. `{org}-{env}-{abbreviation}-{instance}`).
+2. Review the patterns:
+   - Click **"Approve All Inferred"** to immediately merge all discovered conventions into the client profile.
+   - Or click individual **"Adopt"** buttons to pick and choose specific resource conventions.
+3. Once approved, the banner cleanly dismisses and the conventions become active in the pattern engine.
+
+---
+
+### Step 4: Tag Governance & Client Tag Repopulation
+
+1. Navigate to `03 // TAG GOVERNANCE`.
+2. Locate the **"Discovered Client Tags"** banner:
+   - Highlights all legacy tags found on client resources during discovery (e.g. `billing_id`, `dept`, `temporary`, `CreatedBy`).
+   - Displays how many resources and resource groups currently carry each tag.
+3. Repopulate & Govern:
+   - **"+ Govern Tag"**: 1-click adopt any client tag into official policy rules with allowed values pre-populated from discovered samples.
+   - **"⬇ Inherit"**: 1-click add the tag to RG ➔ Resource inheritance so child resources automatically inherit it from parent groups.
+   - **"Adopt All"**: 1-click batch adopt all un-governed client tags.
+4. Inject CAF Baseline:
+   - Click **"+ FinOps Suite"** (adds `CostCenter`, `ProjectCode`, `BusinessUnit`, `Owner`).
+   - Click **"+ Ops Suite"** (adds `Environment`, `DisasterRecovery`).
+5. Configure Inheritance & Remediation:
+   - Switch to **"4. Tag Inheritance & Remediation"** tab.
+   - Ensure `subToRg` contains `CostCenter`, `Owner`.
+   - Ensure `rgToResource` contains `Environment`, `CostCenter`, `Owner`, `Workload`.
+   - Verify `defaultResourceNA` contains required tags for automated `NA` fallback on leaf resources.
+
+---
+
+### Step 5: Export & Inspect IaC Artifacts
+
+1. Navigate to `05 // IAC EXPORT`.
+2. Use the **POLICY INITIATIVE SCOPE** pills:
+   - **Both Initiatives (Full CAF)**: Complete bundle.
+   - **Naming & Geo Only**: When the client wants to enforce naming without enforcing tags yet.
+   - **Tag Governance Only**: When the client wants tag remediation without naming restrictions.
+3. Inspect Artifacts:
+   - `Apply-ResourceTags.ps1`: Production PowerShell runbook using `Update-AzTag -Operation Merge`.
+   - `apply-tags.sh`: Production Bash / Azure CLI runbook using `az tag update --operation merge`.
+   - `main.bicep` & `main.json`: Declarative Azure Policy initiatives and assignments.
+
+---
+
+### Step 6: Execute Live Tag Remediation (Safe Merge)
+
+> [!IMPORTANT]
+> The generated runbooks use **Merge Mode** (`Update-AzTag -Operation Merge` / `az tag update --operation merge`). Existing client tags are **preserved and never deleted**!
+
+#### Dry-Run / WhatIf Mode (PowerShell)
+```powershell
+.\Apply-ResourceTags.ps1 -WhatIf
+```
+
+#### Execute Live Remediation (Bash)
+```bash
+bash apply-tags.sh
+```
+
+#### Verification in Azure
+Verify that previously untagged resources now possess standardized governance tags:
+```bash
+az resource list --resource-group "RG-CoreApp-Prod" --query "[].{name:name, tags:tags}" -o json
+```
+
+---
+
+### Step 7: Deploy Policy Bundle in Audit Mode
+
+Deploy the generated `main.bicep` in `Audit` mode:
+
+```bash
+az deployment sub create \
+  --location canadacentral \
+  --template-file main.bicep \
+  --parameters namingEffect=Audit tagEffect=Audit geoEffect=Audit enableRoleAssignment=false \
+  --name "alz-policy-audit"
+```
+
+Trigger an on-demand compliance scan:
+```bash
+az policy state trigger-scan --no-wait
+```
+
+Check compliance summary:
+```bash
+az policy state summarize --query "summaries[0].policyAssignments" -o table
+```
+
+---
+
+### Step 8: Zero-Cost Mock Tenant Teardown (Lab Drills)
+
+When running internal tabletop exercises with our $0.00-cost mock tenant (`tests/brownfield-mock-tenant.bicep`), clean up test resources with:
+
+```bash
+az group delete --name "RG-CoreApp-Prod" --yes --no-wait
+az group delete --name "rg_marketing_legacy_dev" --yes --no-wait
+az group delete --name "SANDBOX-SHARED-SVCS" --yes --no-wait
+```
+

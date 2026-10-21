@@ -247,6 +247,97 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
     onShowToast("Updated Regional Geo-Boundary settings");
   };
 
+  // Brownfield Discovered Client Tags State & Handlers
+  const isBrownfield = customer.environmentParadigm === "brownfield";
+  const discoveredTags = customer.brownfieldMetadata?.discoveredTags || [];
+  const [showDiscoveredTags, setShowDiscoveredTags] = useState(true);
+
+  const isTagGoverned = (key) => {
+    const k = (key || "").toLowerCase();
+    const allGov = [
+      ...(customer.tags?.subscription || []),
+      ...(customer.tags?.resourceGroup || []),
+      ...(customer.tags?.resource || [])
+    ];
+    return allGov.some((t) => (t.key || "").toLowerCase() === k);
+  };
+
+  const isTagInherited = (key) => {
+    const k = (key || "").toLowerCase();
+    const allInh = [
+      ...(tagInheritance.subToRg || []),
+      ...(tagInheritance.rgToResource || [])
+    ];
+    return allInh.some((tagKey) => (typeof tagKey === "string" ? tagKey : tagKey?.key || "").toLowerCase() === k);
+  };
+
+  const handleAdoptDiscoveredTag = (discTag) => {
+    const targetScope = activeScope === "inheritance" ? "resource" : activeScope;
+    const existing = customer.tags?.[targetScope] || [];
+    if (existing.some((t) => (t.key || "").toLowerCase() === discTag.key.toLowerCase())) {
+      onShowToast(`Tag '${discTag.key}' is already governed in ${targetScope} scope.`, "info");
+      return;
+    }
+    const newTag = {
+      key: discTag.key,
+      displayName: discTag.key,
+      description: `Imported from client tenant discovery scan (${discTag.count} occurrences)`,
+      required: false,
+      caseSensitive: false,
+      allowedValues: discTag.sampleValues && discTag.sampleValues.length > 0 ? [...discTag.sampleValues] : ["*"]
+    };
+    const updated = {
+      ...customer,
+      tags: {
+        ...customer.tags,
+        [targetScope]: [...existing, newTag]
+      }
+    };
+    onUpdateCustomer(updated);
+    onShowToast(`Adopted '${discTag.key}' into ${targetScope} governance.`, "success");
+  };
+
+  const handleAddDiscoveredToInheritance = (discTag) => {
+    const currentRgToRes = tagInheritance.rgToResource || [];
+    if (currentRgToRes.some((k) => (typeof k === "string" ? k : k?.key || "").toLowerCase() === discTag.key.toLowerCase())) {
+      onShowToast(`'${discTag.key}' is already in RG ➔ Resource inheritance.`, "info");
+      return;
+    }
+    const updated = {
+      ...tagInheritance,
+      rgToResource: [...currentRgToRes, discTag.key]
+    };
+    handleUpdateTagInheritance(updated);
+    onShowToast(`Added '${discTag.key}' to RG ➔ Resource inheritance.`, "success");
+  };
+
+  const handleBatchAdoptDiscoveredTags = () => {
+    const unadopted = discoveredTags.filter((t) => !isTagGoverned(t.key));
+    if (unadopted.length === 0) {
+      onShowToast("All discovered tags are already governed.", "info");
+      return;
+    }
+    const targetScope = activeScope === "inheritance" ? "resource" : activeScope;
+    const existing = customer.tags?.[targetScope] || [];
+    const newTags = unadopted.map((discTag) => ({
+      key: discTag.key,
+      displayName: discTag.key,
+      description: `Imported from client tenant discovery scan (${discTag.count} occurrences)`,
+      required: false,
+      caseSensitive: false,
+      allowedValues: discTag.sampleValues && discTag.sampleValues.length > 0 ? [...discTag.sampleValues] : ["*"]
+    }));
+    const updated = {
+      ...customer,
+      tags: {
+        ...customer.tags,
+        [targetScope]: [...existing, ...newTags]
+      }
+    };
+    onUpdateCustomer(updated);
+    onShowToast(`Adopted ${newTags.length} discovered tags into ${targetScope} governance!`, "success");
+  };
+
   // Multi-Scope Add Tag Modal State
   const [showAddTagModal, setShowAddTagModal] = useState(false);
   const [tagFormData, setTagFormData] = useState({
@@ -585,6 +676,135 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
             </button>
           )}
         </div>
+
+        {/* Brownfield Discovered Client Tags Section */}
+        {isBrownfield && discoveredTags.length > 0 && (
+          <div
+            id="brownfield-discovered-tags-banner"
+            style={{
+              padding: "16px 20px",
+              borderRadius: "var(--radius-sm)",
+              background: "linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(180, 83, 9, 0.03) 100%)",
+              border: "1px solid rgba(217, 119, 6, 0.35)",
+              marginBottom: "18px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px"
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <Layers size={18} style={{ color: "var(--accent-amber)" }} />
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <strong style={{ fontSize: "0.92rem", color: "var(--text-primary)" }}>
+                      Discovered Client Tags
+                    </strong>
+                    <span className="au-badge au-badge-amber" style={{ fontSize: "0.72rem" }}>
+                      {discoveredTags.length} Found in Live Scan
+                    </span>
+                  </div>
+                  <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", margin: "2px 0 0" }}>
+                    Tags detected on client infrastructure during tenant discovery. 1-click adopt them into official policy rules or add them to RG ➔ Resource inheritance.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <AuButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleBatchAdoptDiscoveredTags()}
+                  title="Adopt all discovered tags into Resource Scope"
+                >
+                  Adopt All ({discoveredTags.filter(t => !isTagGoverned(t.key)).length})
+                </AuButton>
+                <AuButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowDiscoveredTags(!showDiscoveredTags)}
+                >
+                  {showDiscoveredTags ? "Hide Tags" : `View ${discoveredTags.length} Tags`}
+                </AuButton>
+              </div>
+            </div>
+
+            {showDiscoveredTags && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "10px", marginTop: "4px" }}>
+                {discoveredTags.map((tag) => {
+                  const governed = isTagGoverned(tag.key);
+                  const inherited = isTagInherited(tag.key);
+
+                  return (
+                    <div
+                      key={tag.key}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: "var(--radius-sm)",
+                        background: "var(--bg-card)",
+                        border: "1px solid var(--border-hairline)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px"
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <code style={{ fontSize: "0.85rem", color: "var(--accent-amber)", fontWeight: 600 }}>
+                          {tag.key}
+                        </code>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {tag.foundInScopes?.map(s => (
+                            <span key={s} className="au-badge au-badge-subtle" style={{ fontSize: "0.65rem", padding: "1px 5px" }}>
+                              {s === "subscription" ? "Sub" : s === "resourceGroup" ? "RG" : "Res"}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {tag.sampleValues?.length > 0 && (
+                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          Sample: <span style={{ color: "var(--text-secondary)" }}>{tag.sampleValues.join(", ")}</span>
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "6px", marginTop: "4px" }}>
+                        {governed ? (
+                          <span className="au-badge au-badge-mint" style={{ fontSize: "0.68rem" }}>
+                            ✓ Governed
+                          </span>
+                        ) : (
+                          <AuButton
+                            variant="secondary"
+                            size="sm"
+                            style={{ fontSize: "0.72rem", padding: "2px 8px" }}
+                            onClick={() => handleAdoptDiscoveredTag(tag)}
+                          >
+                            + Govern Tag
+                          </AuButton>
+                        )}
+
+                        {inherited ? (
+                          <span className="au-badge au-badge-mint" style={{ fontSize: "0.68rem" }}>
+                            ✓ Inherited
+                          </span>
+                        ) : (
+                          <AuButton
+                            variant="secondary"
+                            size="sm"
+                            style={{ fontSize: "0.72rem", padding: "2px 8px" }}
+                            onClick={() => handleAddDiscoveredToInheritance(tag)}
+                          >
+                            ⬇ Inherit
+                          </AuButton>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 2. Hierarchical Scope Tabs */}
         <div className="nav-tabs" style={{ marginBottom: 0 }}>

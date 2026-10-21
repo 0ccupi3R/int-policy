@@ -199,6 +199,42 @@ export function BrownfieldIngestionModal({
     // 4. Run Reverse-Engineering Naming Pattern Inference
     const { inferredPatterns } = inferBrownfieldNamingPatterns(rawResources, customer);
 
+    // 4b. Aggregate Discovered Tags across tenant
+    const discoveredTagsMap = {};
+    const registerTag = (key, val, scope) => {
+      if (!key) return;
+      if (!discoveredTagsMap[key]) {
+        discoveredTagsMap[key] = {
+          key,
+          sampleValues: new Set(),
+          foundInScopes: new Set(),
+          count: 0
+        };
+      }
+      if (val !== undefined && val !== null && val !== "") {
+        discoveredTagsMap[key].sampleValues.add(String(val));
+      }
+      discoveredTagsMap[key].foundInScopes.add(scope);
+      discoveredTagsMap[key].count++;
+    };
+
+    subscriptions.forEach((s) => {
+      Object.entries(s.tags || {}).forEach(([k, v]) => registerTag(k, v, "subscription"));
+    });
+    rawRgs.forEach((rg) => {
+      Object.entries(rg.tags || {}).forEach(([k, v]) => registerTag(k, v, "resourceGroup"));
+    });
+    rawResources.forEach((r) => {
+      Object.entries(r.tags || {}).forEach(([k, v]) => registerTag(k, v, "resource"));
+    });
+
+    const discoveredTags = Object.values(discoveredTagsMap).map((t) => ({
+      key: t.key,
+      sampleValues: Array.from(t.sampleValues).slice(0, 5),
+      foundInScopes: Array.from(t.foundInScopes),
+      count: t.count
+    }));
+
     // 5. Update Customer Workspace
     const updatedCustomer = {
       ...customer,
@@ -213,7 +249,9 @@ export function BrownfieldIngestionModal({
         importedAt: new Date().toISOString(),
         totalDiscoveredResources: rawResources.length,
         discoveredSubscriptionsCount: subscriptions.length,
-        inferredPatternsCount: Object.keys(inferredPatterns).length
+        inferredPatternsCount: Object.keys(inferredPatterns).length,
+        discoveredTagsCount: discoveredTags.length,
+        discoveredTags
       }
     };
 

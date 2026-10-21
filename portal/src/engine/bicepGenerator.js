@@ -84,6 +84,9 @@ param tagInheritanceEffect string = '${customer.tagInheritance?.effect || "modif
 @description('Primary deployment location for Managed Identity assignment')
 param location string = '${customer.defaultRegion || "canadacentral"}'
 
+@description('Grant Tag Contributor role to Managed Identity (requires roleAssignment write permissions)')
+param enableRoleAssignment bool = false
+
 `;
   }
 
@@ -954,7 +957,7 @@ resource tagInheritanceAssignment 'Microsoft.Authorization/policyAssignments@202
   }
 }
 
-resource tagContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource tagContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (enableRoleAssignment) {
   name: guid(subscription().id, tagInheritanceAssignment.id, 'b24988ac-6180-42a0-ab88-20f7382dd24c')
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')

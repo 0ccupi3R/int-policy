@@ -620,13 +620,22 @@ export function autoFixPatternForResource(pattern, resourceItem) {
 
   const isContainerRegistry =
     resType.includes("microsoft.containerregistry/registries") || key === "cr";
-
   const isKeyVault =
     resType.includes("microsoft.keyvault/vaults") || key === "kv";
+  const isCosmosDb = resType.includes("microsoft.documentdb/databaseaccounts") || key === "cosmos";
+  const isSearchService = resType.includes("microsoft.search/searchservices") || key === "search";
+  const isSynapse = resType.includes("microsoft.synapse/workspaces") || key === "synw";
+  const requiresLowercaseOnly =
+    isStorageAccount ||
+    isCosmosDb ||
+    isSearchService ||
+    isSynapse ||
+    (meta.allowedCharacters && /lowercase/i.test(meta.allowedCharacters) && !/uppercase/i.test(meta.allowedCharacters)) ||
+    (meta.pattern && /\[a-z0-9/.test(meta.pattern) && !/\[a-zA-Z/.test(meta.pattern));
 
   let fixed = pattern;
 
-  if (isStorageAccount) {
+  if (requiresLowercaseOnly) {
     // Convert uppercase/TitleCase tokens to lowercase tokens
     fixed = fixed
       .replace(/\{ORGNAME\}|\{OrgName\}/g, "{orgname}")
@@ -638,12 +647,12 @@ export function autoFixPatternForResource(pattern, resourceItem) {
       .replace(/\{ENV\}|\{Env\}/g, "{env}")
       .replace(/\{REGION\}|\{Region\}/g, "{region}")
       .replace(/\{Role\}|\{role\}/g, "diag")
-      .replace(/[-_]/g, "") // Remove hyphens and underscores
       .replace(/([^{}]+)/g, (m) => m.toLowerCase()); // Lowercase literal text outside {tokens}
-  } else if (isContainerRegistry) {
-    fixed = fixed
-      .replace(/\{ResourceGroup\}|\{RGNAME\}|\{RgName\}/g, "{rg}")
-      .replace(/[-_]/g, "");
+  }
+
+  if (isStorageAccount || isContainerRegistry) {
+    // Storage & Container Registry reject hyphens and underscores
+    fixed = fixed.replace(/[-_]/g, "");
   } else if (isKeyVault) {
     // Replace underscores with hyphens
     fixed = fixed.replace(/_/g, "-");

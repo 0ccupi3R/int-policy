@@ -469,7 +469,7 @@ export function BrownfieldIngestionModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Brownfield Discovery Ingestion: Live Tenant Scan"
-      width="780px"
+      width="840px"
       footer={
         <>
           <AuButton variant="secondary" size="sm" onClick={onClose}>
@@ -490,7 +490,7 @@ export function BrownfieldIngestionModal({
       <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
         {/* Step 1: Run Discovery Script */}
         <div style={{ background: "var(--bg-canvas)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-sm)", padding: "14px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Terminal size={15} style={{ color: "var(--accent-amber)" }} />
               <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>
@@ -498,7 +498,7 @@ export function BrownfieldIngestionModal({
               </strong>
             </div>
 
-            <div style={{ display: "flex", gap: "6px" }}>
+            <div>
               <button
                 type="button"
                 className="au-btn au-btn-primary au-btn-xs"
@@ -511,7 +511,7 @@ export function BrownfieldIngestionModal({
           </div>
 
           {/* Script Type Selector Tabs */}
-          <div style={{ display: "flex", gap: "6px", marginBottom: "8px", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "6px", marginBottom: "10px", alignItems: "center", flexWrap: "wrap" }}>
             <button
               type="button"
               className={`au-btn au-btn-xs ${activeScriptTab === "powershell" ? "au-btn-primary" : "au-btn-secondary"}`}
@@ -533,11 +533,28 @@ export function BrownfieldIngestionModal({
             >
               <span>Resource Graph (One-Liner)</span>
             </button>
+          </div>
 
-            <div style={{ marginLeft: "auto" }}>
+          {/* Integrated Code Block with Anchored Header */}
+          <div style={{ borderRadius: "var(--radius-xs)", overflow: "hidden", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+            <div
+              style={{
+                background: "rgba(0, 0, 0, 0.55)",
+                padding: "6px 12px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderBottom: "1px solid rgba(255, 255, 255, 0.06)"
+              }}
+            >
+              <span style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                {activeScriptTab === "powershell" ? "PowerShell Script" : activeScriptTab === "cli" ? "Bash / Python Discovery Script" : "Resource Graph One-Liner"}
+              </span>
+
               <button
                 type="button"
                 className="au-btn au-btn-secondary au-btn-xs"
+                style={{ padding: "2px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: "5px" }}
                 onClick={() =>
                   handleCopyScript(
                     currentScriptContent,
@@ -549,27 +566,27 @@ export function BrownfieldIngestionModal({
                   )
                 }
               >
-                {copiedType ? <Check size={11} /> : <Copy size={11} />}
-                <span>Copy Script</span>
+                {copiedType ? <Check size={11} style={{ color: "var(--accent-mint)" }} /> : <Copy size={11} />}
+                <span>{copiedType ? "Copied!" : "Copy Script"}</span>
               </button>
             </div>
-          </div>
 
-          <pre
-            style={{
-              background: "rgba(0, 0, 0, 0.45)",
-              padding: "10px 12px",
-              borderRadius: "var(--radius-xs)",
-              fontSize: "0.72rem",
-              fontFamily: "var(--font-mono)",
-              color: "var(--text-dim)",
-              overflowX: "auto",
-              maxHeight: "180px",
-              margin: 0
-            }}
-          >
-            {currentScriptContent}
-          </pre>
+            <pre
+              style={{
+                background: "rgba(0, 0, 0, 0.35)",
+                padding: "10px 12px",
+                fontSize: "0.72rem",
+                fontFamily: "var(--font-mono)",
+                color: "var(--text-dim)",
+                overflowX: "auto",
+                maxHeight: "180px",
+                margin: 0,
+                borderRadius: 0
+              }}
+            >
+              {currentScriptContent}
+            </pre>
+          </div>
         </div>
 
         {/* Step 2: Upload or Paste JSON */}

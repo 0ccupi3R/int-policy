@@ -47,7 +47,9 @@ import {
   Trash2,
   Zap,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Filter,
+  ArrowDown
 } from "lucide-react";
 
 const EMPTY_OBJ = {};
@@ -62,6 +64,7 @@ export function NamingStudio({
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [filterOnlyViolations, setFilterOnlyViolations] = useState(false);
 
   // Live Sandbox state
   const [testName, setTestName] = useState("");
@@ -158,51 +161,7 @@ export function NamingStudio({
   const subnetAllowed = namingRules.subnetNaming?.allowedNames || [];
   const [newSubnetName, setNewSubnetName] = useState("");
 
-  const categories = ["All", ...new Set(catalog.map((c) => c.category || "General"))];
-
-  const filteredCatalog = catalog.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.resourceType.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const [expandedCategories, setExpandedCategories] = useState({});
-
-  // Group filtered catalog by category
-  const groupedCatalog = useMemo(() => {
-    const groups = {};
-    filteredCatalog.forEach((item) => {
-      const cat = item.category || "General";
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(item);
-    });
-    return groups;
-  }, [filteredCatalog]);
-
-  const categoryNames = useMemo(() => Object.keys(groupedCatalog), [groupedCatalog]);
-  const allCategoriesExpanded = categoryNames.length > 0 && categoryNames.every((c) => !!expandedCategories[c]);
-
-  const handleToggleAllCategories = () => {
-    if (allCategoriesExpanded) {
-      setExpandedCategories({});
-    } else {
-      const next = {};
-      categoryNames.forEach((c) => {
-        next[c] = true;
-      });
-      setExpandedCategories(next);
-    }
-  };
-
-  const toggleCategory = (cat) => {
-    setExpandedCategories((prev) => ({
-      ...prev,
-      [cat]: !prev[cat]
-    }));
-  };
+  const categories = useMemo(() => ["All", ...new Set(catalog.map((c) => c.category || "General"))], [catalog]);
 
 
   // Handler for updating a type's custom pattern
@@ -485,6 +444,101 @@ export function NamingStudio({
     return list;
   }, [catalog, unrestrictedTypes, customPatterns, customer, effectivePurpose]);
 
+  const filteredCatalog = useMemo(() => {
+    return catalog.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.resourceType.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
+      const matchesViolationFilter = !filterOnlyViolations || platformViolations.some((v) => v.item.key === item.key);
+      return matchesSearch && matchesCategory && matchesViolationFilter;
+    });
+  }, [catalog, searchQuery, selectedCategory, filterOnlyViolations, platformViolations]);
+
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  // Group filtered catalog by category
+  const groupedCatalog = useMemo(() => {
+    const groups = {};
+    filteredCatalog.forEach((item) => {
+      const cat = item.category || "General";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
+    });
+    return groups;
+  }, [filteredCatalog]);
+
+  const categoryNames = useMemo(() => Object.keys(groupedCatalog), [groupedCatalog]);
+  const allCategoriesExpanded = categoryNames.length > 0 && categoryNames.every((c) => !!expandedCategories[c]);
+
+  const handleToggleAllCategories = () => {
+    if (allCategoriesExpanded) {
+      setExpandedCategories({});
+    } else {
+      const next = {};
+      categoryNames.forEach((c) => {
+        next[c] = true;
+      });
+      setExpandedCategories(next);
+    }
+  };
+
+  const toggleCategory = (cat) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [cat]: !prev[cat]
+    }));
+  };
+
+  const categoryOptions = useMemo(() => {
+    return categories.map((cat) => {
+      if (cat === "All") {
+        return {
+          value: "All",
+          label:
+            platformViolations.length > 0
+              ? `All Categories (${catalog.length} types · ${platformViolations.length} failed)`
+              : `All Categories (${catalog.length} types)`
+        };
+      }
+      const catItems = catalog.filter((c) => (c.category || "General") === cat);
+      const catFailed = catItems.filter((it) => platformViolations.some((v) => v.item.key === it.key)).length;
+      return {
+        value: cat,
+        label:
+          catFailed > 0
+            ? `${cat} (${catItems.length} types · ${catFailed} failed)`
+            : `${cat} (${catItems.length} types)`
+      };
+    });
+  }, [categories, catalog, platformViolations]);
+
+  const handleJumpToViolation = (targetKey) => {
+    const keyToJump = targetKey || platformViolations[0]?.item?.key;
+    if (!keyToJump) return;
+
+    const targetItem = catalog.find((c) => c.key === keyToJump);
+    if (targetItem) {
+      const cat = targetItem.category || "General";
+      setExpandedCategories((prev) => ({ ...prev, [cat]: true }));
+    }
+
+    setTimeout(() => {
+      const card = document.getElementById(`naming-card-${keyToJump}`);
+      if (card) {
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        card.style.outline = "2px solid var(--accent-rose)";
+        card.style.boxShadow = "0 0 20px rgba(244, 63, 94, 0.55)";
+        card.style.transition = "all 0.3s ease";
+        setTimeout(() => {
+          card.style.outline = "";
+          card.style.boxShadow = "";
+        }, 3000);
+      }
+    }, 150);
+  };
+
   const handleAutoFixAll = () => {
     const updatedPatterns = { ...customPatterns };
     platformViolations.forEach((v) => {
@@ -720,21 +774,63 @@ export function NamingStudio({
               </div>
             </div>
           </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-danger"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              fontWeight: "600",
-              fontSize: "0.8rem"
-            }}
-            onClick={handleAutoFixAll}
-          >
-            <Zap size={15} /> Auto-Fix All Violations ({platformViolations.length})
-          </button>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+            <button
+              type="button"
+              id="naming-inspect-violation-btn"
+              className="btn btn-sm btn-secondary"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 14px",
+                fontWeight: "600",
+                fontSize: "0.8rem",
+                color: "var(--status-danger-text)",
+                borderColor: "rgba(244, 63, 94, 0.4)"
+              }}
+              onClick={() => handleJumpToViolation()}
+              title="Jump to and highlight the first non-compliant resource card"
+            >
+              <ArrowDown size={14} /> Inspect Violation →
+            </button>
+
+            <button
+              type="button"
+              id="naming-filter-violations-btn"
+              className={`btn btn-sm ${filterOnlyViolations ? "btn-danger" : "btn-secondary"}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 14px",
+                fontWeight: "600",
+                fontSize: "0.8rem",
+                borderColor: "rgba(244, 63, 94, 0.4)"
+              }}
+              onClick={() => setFilterOnlyViolations((prev) => !prev)}
+              title="Show only resource types that have naming violations"
+            >
+              <Filter size={14} /> {filterOnlyViolations ? "Show All Types" : `Filter to Non-Compliant (${platformViolations.length})`}
+            </button>
+
+            <button
+              type="button"
+              id="naming-autofix-all-btn"
+              className="btn btn-sm btn-outline-danger"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                fontWeight: "600",
+                fontSize: "0.8rem"
+              }}
+              onClick={handleAutoFixAll}
+            >
+              <Zap size={15} /> Auto-Fix All Violations ({platformViolations.length})
+            </button>
+          </div>
         </div>
       )}
 
@@ -1082,17 +1178,39 @@ export function NamingStudio({
               />
             </div>
 
+            {/* Quick Non-Compliant Filter Pill if violations exist */}
+            {platformViolations.length > 0 && (
+              <button
+                type="button"
+                id="naming-toolbar-filter-violations"
+                className={`btn btn-sm ${filterOnlyViolations ? "btn-danger" : "btn-secondary"}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "0.8rem",
+                  borderColor: filterOnlyViolations ? "var(--status-danger-border)" : "var(--border-subtle)",
+                  background: filterOnlyViolations ? "rgba(244, 63, 94, 0.2)" : undefined,
+                  color: filterOnlyViolations ? "var(--status-danger-text)" : undefined
+                }}
+                onClick={() => setFilterOnlyViolations((prev) => !prev)}
+                title="Filter catalog to show only non-compliant types"
+              >
+                <Filter size={13} />
+                <span>Violations ({platformViolations.length})</span>
+              </button>
+            )}
+
             {/* Category Filter */}
-            <div style={{ minWidth: "180px" }}>
+            <div style={{ minWidth: "220px" }}>
               <AuSelect
                 id="naming-category-filter"
                 aria-label="Filter resource types by category"
                 value={selectedCategory}
                 onChange={setSelectedCategory}
-                options={categories.map((cat) => ({ value: cat, label: cat }))}
+                options={categoryOptions}
               />
             </div>
-
 
             <AuExpandCollapseButton
               allExpanded={allCategoriesExpanded}
@@ -1111,12 +1229,14 @@ export function NamingStudio({
             categoryNames.map((cat) => {
               const items = groupedCatalog[cat];
               const isExpanded = !!expandedCategories[cat];
+              const catViolations = items.filter((it) => platformViolations.some((v) => v.item.key === it.key));
+              const hasCatViolations = catViolations.length > 0;
               return (
                 <div
                   key={cat}
                   className="au-hud-card"
                   style={{
-                    border: "1px solid var(--border-hairline)",
+                    border: hasCatViolations ? "1px solid rgba(244, 63, 94, 0.35)" : "1px solid var(--border-hairline)",
                     borderRadius: "var(--radius-sm)",
                     overflow: "hidden"
                   }}
@@ -1128,7 +1248,7 @@ export function NamingStudio({
                       justifyContent: "space-between",
                       alignItems: "center",
                       cursor: "pointer",
-                      background: "rgba(255, 255, 255, 0.02)",
+                      background: hasCatViolations ? "rgba(244, 63, 94, 0.04)" : "rgba(255, 255, 255, 0.02)",
                       borderBottom: isExpanded ? "1px solid var(--border-subtle)" : "none",
                       transition: "background 0.2s ease"
                     }}
@@ -1141,9 +1261,26 @@ export function NamingStudio({
                       <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text-primary)" }}>
                         {cat}
                       </span>
-                      <span className="au-badge au-badge-mint" style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem" }}>
-                        {items.length} types
-                      </span>
+                      {hasCatViolations ? (
+                        <span
+                          className="au-badge au-badge-rose"
+                          style={{
+                            fontSize: "0.72rem",
+                            padding: "0.15rem 0.55rem",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px"
+                          }}
+                          title={`${catViolations.length} resource types in this category fail Azure ARM platform rules`}
+                        >
+                          <AlertTriangle size={11} />
+                          {items.length} types ({catViolations.length} failed)
+                        </span>
+                      ) : (
+                        <span className="au-badge au-badge-mint" style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem" }}>
+                          {items.length} types
+                        </span>
+                      )}
                     </div>
                     <span className="au-mono-meta" style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
                       {isExpanded ? "Click to collapse" : "Click to expand"}
@@ -1193,6 +1330,7 @@ export function NamingStudio({
             return (
               <div
                 key={item.key}
+                id={`naming-card-${item.key}`}
                 className="glass-panel"
                 style={{
                   padding: "18px 20px",

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0",
+  "description": "Declarative sanitization and resource filtering rules for Azure IaC exports (ARM, Bicep, Terraform). Modify this file to add or adjust filtering for any Azure resource type without modifying code.",
+  "rules": [
+    {
+      "id": "law-prebuilt-tables",
+      "description": "Prune pre-built Log Analytics Workspace and Microsoft Sentinel system tables that lack custom columns and custom log suffixes (_CL, _SRCH, _RST).",
+      "enabled": true,
+      "arm": {
+        "resourceType": "Microsoft.OperationalInsights/workspaces/tables",
+        "action": "prune",
+        "condition": {
+          "unless": {
+            "hasProperties": ["properties.schema.columns"],
+            "nameEndsWith": ["_CL", "_SRCH", "_RST"]
+          }
+        }
+      },
+      "bicep": {
+        "resourceType": "Microsoft.OperationalInsights/workspaces/tables",
+        "action": "prune",
+        "condition": {
+          "unless": {
+            "containsAny": ["columns:"],
+            "nameEndsWith": ["_CL", "_SRCH", "_RST"]
+          }
+        }
+      },
+      "terraform": {
+        "resourceType": "azurerm_log_analytics_workspace_table_custom_log",
+        "action": "prune",
+        "condition": {
+          "unless": {
+            "containsAny": ["column {", "column{"],
+            "nameEndsWith": ["_CL", "_SRCH", "_RST"]
+          }
+        }
+      }
+    },
+    {
+      "id": "terraform-duplicate-provider-blocks",
+      "description": "Strip redundant top-level terraform {} and provider {} blocks from main.tf to keep providers.tf as the single source of truth.",
+      "enabled": true,
+      "terraform": {
+        "action": "strip_block_types",
+        "blockTypes": ["terraform", "provider"]
+      }
+    },
+    {
+      "id": "example-network-watchers",
+      "description": "Example: Prune default Azure Network Watchers (disabled by default; change 'enabled' to true to activate).",
+      "enabled": false,
+      "arm": {
+        "resourceType": "Microsoft.Network/networkWatchers",
+        "action": "prune"
+      },
+      "bicep": {
+        "resourceType": "Microsoft.Network/networkWatchers",
+        "action": "prune"
+      },
+      "terraform": {
+        "resourceType": "azurerm_network_watcher",
+        "action": "prune"
+      }
+    },
+    {
+      "id": "example-default-nsg-rules",
+      "description": "Example: Prune default NSG security rules matching system default names (disabled by default; change 'enabled' to true to activate).",
+      "enabled": false,
+      "arm": {
+        "resourceType": "Microsoft.Network/networkSecurityGroups/securityRules",
+        "action": "prune",
+        "condition": {
+          "nameMatches": ["AllowVnetInBound", "AllowAzureLoadBalancerInBound", "DenyAllInBound"]
+        }
+      },
+      "bicep": {
+        "resourceType": "Microsoft.Network/networkSecurityGroups/securityRules",
+        "action": "prune",
+        "condition": {
+          "nameMatches": ["AllowVnetInBound", "AllowAzureLoadBalancerInBound", "DenyAllInBound"]
+        }
+      },
+      "terraform": {
+        "resourceType": "azurerm_network_security_rule",
+        "action": "prune",
+        "condition": {
+          "nameMatches": ["AllowVnetInBound", "AllowAzureLoadBalancerInBound", "DenyAllInBound"]
+        }
+      }
+    }
+  ]
+}

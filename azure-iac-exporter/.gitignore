@@ -1,0 +1,7 @@
+# Export outputs and state caches
+exports/
+.export_state.json
+scan_inventory.json
+*.tmp
+*.log
+__pycache__/

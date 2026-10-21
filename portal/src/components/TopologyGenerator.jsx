@@ -802,6 +802,9 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
               <div style={{ position: "relative" }}>
                 <Search size={13} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
                 <input
+                  id="topology-filter-input"
+                  name="topology_filter"
+                  aria-label="Filter groups and resources"
                   type="text"
                   placeholder="Filter groups & resources..."
                   value={searchQuery}
@@ -1774,10 +1777,13 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
               <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                 {/* Subscription Name */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                  <label htmlFor="sub-modal-name" style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
                     Subscription Name:
                   </label>
                   <input
+                    id="sub-modal-name"
+                    name="sub_modal_name"
+                    aria-label="Subscription Name"
                     type="text"
                     className="form-input form-input-mono"
                     placeholder="e.g. Workload-Analytics, SharedServices"
@@ -1793,10 +1799,13 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                 {/* Subscription Code & Environment */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                    <label htmlFor="sub-modal-code" style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
                       Subscription Code ({"{SUB}"}):
                     </label>
                     <input
+                      id="sub-modal-code"
+                      name="sub_modal_code"
+                      aria-label="Subscription Code"
                       type="text"
                       className="form-input form-input-mono"
                       placeholder="e.g. WL, APP, SHD"
@@ -2005,10 +2014,13 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                 {/* Custom Purpose Input if selected */}
                 {rgModal.purpose === "__custom__" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                    <label htmlFor="rg-modal-custom-purpose" style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
                       Custom Purpose Name:
                     </label>
                     <input
+                      id="rg-modal-custom-purpose"
+                      name="rg_custom_purpose"
+                      aria-label="Custom Purpose Name"
                       type="text"
                       className="form-input form-input-mono"
                       placeholder="e.g. analytics, batch, telemetry"
@@ -2061,10 +2073,13 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                 {/* Optional Custom Name Override */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-muted)" }}>
+                  <label htmlFor="rg-modal-name-override" style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-muted)" }}>
                     Custom Name Override (Optional):
                   </label>
                   <input
+                    id="rg-modal-name-override"
+                    name="rg_name_override"
+                    aria-label="Custom Name Override"
                     type="text"
                     className="form-input form-input-mono"
                     placeholder="Leave blank to use naming rule pattern ({Org}-{SUB}-{ResourceGroup}-rg)"
@@ -2261,6 +2276,9 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                     <div style={{ position: "relative", flex: 1 }}>
                       <Search size={14} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-dim)" }} />
                       <input
+                        id="res-modal-search"
+                        name="res_modal_search"
+                        aria-label="Filter resource catalog types by name, abbr, or provider"
                         type="text"
                         className="form-input form-input-mono"
                         placeholder="Filter types by name, abbr, or provider..."
@@ -2296,10 +2314,13 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                 {/* Role / Purpose & Instance Number */}
                 <div style={{ display: "grid", gridTemplateColumns: isVm ? "1fr 1fr 1fr" : "1.2fr 1fr", gap: "12px" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                    <label htmlFor="res-modal-purpose" style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
                       Role / Purpose Token:
                     </label>
                     <input
+                      id="res-modal-purpose"
+                      name="res_modal_purpose"
+                      aria-label="Role or purpose token"
                       type="text"
                       className="form-input form-input-mono"
                       placeholder="e.g. apps, core, db, web"
@@ -2315,7 +2336,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
+                      <label htmlFor="res-modal-instance" style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
                         Instance:
                       </label>
                       {validation.isDuplicate && (
@@ -2330,6 +2351,9 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                       )}
                     </div>
                     <input
+                      id="res-modal-instance"
+                      name="res_modal_instance"
+                      aria-label="Instance number"
                       type="text"
                       className="form-input form-input-mono"
                       value={resModal.instance}

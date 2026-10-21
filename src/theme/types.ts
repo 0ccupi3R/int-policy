@@ -166,6 +166,7 @@ export interface AuSelectProps {
   disabled?: boolean;
   searchable?: boolean;
   'aria-label'?: string;
+  ariaLabel?: string;
 }
 
 export interface AuValidatedInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {

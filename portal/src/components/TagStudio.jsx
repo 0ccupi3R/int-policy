@@ -29,6 +29,7 @@ import {
   validateTagKey,
   validateTagAllowedValues
 } from "../theme";
+import { BASELINE_TAGS } from "../data/baselineTags.js";
 
 
 /**
@@ -1078,7 +1079,7 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                     </div>
 
                     <div>
-                      <label className="form-label">Requirement Status</label>
+                      <span className="form-label">Requirement Status</span>
                       <div
                         style={{
                           display: "flex",
@@ -1094,6 +1095,7 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                           type="checkbox"
                           id={`req-${activeScope}-${idx}`}
                           name={`req_${activeScope}_${idx}`}
+                          aria-label={`Mandatory requirement status for ${tag.key || `tag ${idx + 1}`}`}
                           checked={tag.required}
                           onChange={(e) => handleTagFieldChange(idx, "required", e.target.checked)}
                           style={{ cursor: "pointer", width: "16px", height: "16px" }}
@@ -1343,6 +1345,7 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
           {/* Requirement Status & Case Sensitivity Checkboxes */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <label
+              htmlFor="new-tag-required"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1355,6 +1358,9 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
               }}
             >
               <input
+                id="new-tag-required"
+                name="new_tag_required"
+                aria-label="Mandatory or required tag enforcement"
                 type="checkbox"
                 checked={tagFormData.required}
                 onChange={(e) => setTagFormData({ ...tagFormData, required: e.target.checked })}
@@ -1367,6 +1373,7 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
             </label>
 
             <label
+              htmlFor="new-tag-case-sensitive"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1379,6 +1386,9 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
               }}
             >
               <input
+                id="new-tag-case-sensitive"
+                name="new_tag_case_sensitive"
+                aria-label="Case sensitive tag value matching"
                 type="checkbox"
                 checked={tagFormData.caseSensitive}
                 onChange={(e) => setTagFormData({ ...tagFormData, caseSensitive: e.target.checked })}
@@ -1436,6 +1446,7 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
 
             {/* Scope 1: Subscription */}
             <label
+              htmlFor="new-tag-scope-subscription"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1449,6 +1460,9 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
               }}
             >
               <input
+                id="new-tag-scope-subscription"
+                name="new_tag_scope_subscription"
+                aria-label="Apply tag rule to Subscription scope"
                 type="checkbox"
                 checked={tagFormData.scopes.subscription}
                 onChange={() => handleToggleScope("subscription")}
@@ -1468,6 +1482,7 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
 
             {/* Scope 2: Resource Group */}
             <label
+              htmlFor="new-tag-scope-resource-group"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1481,6 +1496,9 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
               }}
             >
               <input
+                id="new-tag-scope-resource-group"
+                name="new_tag_scope_resource_group"
+                aria-label="Apply tag rule to Resource Group scope"
                 type="checkbox"
                 checked={tagFormData.scopes.resourceGroup}
                 onChange={() => handleToggleScope("resourceGroup")}
@@ -1500,6 +1518,7 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
 
             {/* Scope 3: Resource */}
             <label
+              htmlFor="new-tag-scope-resource"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1513,6 +1532,9 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
               }}
             >
               <input
+                id="new-tag-scope-resource"
+                name="new_tag_scope_resource"
+                aria-label="Apply tag rule to Leaf Resource scope"
                 type="checkbox"
                 checked={tagFormData.scopes.resource}
                 onChange={() => handleToggleScope("resource")}

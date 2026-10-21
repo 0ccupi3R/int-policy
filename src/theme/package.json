@@ -1,6 +1,7 @@
 {
   "name": "@0ccupi3r/tactical-ui",
   "version": "1.0.0",
+  "type": "module",
   "description": "Tactical HUD & Editorial Swiss Grid React UI Theme System",
   "main": "index.ts",
   "module": "index.ts",

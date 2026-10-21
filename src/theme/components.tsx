@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useId } from 'react';
 import {
   KeyValueSpecItem,
   ShiftCardItem,
@@ -389,7 +389,8 @@ export const AuSelect: React.FC<AuSelectProps> = ({
   style,
   disabled = false,
   searchable = false,
-  'aria-label': ariaLabel,
+  'aria-label': ariaLabelKebab,
+  ariaLabel: ariaLabelCamel,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -423,6 +424,13 @@ export const AuSelect: React.FC<AuSelectProps> = ({
   });
 
   const selectedOption = normalizedOptions.find((opt) => opt.value === value);
+
+  const effectiveAriaLabel =
+    ariaLabelCamel ||
+    ariaLabelKebab ||
+    (label
+      ? `${label}${selectedOption ? `: ${selectedOption.label}` : ''}`
+      : selectedOption?.label || placeholder);
 
   // Auto-enable search if option count > 8
   const isSearchEnabled = searchable || normalizedOptions.length > 8;
@@ -478,15 +486,18 @@ export const AuSelect: React.FC<AuSelectProps> = ({
     }
   };
 
+  const reactGeneratedId = useId();
+  const selectId = id || `au-select-${reactGeneratedId.replace(/[:]/g, '')}`;
+
   return (
     <div className={`au-form-group ${className}`} style={style} ref={containerRef}>
-      {label && <label className="au-label" htmlFor={id}>{label}</label>}
+      {label && <label className="au-label" htmlFor={selectId}>{label}</label>}
       <div className="au-select-wrapper">
         <button
           type="button"
-          id={id}
-          name={name}
-          aria-label={ariaLabel || label || placeholder}
+          id={selectId}
+          name={name || selectId}
+          aria-label={effectiveAriaLabel}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
           disabled={disabled}
@@ -514,6 +525,9 @@ export const AuSelect: React.FC<AuSelectProps> = ({
               <div className="au-select-search-box">
                 <input
                   ref={searchInputRef}
+                  id={`${selectId}-search`}
+                  name={`${selectId}_search`}
+                  aria-label={`Filter ${label || 'options'}`}
                   type="text"
                   className="au-select-search-input"
                   placeholder="Filter options..."
@@ -609,11 +623,14 @@ export const AuValidatedInput: React.FC<AuValidatedInputProps> = ({
   const isCharWarning = maxLen && value.length > maxLen * 0.85 && value.length <= maxLen;
   const isCharError = maxLen && value.length > maxLen;
 
+  const reactGeneratedId = useId();
+  const inputId = id || `au-input-${reactGeneratedId.replace(/[:]/g, '')}`;
+
   return (
     <div className={`au-validated-input-container ${className}`}>
       {(label || (showCharCount && maxLen)) && (
         <div className="au-input-header">
-          {label && <label className="au-label" htmlFor={id}>{label}</label>}
+          {label && <label className="au-label" htmlFor={inputId}>{label}</label>}
           {showCharCount && maxLen && (
             <span
               className={`au-input-char-count ${isCharError ? 'is-error' : isCharWarning ? 'is-warning' : ''}`}
@@ -624,7 +641,9 @@ export const AuValidatedInput: React.FC<AuValidatedInputProps> = ({
         </div>
       )}
       <input
-        id={id}
+        id={inputId}
+        name={rest.name || inputId}
+        aria-label={rest['aria-label'] || label || placeholder}
         value={value}
         onChange={handleChange}
         disabled={disabled}
@@ -665,41 +684,47 @@ export const AuCheckbox: React.FC<AuCheckboxProps> = ({
   disabled = false,
   className = '',
   style,
-}) => (
-  <label
-    htmlFor={id}
-    className={`au-checkbox ${className}`}
-    style={{
-      display: 'inline-flex',
-      alignItems: 'flex-start',
-      gap: '8px',
-      cursor: disabled ? 'not-allowed' : 'pointer',
-      opacity: disabled ? 0.5 : 1,
-      ...style,
-    }}
-  >
-    <input
-      type="checkbox"
-      id={id}
-      name={name}
-      checked={checked}
-      disabled={disabled}
-      onChange={(e) => onChange(e.target.checked)}
-      className="au-checkbox-input"
-    />
-    {(label || description) && (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {label && <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)' }}>{label}</span>}
-          {badge && <span className="au-badge" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>{badge}</span>}
+}) => {
+  const reactGeneratedId = useId();
+  const checkId = id || `au-chk-${reactGeneratedId.replace(/[:]/g, '')}`;
+
+  return (
+    <label
+      htmlFor={checkId}
+      className={`au-checkbox ${className}`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'flex-start',
+        gap: '8px',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        ...style,
+      }}
+    >
+      <input
+        type="checkbox"
+        id={checkId}
+        name={name || checkId}
+        aria-label={label || description || 'Option checkbox'}
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className="au-checkbox-input"
+      />
+      {(label || description) && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {label && <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)' }}>{label}</span>}
+            {badge && <span className="au-badge" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>{badge}</span>}
+          </div>
+          {description && (
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{description}</span>
+          )}
         </div>
-        {description && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{description}</span>
-        )}
-      </div>
-    )}
-  </label>
-);
+      )}
+    </label>
+  );
+};
 
 /* ==========================================================================
    7f. QUICK-INSERT TOKEN CHIP (.au-token-chip)

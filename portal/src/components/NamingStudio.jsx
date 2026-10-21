@@ -505,8 +505,182 @@ export function NamingStudio({
     }
   };
 
+  const handleApproveAllInferred = () => {
+    if (!customer.namingRules?.inferredPatterns) return;
+    const newCustomPatterns = { ...(customer.namingRules.customPatterns || {}) };
+    const count = Object.keys(customer.namingRules.inferredPatterns).length;
+    Object.entries(customer.namingRules.inferredPatterns).forEach(([key, val]) => {
+      newCustomPatterns[key] = val.pattern;
+    });
+
+    const updated = {
+      ...customer,
+      namingRules: {
+        ...customer.namingRules,
+        customPatterns: newCustomPatterns,
+        inferredPatterns: null
+      }
+    };
+    onUpdateCustomer(updated);
+    if (onShowToast) {
+      onShowToast(`Approved and applied ${count} inferred naming patterns!`);
+    }
+  };
+
+  const handleApproveSingleInferred = (typeKey, pattern) => {
+    const newCustomPatterns = { ...(customer.namingRules?.customPatterns || {}) };
+    newCustomPatterns[typeKey] = pattern;
+    const remainingInferred = { ...(customer.namingRules?.inferredPatterns || {}) };
+    delete remainingInferred[typeKey];
+
+    const updated = {
+      ...customer,
+      namingRules: {
+        ...customer.namingRules,
+        customPatterns: newCustomPatterns,
+        inferredPatterns: Object.keys(remainingInferred).length > 0 ? remainingInferred : null
+      }
+    };
+    onUpdateCustomer(updated);
+    if (onShowToast) {
+      onShowToast(`Adopted inferred pattern for ${typeKey}: ${pattern}`);
+    }
+  };
+
+  const handleDismissInferred = () => {
+    const updated = {
+      ...customer,
+      namingRules: {
+        ...customer.namingRules,
+        inferredPatterns: null
+      }
+    };
+    onUpdateCustomer(updated);
+    if (onShowToast) {
+      onShowToast("Dismissed inferred naming patterns.");
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      {/* Brownfield Inferred Naming Patterns Review Banner */}
+      {customer.namingRules?.inferredPatterns && Object.keys(customer.namingRules.inferredPatterns).length > 0 && (
+        <div
+          className="glass-panel"
+          style={{
+            padding: "16px 20px",
+            background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%)",
+            border: "1px solid var(--accent-gold)",
+            borderRadius: "var(--radius-lg)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "8px",
+                  background: "rgba(245, 158, 11, 0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--accent-gold)"
+                }}
+              >
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                    Brownfield Discovered Naming Patterns
+                  </span>
+                  <AuBadge variant="gold">
+                    {Object.keys(customer.namingRules.inferredPatterns).length} Resource Types Inferred
+                  </AuBadge>
+                  <AuBadge variant="teal">LIVE TENANT REVERSE-ENGINEERED</AuBadge>
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                  The Inference Engine deconstructed resource names from your live tenant discovery scan and mapped them to tokens ({'{Org}'}, {'{SUB}'}, {'{ENV}'}, {'{Instance}'}). Review and approve them to formalize your naming conventions.
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "8px" }}>
+              <AuButton
+                variant="primary"
+                size="sm"
+                icon={<Check size={14} />}
+                onClick={() => handleApproveAllInferred()}
+              >
+                Approve All Inferred ({Object.keys(customer.namingRules.inferredPatterns).length})
+              </AuButton>
+              <AuButton
+                variant="secondary"
+                size="sm"
+                icon={<XCircle size={14} />}
+                onClick={() => handleDismissInferred()}
+              >
+                Dismiss
+              </AuButton>
+            </div>
+          </div>
+
+          {/* Grid of inferred pattern cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "10px" }}>
+            {Object.entries(customer.namingRules.inferredPatterns).map(([typeKey, inf]) => {
+              const catalogItem = catalog.find((c) => c.key === typeKey);
+              const displayName = catalogItem ? catalogItem.name : typeKey.toUpperCase();
+              return (
+                <div
+                  key={typeKey}
+                  style={{
+                    padding: "10px 14px",
+                    background: "var(--surface-bg)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: "var(--radius-md)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontWeight: "600", fontSize: "0.82rem", color: "var(--text-primary)" }}>
+                      {displayName} ({typeKey})
+                    </span>
+                    <span
+                      className={`au-badge ${inf.confidence === "HIGH" ? "au-badge-mint" : inf.confidence === "MEDIUM" ? "au-badge-gold" : ""}`}
+                      style={{ fontSize: "0.68rem" }}
+                    >
+                      {inf.confidence} CONFIDENCE
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
+                    Sample: <code style={{ color: "var(--text-secondary)" }}>{inf.sampleDiscovered}</code>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "4px" }}>
+                    <code style={{ fontSize: "0.78rem", color: "var(--accent-mint)", fontWeight: "600" }}>
+                      {inf.pattern}
+                    </code>
+                    <button
+                      type="button"
+                      className="au-btn au-btn-sm au-btn-secondary"
+                      style={{ fontSize: "0.72rem", padding: "0.2rem 0.5rem" }}
+                      onClick={() => handleApproveSingleInferred(typeKey, inf.pattern)}
+                    >
+                      Adopt
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Azure Platform Constraints Global Warning Banner */}
       {platformViolations.length > 0 && (
         <div

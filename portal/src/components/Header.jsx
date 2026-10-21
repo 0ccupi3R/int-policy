@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShieldCheck, Download, Plus, Settings, Archive, Sparkles, ChevronDown, Sun, Moon } from "lucide-react";
+import { ShieldCheck, Download, Plus, Settings, Archive, Sparkles, ChevronDown, Sun, Moon, Layers } from "lucide-react";
 import { downloadBicepFile, downloadZipBundle } from "../engine/bundleExporter.js";
 import { AuButton, AuBadge, AuDropdown, AuSelect } from "../theme";
 
@@ -8,6 +8,7 @@ export function Header({
   activeCustomer,
   onSelectCustomer,
   onOpenCustomerModal,
+  onOpenBrownfieldModal,
   onBumpVersion,
   catalog,
   onShowToast,
@@ -27,11 +28,13 @@ export function Header({
     onShowToast(`Downloaded ${activeCustomer.name} complete ALZ bundle (.zip)!`);
   };
 
+  const isBrownfield = activeCustomer.environmentParadigm === "brownfield";
+
   return (
     <header className="header-bar">
       {/* Brand & Monospace Kicker */}
       <div className="logo-group">
-        <div className="logo-icon" style={{ background: "var(--accent-primary)", color: "#06252D" }}>
+        <div className="logo-icon" style={{ background: isBrownfield ? "var(--accent-amber)" : "var(--accent-primary)", color: "#06252D" }}>
           <ShieldCheck size={20} />
         </div>
         <div className="logo-text">
@@ -41,11 +44,19 @@ export function Header({
           <h1>Landing Zone Studio</h1>
         </div>
 
-        {/* Tenant Breadcrumb */}
+        {/* Tenant Breadcrumb & Paradigm Badge */}
         <div style={{ marginLeft: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span className="au-mono-meta" style={{ color: "var(--accent-mint)", fontSize: "0.74rem" }}>
-            ● ALZ READY
-          </span>
+          {isBrownfield ? (
+            <span className="au-badge au-badge-amber" style={{ fontSize: "0.72rem", padding: "0.2rem 0.6rem" }}>
+              <Layers size={11} style={{ marginRight: "4px" }} />
+              BROWNFIELD
+            </span>
+          ) : (
+            <span className="au-badge au-badge-mint" style={{ fontSize: "0.72rem", padding: "0.2rem 0.6rem" }}>
+              <Sparkles size={11} style={{ marginRight: "4px" }} />
+              GREENFIELD
+            </span>
+          )}
           <span className="au-mono-meta">·</span>
           <span className="au-mono-meta">
             {activeCustomer.tenantId ? `Tenant: ${activeCustomer.tenantId.slice(0, 8)}...` : "Default Tenant"}
@@ -57,7 +68,7 @@ export function Header({
       <div className="header-actions">
         {/* Customer Workspace Selector */}
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <div style={{ minWidth: "190px" }}>
+          <div style={{ minWidth: "205px" }}>
             <AuSelect
               id="active-customer-select"
               aria-label="Active customer workspace selector"
@@ -66,11 +77,22 @@ export function Header({
               options={customers.map((c) => ({
                 value: c.id,
                 label: c.name,
-                badge: c.subscriptionCode
+                badge: c.environmentParadigm === "brownfield" ? "BF" : "GF"
               }))}
             />
           </div>
 
+          {isBrownfield && (
+            <AuButton
+              variant="secondary"
+              size="sm"
+              onClick={onOpenBrownfieldModal}
+              title="Import & Discover Existing Tenant Infrastructure"
+              icon={<Layers size={14} style={{ color: "var(--accent-amber)" }} />}
+            >
+              <span style={{ color: "var(--accent-amber)" }}>Ingest Tenant</span>
+            </AuButton>
+          )}
 
           <AuButton
             variant="secondary"

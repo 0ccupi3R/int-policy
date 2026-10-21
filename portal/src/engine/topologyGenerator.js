@@ -228,6 +228,16 @@ export function getAirGateDefaultPlatformTopology(customer) {
 }
 
 /**
+ * Returns the official 4-subscription Core Platform Landing Zone topology (CON, IDN, MGT, SEC).
+ */
+export function get4SubscriptionPlatformCoreTopology(customer) {
+  const full = getAirGateDefaultPlatformTopology(customer);
+  return {
+    subscriptions: full.subscriptions.filter((s) => s.code !== "APP")
+  };
+}
+
+/**
  * Computes unified tags across all 3 tiers with override support:
  * Tier 1: Subscription tags (default or subscription.tags override)
  * Tier 2: Resource Group tags (Subscription inherited or rg.tags override)

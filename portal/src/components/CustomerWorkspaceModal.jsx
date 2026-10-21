@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Building2, MapPin, Sliders, Save, Trash2 } from "lucide-react";
-import { AuModal, AuButton, AuSelect } from "../theme";
+import { Building2, MapPin, Sliders, Save, Trash2, Sparkles, Layers } from "lucide-react";
+import { AuModal, AuButton, AuSelect, AuBadge } from "../theme";
 
 export function CustomerWorkspaceModal({
   isOpen,
@@ -15,6 +15,9 @@ export function CustomerWorkspaceModal({
     id: "",
     name: "",
     abbreviation: "",
+    environmentParadigm: "greenfield",
+    scaffoldingPreset: "4-sub-core",
+    policyModules: { naming: true, tags: true, geoRestrictions: true },
     subscriptionName: "",
     subscriptionCode: "",
     environment: "prod",
@@ -45,6 +48,9 @@ export function CustomerWorkspaceModal({
         id: customer.id,
         name: customer.name || "",
         abbreviation: customer.abbreviation || "",
+        environmentParadigm: customer.environmentParadigm || "greenfield",
+        scaffoldingPreset: customer.scaffoldingPreset || "4-sub-core",
+        policyModules: customer.policyModules || { naming: true, tags: true, geoRestrictions: true },
         subscriptionName: customer.subscriptionName || "",
         subscriptionCode: customer.subscriptionCode || "",
         environment: customer.environment || "prod",
@@ -62,6 +68,9 @@ export function CustomerWorkspaceModal({
         id: `cust-${Date.now().toString().slice(-4)}`,
         name: "New Enterprise",
         abbreviation: "corp",
+        environmentParadigm: "greenfield",
+        scaffoldingPreset: "4-sub-core",
+        policyModules: { naming: true, tags: true, geoRestrictions: true },
         subscriptionName: "LandingZone-Core",
         subscriptionCode: "CORE",
         environment: "prod",
@@ -117,6 +126,9 @@ export function CustomerWorkspaceModal({
       id: formData.id,
       name: formData.name,
       abbreviation: formData.abbreviation.toLowerCase(),
+      environmentParadigm: formData.environmentParadigm,
+      scaffoldingPreset: formData.scaffoldingPreset,
+      policyModules: formData.policyModules,
       subscriptionName: formData.subscriptionName,
       subscriptionCode: formData.subscriptionCode.toUpperCase(),
       environment: formData.environment.toLowerCase(),
@@ -130,7 +142,7 @@ export function CustomerWorkspaceModal({
       tagEffect: formData.tagEffect,
       enforcementMode: formData.enforcementMode,
       geoRestrictions: (customer && customer.geoRestrictions) || {
-        enabled: true,
+        enabled: formData.policyModules?.geoRestrictions ?? true,
         allowedLocations: ["canadacentral", "canadaeast"],
         effect: "Audit"
       },
@@ -187,6 +199,181 @@ export function CustomerWorkspaceModal({
       }
     >
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* Environment Paradigm Selector: Greenfield vs Brownfield */}
+        <div>
+          <label className="form-label" style={{ marginBottom: "6px" }}>Environment Paradigm</label>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            {/* Greenfield Card */}
+            <div
+              id="paradigm-greenfield-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => setFormData({ ...formData, environmentParadigm: "greenfield" })}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setFormData({ ...formData, environmentParadigm: "greenfield" }); }}
+              style={{
+                padding: "12px 14px",
+                borderRadius: "var(--radius-sm)",
+                border: formData.environmentParadigm === "greenfield"
+                  ? "2px solid var(--accent-mint)"
+                  : "1px solid var(--border-hairline)",
+                background: formData.environmentParadigm === "greenfield"
+                  ? "var(--accent-mint-tint)"
+                  : "var(--bg-canvas)",
+                cursor: "pointer",
+                transition: "all var(--ease-snappy)"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Sparkles size={14} style={{ color: "var(--accent-mint)" }} />
+                  <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>Greenfield</strong>
+                </div>
+                <span className="au-badge au-badge-mint" style={{ fontSize: "0.68rem" }}>Clean Slate</span>
+              </div>
+              <p style={{ fontSize: "0.74rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.35 }}>
+                New ALZ deployment. Scaffolds 4 or 5 core platform subscriptions with strict naming & tag guardrails from Day 1.
+              </p>
+            </div>
+
+            {/* Brownfield Card */}
+            <div
+              id="paradigm-brownfield-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => setFormData({ ...formData, environmentParadigm: "brownfield", namingEffect: "Audit" })}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setFormData({ ...formData, environmentParadigm: "brownfield", namingEffect: "Audit" }); }}
+              style={{
+                padding: "12px 14px",
+                borderRadius: "var(--radius-sm)",
+                border: formData.environmentParadigm === "brownfield"
+                  ? "2px solid var(--accent-amber)"
+                  : "1px solid var(--border-hairline)",
+                background: formData.environmentParadigm === "brownfield"
+                  ? "var(--accent-amber-tint)"
+                  : "var(--bg-canvas)",
+                cursor: "pointer",
+                transition: "all var(--ease-snappy)"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Layers size={14} style={{ color: "var(--accent-amber)" }} />
+                  <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>Brownfield</strong>
+                </div>
+                <span className="au-badge au-badge-amber" style={{ fontSize: "0.68rem" }}>Existing Tenant</span>
+              </div>
+              <p style={{ fontSize: "0.74rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.35 }}>
+                Existing infrastructure. Discovers live tenant resources, reverse-engineers legacy naming patterns, and applies non-breaking audit governance.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Greenfield Scaffolding Preset (Shown in create mode for Greenfield) */}
+        {mode === "create" && formData.environmentParadigm === "greenfield" && (
+          <div style={{ background: "rgba(16, 185, 129, 0.05)", border: "1px solid rgba(16, 185, 129, 0.2)", borderRadius: "var(--radius-sm)", padding: "10px 12px" }}>
+            <label className="form-label" style={{ color: "var(--accent-mint)", marginBottom: "6px" }}>
+              Initial Platform Scaffolding Preset
+            </label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <label
+                htmlFor="preset-4sub"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "0.82rem",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  padding: "6px 8px",
+                  borderRadius: "var(--radius-xs)",
+                  background: formData.scaffoldingPreset === "4-sub-core" ? "rgba(16, 185, 129, 0.12)" : "transparent"
+                }}
+              >
+                <input
+                  id="preset-4sub"
+                  type="radio"
+                  name="scaffolding_preset"
+                  checked={formData.scaffoldingPreset === "4-sub-core"}
+                  onChange={() => setFormData({ ...formData, scaffoldingPreset: "4-sub-core" })}
+                />
+                <div>
+                  <strong>4-Subscription Core</strong>
+                  <div className="au-mono-meta" style={{ fontSize: "0.7rem" }}>CON, IDN, MGT, SEC</div>
+                </div>
+              </label>
+
+              <label
+                htmlFor="preset-5sub"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "0.82rem",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  padding: "6px 8px",
+                  borderRadius: "var(--radius-xs)",
+                  background: formData.scaffoldingPreset === "5-sub-full" ? "rgba(16, 185, 129, 0.12)" : "transparent"
+                }}
+              >
+                <input
+                  id="preset-5sub"
+                  type="radio"
+                  name="scaffolding_preset"
+                  checked={formData.scaffoldingPreset === "5-sub-full"}
+                  onChange={() => setFormData({ ...formData, scaffoldingPreset: "5-sub-full" })}
+                />
+                <div>
+                  <strong>5-Subscription Full ALZ</strong>
+                  <div className="au-mono-meta" style={{ fontSize: "0.7rem" }}>CON, IDN, MGT, SEC + Workload APP</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Policy Generation Modules Selection */}
+        <div style={{ background: "var(--bg-canvas)", padding: "10px 14px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-sm)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+            <span className="au-mono-meta" style={{ color: "var(--text-primary)", fontWeight: 600 }}>
+              POLICY MODULES TO GENERATE
+            </span>
+            <span className="au-mono-meta" style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+              Modular Initiative Deployment
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+            <label htmlFor="mod-naming" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", cursor: "pointer" }}>
+              <input
+                id="mod-naming"
+                name="mod_naming"
+                type="checkbox"
+                checked={formData.policyModules?.naming ?? true}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  policyModules: { ...formData.policyModules, naming: e.target.checked }
+                })}
+              />
+              <span>Naming & Geo-Boundary Initiative</span>
+            </label>
+
+            <label htmlFor="mod-tags" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", cursor: "pointer" }}>
+              <input
+                id="mod-tags"
+                name="mod_tags"
+                type="checkbox"
+                checked={formData.policyModules?.tags ?? true}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  policyModules: { ...formData.policyModules, tags: e.target.checked }
+                })}
+              />
+              <span>Tag Governance Initiative</span>
+            </label>
+          </div>
+        </div>
+
         {/* Customer Organization Details */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
           <div>

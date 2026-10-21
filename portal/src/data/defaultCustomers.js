@@ -5,6 +5,9 @@ export const DEFAULT_CUSTOMERS = [
     id: "contoso",
     name: "Contoso Enterprise",
     abbreviation: "con",
+    environmentParadigm: "greenfield",
+    scaffoldingPreset: "4-sub-core",
+    policyModules: { naming: true, tags: true, geoRestrictions: true },
     subscriptionName: "Connectivity",
     subscriptionCode: "CON",
     environment: "prod",
@@ -179,6 +182,9 @@ export const DEFAULT_CUSTOMERS = [
     id: "contoso-health",
     name: "Contoso Health",
     abbreviation: "conhealth",
+    environmentParadigm: "greenfield",
+    scaffoldingPreset: "4-sub-core",
+    policyModules: { naming: true, tags: true, geoRestrictions: true },
     subscriptionName: "Production-Core",
     subscriptionCode: "PRDA",
     environment: "prod",
@@ -302,6 +308,9 @@ export const DEFAULT_CUSTOMERS = [
     id: "contoso-ai",
     name: "Contoso AI Labs",
     abbreviation: "conai",
+    environmentParadigm: "greenfield",
+    scaffoldingPreset: "5-sub-full",
+    policyModules: { naming: true, tags: true, geoRestrictions: true },
     subscriptionName: "AI-Foundry-Production",
     subscriptionCode: "AIP",
     environment: "prod",
@@ -457,6 +466,121 @@ export const DEFAULT_CUSTOMERS = [
       subToRg: ["CostCenter", "Owner"],
       rgToResource: ["Environment", "CostCenter", "Workload"],
       defaultResourceNA: ["BackupPolicy"]
+    }
+  },
+  {
+    id: "woodgrove",
+    name: "Woodgrove Legacy Corp",
+    abbreviation: "wg",
+    environmentParadigm: "brownfield",
+    scaffoldingPreset: "custom",
+    policyModules: { naming: true, tags: true, geoRestrictions: false },
+    subscriptionName: "SharedServices",
+    subscriptionCode: "SHD",
+    environment: "prod",
+    version: "1.0.0",
+    description: "Brownfield Azure tenant with pre-existing legacy workloads requiring unified tagging and audit-only naming governance.",
+    regions: {
+      eastus: "eus",
+      canadacentral: "cc"
+    },
+    defaultRegion: "eastus",
+    purposes: ["corp", "app", "db", "legacy"],
+    purpose: "corp",
+    namingEffect: "Audit",
+    subnetEffect: "Audit",
+    tagEffect: "Audit",
+    enforcementMode: "Default",
+    notScopes: [],
+    namingRules: {
+      defaultBehavior: "enforce",
+      globalPattern: "{Org}-{ResourceGroup}-{abbreviation}",
+      unrestrictedTypes: [],
+      customPatterns: {
+        rg: "rg-{org}-{env}-{purpose}",
+        vnet: "{org}-{env}-vnet-{instance}",
+        vm: "{org}{env}{purpose}vm{instance}",
+        storage: "{org}{env}sa{instance}",
+        kv: "kv-{org}-{env}-{purpose}"
+      },
+      subnetNaming: {
+        effect: "Audit",
+        allowedNames: ["snet-corp", "snet-web", "snet-data", "GatewaySubnet"]
+      }
+    },
+    tags: {
+      subscription: [
+        {
+          key: "CostCenter",
+          displayName: "Cost Center",
+          required: true,
+          caseSensitive: false,
+          allowedValues: ["CC-CORP-100", "CC-RETAIL-200", "CC-IT-900"],
+          description: "Legacy corporate cost center."
+        },
+        {
+          key: "Owner",
+          displayName: "Application Custodian",
+          required: true,
+          caseSensitive: false,
+          allowedValues: ["it-ops@woodgrove.com", "arch@woodgrove.com"],
+          description: "Primary point of contact."
+        }
+      ],
+      resourceGroup: [
+        {
+          key: "Environment",
+          displayName: "Environment Tier",
+          required: true,
+          caseSensitive: false,
+          allowedValues: ["Prod", "NonProd", "Legacy"],
+          description: "Operational lifecycle tier."
+        },
+        {
+          key: "Application",
+          displayName: "Application Name",
+          required: true,
+          caseSensitive: false,
+          allowedValues: ["CoreBanking", "RetailPortal", "Payments", "DataHub"],
+          description: "Workload application name."
+        }
+      ],
+      resource: [
+        {
+          key: "Environment",
+          displayName: "Environment Tier",
+          required: true,
+          caseSensitive: false,
+          allowedValues: ["Prod", "NonProd", "Legacy"],
+          description: "Operational lifecycle tier."
+        },
+        {
+          key: "DataClassification",
+          displayName: "Data Classification",
+          required: true,
+          caseSensitive: false,
+          allowedValues: ["Confidential", "Restricted", "Internal", "Public"],
+          description: "Sensitivity tier."
+        }
+      ]
+    },
+    geoRestrictions: {
+      enabled: false,
+      allowedLocations: ["eastus", "canadacentral"],
+      effect: "Audit"
+    },
+    tagInheritance: {
+      enabled: true,
+      effect: "modify",
+      subToRg: ["CostCenter", "Owner"],
+      rgToResource: ["Environment", "Application", "CostCenter"],
+      defaultResourceNA: ["DataClassification"]
+    },
+    brownfieldMetadata: {
+      importedAt: "2026-10-21T10:00:00Z",
+      totalDiscoveredResources: 24,
+      discoveredSubscriptionsCount: 3,
+      inferredPatternsCount: 5
     }
   }
 ];

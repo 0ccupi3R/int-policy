@@ -7,6 +7,12 @@ import { CodeInspector } from "./components/CodeInspector.jsx";
 import { TopologyGenerator } from "./components/TopologyGenerator.jsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.jsx";
 import { CustomerWorkspaceModal } from "./components/CustomerWorkspaceModal.jsx";
+import { GuidedStepper } from "./components/GuidedStepper.jsx";
+import { BrownfieldIngestionModal } from "./components/BrownfieldIngestionModal.jsx";
+import {
+  get4SubscriptionPlatformCoreTopology,
+  getAirGateDefaultPlatformTopology
+} from "./engine/topologyGenerator.js";
 import { DEFAULT_CUSTOMERS } from "./data/defaultCustomers.js";
 import { AZURE_RESOURCE_CATALOG } from "./data/azureResourceCatalog.js";
 import { DEFAULT_AIRGATE_OVERRIDES } from "./data/azureNamingCatalog.js";
@@ -24,6 +30,11 @@ export function App() {
           (c) => c.id === "cust01" || c.name === "CustomerName" || c.id === "nova-ai"
         );
         if (!hasLegacy && Array.isArray(parsed) && parsed.length > 0) {
+          const hasWoodgrove = parsed.some((c) => c.id === "woodgrove");
+          if (!hasWoodgrove) {
+            const woodgrove = DEFAULT_CUSTOMERS.find((c) => c.id === "woodgrove");
+            if (woodgrove) return [...parsed, woodgrove];
+          }
           return parsed;
         }
       }
@@ -101,6 +112,7 @@ export function App() {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("edit"); // "edit" or "create"
+  const [brownfieldModalOpen, setBrownfieldModalOpen] = useState(false);
 
   // Toast state
   const [toastMessage, setToastMessage] = useState(null);
@@ -164,13 +176,37 @@ export function App() {
 
   const handleSaveCustomerModal = (customerData, mode) => {
     if (mode === "create") {
-      setCustomers((prev) => [...prev, customerData]);
-      setActiveCustomerId(customerData.id);
-      showToast(`Created workspace for ${customerData.name}!`);
+      let prepared = { ...customerData };
+      if (prepared.environmentParadigm === "greenfield") {
+        if (prepared.scaffoldingPreset === "4-sub-core") {
+          prepared.topology = get4SubscriptionPlatformCoreTopology(prepared);
+        } else {
+          prepared.topology = getAirGateDefaultPlatformTopology(prepared);
+        }
+      } else if (prepared.environmentParadigm === "brownfield") {
+        prepared.topology = { subscriptions: [] };
+        prepared.namingRules = {
+          ...prepared.namingRules,
+          inferredPatterns: null
+        };
+      }
+      setCustomers((prev) => [...prev, prepared]);
+      setActiveCustomerId(prepared.id);
+      showToast(`Created workspace for ${prepared.name} (${(prepared.environmentParadigm || "greenfield").toUpperCase()})!`);
+      if (prepared.environmentParadigm === "brownfield") {
+        setBrownfieldModalOpen(true);
+      }
     } else {
       handleUpdateCustomer(customerData);
       showToast(`Updated profile for ${customerData.name}!`);
     }
+  };
+
+  const handleBrownfieldIngestionSuccess = (updatedCustomer) => {
+    handleUpdateCustomer(updatedCustomer);
+    setBrownfieldModalOpen(false);
+    showToast(`Ingested tenant! Discovered ${updatedCustomer.brownfieldMetadata?.totalDiscoveredResources || 0} resources.`);
+    setActiveTab("naming");
   };
 
   const handleDeleteCustomer = (customerId) => {
@@ -261,6 +297,7 @@ export function App() {
           setModalMode(mode);
           setModalOpen(true);
         }}
+        onOpenBrownfieldModal={() => setBrownfieldModalOpen(true)}
         onBumpVersion={handleBumpVersion}
         catalog={catalog}
         onShowToast={showToast}
@@ -272,6 +309,15 @@ export function App() {
         {/* HUD Tactical Telemetry Ribbon */}
         <div style={{ marginBottom: "1.5rem" }}>
           <AuTelemetryStrip stats={stats} />
+        </div>
+
+        {/* Greenfield / Brownfield Guided Journey Stepper */}
+        <div style={{ marginBottom: "1.25rem" }}>
+          <GuidedStepper
+            activeTab={activeTab}
+            onSelectTab={setActiveTab}
+            customer={activeCustomer}
+          />
         </div>
 
         {/* Numbered HUD Tabs */}
@@ -343,6 +389,15 @@ export function App() {
         onSave={handleSaveCustomerModal}
         onDelete={handleDeleteCustomer}
         canDelete={customers.length > 1}
+      />
+
+      {/* Brownfield Ingestion Modal */}
+      <BrownfieldIngestionModal
+        isOpen={brownfieldModalOpen}
+        customer={activeCustomer}
+        onClose={() => setBrownfieldModalOpen(false)}
+        onIngestSuccess={handleBrownfieldIngestionSuccess}
+        onShowToast={showToast}
       />
 
       {/* Snappy Toast Notification */}

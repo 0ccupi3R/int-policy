@@ -13,7 +13,11 @@ function formatBicepArray(arr) {
   return `[${formatted}]`;
 }
 
-export function generateBicep(customer, catalog) {
+export function generateBicep(customer, catalog, options = {}) {
+  const policyScope = options.policyScope || (customer.policyModules ? (customer.policyModules.naming && customer.policyModules.tags ? "both" : customer.policyModules.naming ? "naming" : customer.policyModules.tags ? "tagging" : "both") : "both");
+  const includeNaming = policyScope === "both" || policyScope === "naming";
+  const includeTagging = policyScope === "both" || policyScope === "tagging";
+
   const orgAbbr = customer.abbreviation || customer.name || "cust01";
   const subCode = customer.subscriptionCode || "CON";
   const prefix = `${orgAbbr.toLowerCase()}-${subCode.toLowerCase()}`;
@@ -21,6 +25,8 @@ export function generateBicep(customer, catalog) {
   const dateStr = new Date().toISOString().split("T")[0];
 
   const regions = customer.regions || { canadacentral: "cc", canadaeast: "ce" };
+  const geoRestrictions = customer.geoRestrictions || { enabled: true, allowedLocations: ["canadacentral", "canadaeast"], effect: "Audit" };
+  const allowedLocations = geoRestrictions.allowedLocations || Object.keys(regions);
   const namingRules = customer.namingRules || {};
   const unrestrictedTypes = namingRules.unrestrictedTypes || [];
   const customPatterns = namingRules.customPatterns || {};
@@ -33,11 +39,12 @@ export function generateBicep(customer, catalog) {
   const resTags = customer.tags?.resource || [];
 
   let bicep = `// ==============================================================================
-// Azure Landing Zone Policy Bundle: Naming Conventions & Tag Governance
+// Azure Landing Zone Policy Bundle: ${includeNaming && includeTagging ? "Naming Conventions & Tag Governance" : includeNaming ? "Naming Conventions & Geo-Boundary" : "Tag Governance & Inheritance"}
 // Customer: ${customer.name} (${customer.abbreviation})
 // Subscription: ${customer.subscriptionName} (${subCode})
 // Version: ${version} | Generated: ${dateStr}
 // Microsoft Cloud Adoption Framework (CAF) Enterprise Scale Architecture
+// Scope Mode: ${policyScope.toUpperCase()}
 // ==============================================================================
 
 targetScope = 'subscription'
@@ -45,8 +52,12 @@ targetScope = 'subscription'
 metadata name = '${customer.name} ALZ Policy Bundle'
 metadata description = 'Config-driven Azure policies for Resource Naming Conventions and Granular Tag Governance'
 metadata version = '${version}'
+metadata policyScope = '${policyScope}'
 
-@description('Enforcement effect for Resource Naming Conventions')
+`;
+
+  if (includeNaming) {
+    bicep += `@description('Enforcement effect for Resource Naming Conventions')
 @allowed(['Audit', 'Deny', 'Disabled'])
 param namingEffect string = '${customer.namingEffect || "Audit"}'
 
@@ -54,13 +65,17 @@ param namingEffect string = '${customer.namingEffect || "Audit"}'
 @allowed(['Audit', 'Deny', 'Disabled'])
 param subnetEffect string = '${customer.subnetEffect || "Audit"}'
 
-@description('Enforcement effect for Tag Governance')
-@allowed(['Audit', 'Deny', 'Disabled'])
-param tagEffect string = '${customer.tagEffect || "Audit"}'
-
 @description('Enforcement effect for Regional Geo-Restriction (Canada Central & Canada East)')
 @allowed(['Audit', 'Deny', 'Disabled'])
 param geoEffect string = '${customer.geoRestrictions?.effect || "Audit"}'
+
+`;
+  }
+
+  if (includeTagging) {
+    bicep += `@description('Enforcement effect for Tag Governance')
+@allowed(['Audit', 'Deny', 'Disabled'])
+param tagEffect string = '${customer.tagEffect || "Audit"}'
 
 @description('Enforcement effect for Tag Inheritance & Automated Defaulting')
 @allowed(['modify', 'audit', 'disabled'])
@@ -69,22 +84,28 @@ param tagInheritanceEffect string = '${customer.tagInheritance?.effect || "modif
 @description('Primary deployment location for Managed Identity assignment')
 param location string = '${customer.defaultRegion || "canadacentral"}'
 
-@description('Policy assignment enforcement mode')
+`;
+  }
+
+  bicep += `@description('Policy assignment enforcement mode')
 @allowed(['Default', 'DoNotEnforce'])
 param enforcementMode string = '${customer.enforcementMode || "Default"}'
 
 @description('Excluded scopes (e.g., exempted resource groups)')
 param notScopes array = []
-
-// ==============================================================================
-// 1. RESOURCE NAMING POLICY DEFINITIONS
-// ==============================================================================
 `;
 
   // Active naming items
   const activeItems = [];
 
-  catalog.forEach((item) => {
+  if (includeNaming) {
+    bicep += `\n// ==============================================================================
+// 1. RESOURCE NAMING POLICY DEFINITIONS
+// ==============================================================================\n`;
+  }
+
+  if (includeNaming) {
+    catalog.forEach((item) => {
     if (item.key === "snet") return; // Handled specially in subnet policy
     if (unrestrictedTypes.includes(item.key)) return; // Direct creation (unrestricted)
 
@@ -258,13 +279,18 @@ resource policyNaming_subnet 'Microsoft.Authorization/policyDefinitions@2023-04-
     }
   }
 }
+`;
+  }
 
+  const tagDefRefs = [];
+  const inheritanceDefRefs = [];
+
+  if (includeTagging) {
+    bicep += `
 // ==============================================================================
 // 2. TAG GOVERNANCE POLICY DEFINITIONS (SUBSCRIPTION -> RG -> RESOURCE)
 // ==============================================================================
 `;
-
-  const tagDefRefs = [];
 
   // 2a. Subscription level tags (mode: All, type: Microsoft.Resources/subscriptions)
   subTags.forEach((tag, idx) => {
@@ -483,9 +509,6 @@ ${conditionBlock}
   // ==============================================================================
   // 2d. TAG INHERITANCE & DEFAULTING POLICY DEFINITIONS (modify effect)
   // ==============================================================================
-  const geoRestrictions = customer.geoRestrictions || { enabled: true, allowedLocations: ["canadacentral", "canadaeast"], effect: "Audit" };
-  const allowedLocations = geoRestrictions.allowedLocations || Object.keys(regions);
-
   const tagInheritance = customer.tagInheritance || {
     enabled: true,
     effect: "modify",
@@ -498,7 +521,7 @@ ${conditionBlock}
   const rgToResKeys = (tagInheritance.rgToResource || []).map((k) => (typeof k === "string" ? k : k.key));
   const defaultNAKeys = (tagInheritance.defaultResourceNA || []).map((k) => (typeof k === "string" ? k : k.key));
 
-  const inheritanceDefRefs = [];
+  // inheritanceDefRefs initialized above
 
   bicep += `
 // ==============================================================================
@@ -692,6 +715,7 @@ resource ${defVar} 'Microsoft.Authorization/policyDefinitions@2023-04-01' = {
 }
 `;
   });
+  }
 
   // ==============================================================================
   // 3. INITIATIVES (POLICY SETS)
@@ -700,24 +724,31 @@ resource ${defVar} 'Microsoft.Authorization/policyDefinitions@2023-04-01' = {
   const tagInitiativeName = `${prefix}-tag-governance-initiative`;
   const tagInheritanceInitiativeName = `${prefix}-tag-inheritance-initiative`;
 
-  let namingPolicyDefs = activeItems.map(({ item, resourceDefName }) => `      {
+  bicep += `
+// ==============================================================================
+// 3. POLICY INITIATIVES (POLICY SET DEFINITIONS)
+// ==============================================================================
+`;
+
+  if (includeNaming) {
+    let namingPolicyDefs = activeItems.map(({ item, resourceDefName }) => `      {
         policyDefinitionId: ${resourceDefName}.id
         policyDefinitionReferenceId: 'naming-${item.key}'
         parameters: {
           effect: { value: '[parameters(\\'namingEffect\\')]' }
         }
       }`).concat([
-    `      {
+      `      {
         policyDefinitionId: policyNaming_subnet.id
         policyDefinitionReferenceId: 'naming-subnet'
         parameters: {
           effect: { value: '[parameters(\\'subnetEffect\\')]' }
         }
       }`
-  ]);
+    ]);
 
-  if (geoRestrictions.enabled !== false) {
-    namingPolicyDefs.push(`      {
+    if (geoRestrictions.enabled !== false) {
+      namingPolicyDefs.push(`      {
         policyDefinitionId: '/providers/Microsoft.Authorization/policyDefinitions/e56962a6-4747-49cd-b67b-bf8b01975c4c'
         policyDefinitionReferenceId: 'allowed-locations-resources'
         parameters: {
@@ -725,7 +756,7 @@ resource ${defVar} 'Microsoft.Authorization/policyDefinitions@2023-04-01' = {
           effect: { value: '[parameters(\\'geoEffect\\')]' }
         }
       }`);
-    namingPolicyDefs.push(`      {
+      namingPolicyDefs.push(`      {
         policyDefinitionId: '/providers/Microsoft.Authorization/policyDefinitions/e765b5de-1225-4ba3-bd56-1ac6695af988'
         policyDefinitionReferenceId: 'allowed-locations-resource-groups'
         parameters: {
@@ -733,31 +764,11 @@ resource ${defVar} 'Microsoft.Authorization/policyDefinitions@2023-04-01' = {
           effect: { value: '[parameters(\\'geoEffect\\')]' }
         }
       }`);
-  }
+    }
 
-  const namingPolicyDefsStr = namingPolicyDefs.join("\n");
+    const namingPolicyDefsStr = namingPolicyDefs.join("\n");
 
-  const tagPolicyDefs = tagDefRefs.map((ref) => `      {
-        policyDefinitionId: ${ref.idRef}
-        policyDefinitionReferenceId: '${ref.refId}'
-        parameters: {
-          effect: { value: '[parameters(\\'tagEffect\\')]' }
-        }
-      }`).join("\n");
-
-  const inheritancePolicyDefs = inheritanceDefRefs.map((ref) => `      {
-        policyDefinitionId: ${ref.idRef}
-        policyDefinitionReferenceId: '${ref.refId}'
-        parameters: {
-          effect: { value: '[parameters(\\'tagInheritanceEffect\\')]' }
-        }
-      }`).join("\n");
-
-  bicep += `
-// ==============================================================================
-// 3. POLICY INITIATIVES (POLICY SET DEFINITIONS)
-// ==============================================================================
-
+    bicep += `
 resource namingInitiative 'Microsoft.Authorization/policySetDefinitions@2023-04-01' = {
   name: '${namingInitiativeName}'
   properties: {
@@ -789,7 +800,27 @@ ${namingPolicyDefsStr}
     ]
   }
 }
+`;
+  }
 
+  if (includeTagging) {
+    const tagPolicyDefs = tagDefRefs.map((ref) => `      {
+        policyDefinitionId: ${ref.idRef}
+        policyDefinitionReferenceId: '${ref.refId}'
+        parameters: {
+          effect: { value: '[parameters(\\'tagEffect\\')]' }
+        }
+      }`).join("\n");
+
+    const inheritancePolicyDefs = inheritanceDefRefs.map((ref) => `      {
+        policyDefinitionId: ${ref.idRef}
+        policyDefinitionReferenceId: '${ref.refId}'
+        parameters: {
+          effect: { value: '[parameters(\\'tagInheritanceEffect\\')]' }
+        }
+      }`).join("\n");
+
+    bicep += `
 resource taggingInitiative 'Microsoft.Authorization/policySetDefinitions@2023-04-01' = {
   name: '${tagInitiativeName}'
   properties: {
@@ -833,11 +864,17 @@ ${inheritancePolicyDefs}
     ]
   }
 }
+`;
+  }
 
+  bicep += `
 // ==============================================================================
 // 4. POLICY ASSIGNMENTS & MANAGED IDENTITY
 // ==============================================================================
+`;
 
+  if (includeNaming) {
+    bicep += `
 resource namingAssignment 'Microsoft.Authorization/policyAssignments@2023-04-01' = {
   name: '${prefix}-naming-assignment'
   properties: {
@@ -870,7 +907,11 @@ resource namingAssignment 'Microsoft.Authorization/policyAssignments@2023-04-01'
     ]
   }
 }
+`;
+  }
 
+  if (includeTagging) {
+    bicep += `
 resource taggingAssignment 'Microsoft.Authorization/policyAssignments@2023-04-01' = {
   name: '${prefix}-tag-governance-assignment'
   properties: {
@@ -921,17 +962,28 @@ resource tagContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01'
     principalType: 'ServicePrincipal'
   }
 }
+`;
+  }
 
+  bicep += `
 // ==============================================================================
 // OUTPUTS
 // ==============================================================================
-output namingAssignmentId string = namingAssignment.id
-output tagAssignmentId string = taggingAssignment.id
-output tagInheritanceAssignmentId string = tagInheritanceAssignment.id
+`;
+
+  if (includeNaming) {
+    bicep += `output namingAssignmentId string = namingAssignment.id
 output namingInitiativeId string = namingInitiative.id
+`;
+  }
+
+  if (includeTagging) {
+    bicep += `output tagAssignmentId string = taggingAssignment.id
+output tagInheritanceAssignmentId string = tagInheritanceAssignment.id
 output tagInitiativeId string = taggingInitiative.id
 output tagInheritanceInitiativeId string = tagInheritanceInitiative.id
 `;
+  }
 
   return bicep;
 }

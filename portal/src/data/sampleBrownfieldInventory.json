@@ -1,0 +1,145 @@
+{
+  "version": "1.0.0",
+  "discoveredAt": "2026-10-21T14:30:00Z",
+  "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+  "subscriptions": [
+    {
+      "id": "sub-prod-01",
+      "name": "Production-Workloads",
+      "subscriptionId": "11111111-2222-3333-4444-555555555555",
+      "state": "Enabled",
+      "tags": {
+        "CostCenter": "CC-PROD-100",
+        "Owner": "cloudops@woodgrove.com"
+      }
+    },
+    {
+      "id": "sub-shared-01",
+      "name": "Shared-Services",
+      "subscriptionId": "22222222-3333-4444-5555-666666666666",
+      "state": "Enabled",
+      "tags": {
+        "CostCenter": "CC-IT-900",
+        "Owner": "infra@woodgrove.com"
+      }
+    },
+    {
+      "id": "sub-security-01",
+      "name": "Security-Hub",
+      "subscriptionId": "33333333-4444-5555-6666-777777777777",
+      "state": "Enabled",
+      "tags": {
+        "CostCenter": "CC-SEC-800",
+        "Owner": "soc@woodgrove.com"
+      }
+    }
+  ],
+  "resourceGroups": [
+    {
+      "id": "rg-wg-prod-apps",
+      "name": "rg-wg-prod-apps",
+      "subscriptionId": "11111111-2222-3333-4444-555555555555",
+      "location": "eastus",
+      "tags": {
+        "Environment": "Prod",
+        "Application": "CoreBanking",
+        "CostCenter": "CC-PROD-100"
+      }
+    },
+    {
+      "id": "rg-wg-prod-data",
+      "name": "rg-wg-prod-data",
+      "subscriptionId": "11111111-2222-3333-4444-555555555555",
+      "location": "eastus",
+      "tags": {
+        "Environment": "Prod",
+        "Application": "DataLake",
+        "CostCenter": "CC-PROD-100"
+      }
+    },
+    {
+      "id": "rg-wg-shared-hub",
+      "name": "rg-wg-shared-hub",
+      "subscriptionId": "22222222-3333-4444-5555-666666666666",
+      "location": "eastus",
+      "tags": {
+        "Environment": "Shared",
+        "Application": "HubNetwork",
+        "CostCenter": "CC-IT-900"
+      }
+    },
+    {
+      "id": "rg-wg-sec-mgmt",
+      "name": "rg-wg-sec-mgmt",
+      "subscriptionId": "33333333-4444-5555-6666-777777777777",
+      "location": "eastus",
+      "tags": {
+        "Environment": "Prod",
+        "Application": "SecurityVaults",
+        "CostCenter": "CC-SEC-800"
+      }
+    }
+  ],
+  "resources": [
+    {
+      "id": "/subscriptions/22222222-3333-4444-5555-666666666666/resourceGroups/rg-wg-shared-hub/providers/Microsoft.Network/virtualNetworks/wg-prod-vnet-01",
+      "name": "wg-prod-vnet-01",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "eastus",
+      "resourceGroup": "rg-wg-shared-hub",
+      "subscriptionId": "22222222-3333-4444-5555-666666666666",
+      "tags": {
+        "Environment": "Prod",
+        "Application": "HubNetwork"
+      }
+    },
+    {
+      "id": "/subscriptions/22222222-3333-4444-5555-666666666666/resourceGroups/rg-wg-shared-hub/providers/Microsoft.Network/networkSecurityGroups/wg-prod-nsg-01",
+      "name": "wg-prod-nsg-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "location": "eastus",
+      "resourceGroup": "rg-wg-shared-hub",
+      "subscriptionId": "22222222-3333-4444-5555-666666666666",
+      "tags": {
+        "Environment": "Prod"
+      }
+    },
+    {
+      "id": "/subscriptions/11111111-2222-3333-4444-555555555555/resourceGroups/rg-wg-prod-apps/providers/Microsoft.Compute/virtualMachines/wgprodappvm01",
+      "name": "wgprodappvm01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "eastus",
+      "resourceGroup": "rg-wg-prod-apps",
+      "subscriptionId": "11111111-2222-3333-4444-555555555555",
+      "tags": {
+        "Environment": "Prod",
+        "Application": "CoreBanking",
+        "CostCenter": "CC-PROD-100"
+      }
+    },
+    {
+      "id": "/subscriptions/11111111-2222-3333-4444-555555555555/resourceGroups/rg-wg-prod-data/providers/Microsoft.Storage/storageAccounts/wgproddatasa01",
+      "name": "wgproddatasa01",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "eastus",
+      "resourceGroup": "rg-wg-prod-data",
+      "subscriptionId": "11111111-2222-3333-4444-555555555555",
+      "tags": {
+        "Environment": "Prod",
+        "DataClassification": "Confidential"
+      }
+    },
+    {
+      "id": "/subscriptions/33333333-4444-5555-6666-777777777777/resourceGroups/rg-wg-sec-mgmt/providers/Microsoft.KeyVault/vaults/kv-wg-prod-sec",
+      "name": "kv-wg-prod-sec",
+      "type": "Microsoft.KeyVault/vaults",
+      "location": "eastus",
+      "resourceGroup": "rg-wg-sec-mgmt",
+      "subscriptionId": "33333333-4444-5555-6666-777777777777",
+      "tags": {
+        "Environment": "Prod",
+        "CostCenter": "CC-SEC-800"
+      }
+    }
+  ]
+}

@@ -2,13 +2,19 @@
 
 import { toAzurePolicyPattern, DEFAULT_VM_WINDOWS_PATTERN, DEFAULT_VM_LINUX_PATTERN } from "./tokenParser.js";
 
-export function generateArmTemplate(customer, catalog) {
+export function generateArmTemplate(customer, catalog, options = {}) {
+  const policyScope = options.policyScope || (customer.policyModules ? (customer.policyModules.naming && customer.policyModules.tags ? "both" : customer.policyModules.naming ? "naming" : customer.policyModules.tags ? "tagging" : "both") : "both");
+  const includeNaming = policyScope === "both" || policyScope === "naming";
+  const includeTagging = policyScope === "both" || policyScope === "tagging";
+
   const orgAbbr = customer.abbreviation || customer.name || "cust01";
   const subCode = customer.subscriptionCode || "CON";
   const prefix = `${orgAbbr.toLowerCase()}-${subCode.toLowerCase()}`;
   const version = customer.version || "1.0.0";
 
   const regions = customer.regions || { canadacentral: "cc", canadaeast: "ce" };
+  const geoRestrictions = customer.geoRestrictions || { enabled: true, allowedLocations: ["canadacentral", "canadaeast"], effect: "Audit" };
+  const allowedLocations = geoRestrictions.allowedLocations || Object.keys(regions);
   const namingRules = customer.namingRules || {};
   const unrestrictedTypes = namingRules.unrestrictedTypes || [];
   const customPatterns = namingRules.customPatterns || {};
@@ -25,9 +31,10 @@ export function generateArmTemplate(customer, catalog) {
   const tagInitiativeRefs = [];
 
   // Naming Definitions
-  catalog.forEach((item) => {
-    if (item.key === "snet") return;
-    if (unrestrictedTypes.includes(item.key)) return;
+  if (includeNaming) {
+    catalog.forEach((item) => {
+      if (item.key === "snet") return;
+      if (unrestrictedTypes.includes(item.key)) return;
 
     const pattern = customPatterns[item.key] || namingRules.globalPattern || item.defaultPattern;
     const defName = `${prefix}-naming-${item.key}`;
@@ -161,9 +168,33 @@ export function generateArmTemplate(customer, catalog) {
     parameters: { effect: { value: "[[parameters('subnetEffect')]" } }
   });
 
+  // Geo-restriction built-ins into namingInitiativeRefs
+  if (geoRestrictions.enabled !== false) {
+    namingInitiativeRefs.push({
+      policyDefinitionId: "/providers/Microsoft.Authorization/policyDefinitions/e56962a6-4747-49cd-b67b-bf8b01975c4c",
+      policyDefinitionReferenceId: "allowed-locations-resources",
+      parameters: {
+        listOfAllowedLocations: { value: allowedLocations },
+        effect: { value: "[[parameters('geoEffect')]" }
+      }
+    });
+    namingInitiativeRefs.push({
+      policyDefinitionId: "/providers/Microsoft.Authorization/policyDefinitions/e765b5de-1225-4ba3-bd56-1ac6695af988",
+      policyDefinitionReferenceId: "allowed-locations-resource-groups",
+      parameters: {
+        listOfAllowedLocations: { value: allowedLocations },
+        effect: { value: "[[parameters('geoEffect')]" }
+      }
+    });
+  }
+}
+
+  const inheritanceInitiativeRefs = [];
+
   // Tag Definitions
-  // Subscription
-  subTags.forEach((tag) => {
+  if (includeTagging) {
+    // Subscription
+    subTags.forEach((tag) => {
     const defName = `${prefix}-tag-sub-${tag.key.toLowerCase()}`;
     const allowed = [...tag.allowedValues];
     if (!tag.required && !allowed.includes("NA") && !allowed.includes("N/A")) {
@@ -287,9 +318,6 @@ export function generateArmTemplate(customer, catalog) {
   });
 
   // 2d. Tag Inheritance and Defaulting (mode: All for RG, mode: Indexed for Resource, effect: modify)
-  const geoRestrictions = customer.geoRestrictions || { enabled: true, allowedLocations: ["canadacentral", "canadaeast"], effect: "Audit" };
-  const allowedLocations = geoRestrictions.allowedLocations || Object.keys(regions);
-
   const tagInheritance = customer.tagInheritance || {
     enabled: true,
     effect: "modify",
@@ -301,8 +329,6 @@ export function generateArmTemplate(customer, catalog) {
   const subToRgKeys = (tagInheritance.subToRg || []).map((k) => (typeof k === "string" ? k : k.key));
   const rgToResKeys = (tagInheritance.rgToResource || []).map((k) => (typeof k === "string" ? k : k.key));
   const defaultNAKeys = (tagInheritance.defaultResourceNA || []).map((k) => (typeof k === "string" ? k : k.key));
-
-  const inheritanceInitiativeRefs = [];
 
   // 2d-1. Inherit from Subscription to RG
   subToRgKeys.forEach((key) => {
@@ -430,228 +456,224 @@ export function generateArmTemplate(customer, catalog) {
       parameters: { effect: { value: "[[parameters('tagInheritanceEffect')]" } }
     });
   });
-
-  // Geo-restriction built-ins into namingInitiativeRefs
-  if (geoRestrictions.enabled !== false) {
-    namingInitiativeRefs.push({
-      policyDefinitionId: "/providers/Microsoft.Authorization/policyDefinitions/e56962a6-4747-49cd-b67b-bf8b01975c4c",
-      policyDefinitionReferenceId: "allowed-locations-resources",
-      parameters: {
-        listOfAllowedLocations: { value: allowedLocations },
-        effect: { value: "[[parameters('geoEffect')]" }
-      }
-    });
-    namingInitiativeRefs.push({
-      policyDefinitionId: "/providers/Microsoft.Authorization/policyDefinitions/e765b5de-1225-4ba3-bd56-1ac6695af988",
-      policyDefinitionReferenceId: "allowed-locations-resource-groups",
-      parameters: {
-        listOfAllowedLocations: { value: allowedLocations },
-        effect: { value: "[[parameters('geoEffect')]" }
-      }
-    });
   }
 
-  // Initiatives
+  // Initiatives & Assignments
   const namingInitiativeName = `${prefix}-naming-initiative`;
   const tagInitiativeName = `${prefix}-tag-governance-initiative`;
   const tagInheritanceInitiativeName = `${prefix}-tag-inheritance-initiative`;
-
-  resources.push({
-    type: "Microsoft.Authorization/policySetDefinitions",
-    apiVersion: "2023-04-01",
-    name: namingInitiativeName,
-    dependsOn: namingInitiativeRefs.filter(r => r.policyDefinitionId.includes('subscriptionResourceId')).map((r) => r.policyDefinitionId),
-    properties: {
-      displayName: `${customer.name} Naming & Geo-Boundary Initiative`,
-      description: `Enforces type-specific naming rules and regional geo-restrictions across ${customer.name} Azure resources.`,
-      metadata: { category: "Naming", version },
-      parameters: {
-        namingEffect: { type: "String", allowedValues: ["Audit", "Deny", "Disabled"], defaultValue: "Audit" },
-        subnetEffect: { type: "String", allowedValues: ["Audit", "Deny", "Disabled"], defaultValue: "Audit" },
-        geoEffect: { type: "String", allowedValues: ["Audit", "Deny", "Disabled"], defaultValue: "Audit" }
-      },
-      policyDefinitions: namingInitiativeRefs
-    }
-  });
-
-  resources.push({
-    type: "Microsoft.Authorization/policySetDefinitions",
-    apiVersion: "2023-04-01",
-    name: tagInitiativeName,
-    dependsOn: tagInitiativeRefs.map((r) => r.policyDefinitionId),
-    properties: {
-      displayName: `${customer.name} Tag Governance Initiative`,
-      description: "Enforces mandatory and allowed tags across Subscriptions, Resource Groups, and Resources.",
-      metadata: { category: "Tags", version },
-      parameters: {
-        tagEffect: { type: "String", allowedValues: ["Audit", "Deny", "Disabled"], defaultValue: "Audit" }
-      },
-      policyDefinitions: tagInitiativeRefs
-    }
-  });
-
-  resources.push({
-    type: "Microsoft.Authorization/policySetDefinitions",
-    apiVersion: "2023-04-01",
-    name: tagInheritanceInitiativeName,
-    dependsOn: inheritanceInitiativeRefs.map((r) => r.policyDefinitionId),
-    properties: {
-      displayName: `${customer.name} Tag Inheritance & Remediation Initiative`,
-      description: "Automates one-way tag inheritance from Subscription to RG, RG to Resources, and defaults empty resource tags to NA.",
-      metadata: { category: "Tags", version },
-      parameters: {
-        tagInheritanceEffect: { type: "String", allowedValues: ["modify", "audit", "disabled"], defaultValue: "modify" }
-      },
-      policyDefinitions: inheritanceInitiativeRefs
-    }
-  });
-
-  // Assignments
   const namingAssignmentName = `${prefix}-naming-assignment`;
   const tagAssignmentName = `${prefix}-tag-governance-assignment`;
   const tagInheritanceAssignmentName = `${prefix}-tag-inheritance-assignment`;
 
-  resources.push({
-    type: "Microsoft.Authorization/policyAssignments",
-    apiVersion: "2023-04-01",
-    name: namingAssignmentName,
-    dependsOn: [
-      `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${namingInitiativeName}')]`
-    ],
-    properties: {
-      displayName: `${customer.name} Naming & Geo-Boundary Assignment`,
-      policyDefinitionId: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${namingInitiativeName}')]`,
-      enforcementMode: "[parameters('enforcementMode')]",
-      notScopes: "[parameters('notScopes')]",
-      parameters: {
-        namingEffect: { value: "[parameters('namingEffect')]" },
-        subnetEffect: { value: "[parameters('subnetEffect')]" },
-        geoEffect: { value: "[parameters('geoEffect')]" }
-      },
-      nonComplianceMessages: [
-        { message: `Resource names must match the approved ${customer.name} naming convention.` },
-        { message: "Subnet names must be in the approved allowlist.", policyDefinitionReferenceId: "naming-subnet" },
-        { message: `Resources must be deployed within approved regions (${allowedLocations.join(", ")}).`, policyDefinitionReferenceId: "allowed-locations-resources" },
-        { message: `Resource groups must be created within approved regions (${allowedLocations.join(", ")}).`, policyDefinitionReferenceId: "allowed-locations-resource-groups" }
-      ]
-    }
-  });
+  if (includeNaming) {
+    resources.push({
+      type: "Microsoft.Authorization/policySetDefinitions",
+      apiVersion: "2023-04-01",
+      name: namingInitiativeName,
+      dependsOn: namingInitiativeRefs.filter(r => r.policyDefinitionId.includes('subscriptionResourceId')).map((r) => r.policyDefinitionId),
+      properties: {
+        displayName: `${customer.name} Naming & Geo-Boundary Initiative`,
+        description: `Enforces type-specific naming rules and regional geo-restrictions across ${customer.name} Azure resources.`,
+        metadata: { category: "Naming", version },
+        parameters: {
+          namingEffect: { type: "String", allowedValues: ["Audit", "Deny", "Disabled"], defaultValue: "Audit" },
+          subnetEffect: { type: "String", allowedValues: ["Audit", "Deny", "Disabled"], defaultValue: "Audit" },
+          geoEffect: { type: "String", allowedValues: ["Audit", "Deny", "Disabled"], defaultValue: "Audit" }
+        },
+        policyDefinitions: namingInitiativeRefs
+      }
+    });
 
-  resources.push({
-    type: "Microsoft.Authorization/policyAssignments",
-    apiVersion: "2023-04-01",
-    name: tagAssignmentName,
-    dependsOn: [
-      `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInitiativeName}')]`
-    ],
-    properties: {
-      displayName: `${customer.name} Tag Governance Assignment`,
-      policyDefinitionId: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInitiativeName}')]`,
-      enforcementMode: "[parameters('enforcementMode')]",
-      notScopes: "[parameters('notScopes')]",
-      parameters: {
-        tagEffect: { value: "[parameters('tagEffect')]" }
-      },
-      nonComplianceMessages: [
-        { message: "Entity must contain mandatory governance tags with approved values." }
-      ]
-    }
-  });
+    resources.push({
+      type: "Microsoft.Authorization/policyAssignments",
+      apiVersion: "2023-04-01",
+      name: namingAssignmentName,
+      dependsOn: [
+        `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${namingInitiativeName}')]`
+      ],
+      properties: {
+        displayName: `${customer.name} Naming & Geo-Boundary Assignment`,
+        policyDefinitionId: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${namingInitiativeName}')]`,
+        enforcementMode: "[parameters('enforcementMode')]",
+        notScopes: "[parameters('notScopes')]",
+        parameters: {
+          namingEffect: { value: "[parameters('namingEffect')]" },
+          subnetEffect: { value: "[parameters('subnetEffect')]" },
+          geoEffect: { value: "[parameters('geoEffect')]" }
+        },
+        nonComplianceMessages: [
+          { message: `Resource names must match the approved ${customer.name} naming convention.` },
+          { message: "Subnet names must be in the approved allowlist.", policyDefinitionReferenceId: "naming-subnet" },
+          { message: `Resources must be deployed within approved regions (${allowedLocations.join(", ")}).`, policyDefinitionReferenceId: "allowed-locations-resources" },
+          { message: `Resource groups must be created within approved regions (${allowedLocations.join(", ")}).`, policyDefinitionReferenceId: "allowed-locations-resource-groups" }
+        ]
+      }
+    });
+  }
 
-  resources.push({
-    type: "Microsoft.Authorization/policyAssignments",
-    apiVersion: "2023-04-01",
-    name: tagInheritanceAssignmentName,
-    location: "[parameters('location')]",
-    identity: {
-      type: "SystemAssigned"
-    },
-    dependsOn: [
-      `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInheritanceInitiativeName}')]`
-    ],
-    properties: {
-      displayName: `${customer.name} Tag Inheritance & Remediation Assignment`,
-      policyDefinitionId: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInheritanceInitiativeName}')]`,
-      enforcementMode: "[parameters('enforcementMode')]",
-      notScopes: "[parameters('notScopes')]",
-      parameters: {
-        tagInheritanceEffect: { value: "[parameters('tagInheritanceEffect')]" }
-      },
-      nonComplianceMessages: [
-        { message: "Entity must inherit common tags or default empty tags to NA." }
-      ]
-    }
-  });
+  if (includeTagging) {
+    resources.push({
+      type: "Microsoft.Authorization/policySetDefinitions",
+      apiVersion: "2023-04-01",
+      name: tagInitiativeName,
+      dependsOn: tagInitiativeRefs.map((r) => r.policyDefinitionId),
+      properties: {
+        displayName: `${customer.name} Tag Governance Initiative`,
+        description: "Enforces mandatory and allowed tags across Subscriptions, Resource Groups, and Resources.",
+        metadata: { category: "Tags", version },
+        parameters: {
+          tagEffect: { type: "String", allowedValues: ["Audit", "Deny", "Disabled"], defaultValue: "Audit" }
+        },
+        policyDefinitions: tagInitiativeRefs
+      }
+    });
 
-  resources.push({
-    type: "Microsoft.Authorization/roleAssignments",
-    apiVersion: "2022-04-01",
-    name: `[guid(subscription().id, subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagInheritanceAssignmentName}'), 'b24988ac-6180-42a0-ab88-20f7382dd24c')]`,
-    dependsOn: [
-      `[subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagInheritanceAssignmentName}')]`
-    ],
-    properties: {
-      roleDefinitionId: "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-      principalId: `[reference(subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagInheritanceAssignmentName}'), '2023-04-01', 'Full').identity.principalId]`,
-      principalType: "ServicePrincipal"
-    }
-  });
+    resources.push({
+      type: "Microsoft.Authorization/policySetDefinitions",
+      apiVersion: "2023-04-01",
+      name: tagInheritanceInitiativeName,
+      dependsOn: inheritanceInitiativeRefs.map((r) => r.policyDefinitionId),
+      properties: {
+        displayName: `${customer.name} Tag Inheritance & Remediation Initiative`,
+        description: "Automates one-way tag inheritance from Subscription to RG, RG to Resources, and defaults empty resource tags to NA.",
+        metadata: { category: "Tags", version },
+        parameters: {
+          tagInheritanceEffect: { type: "String", allowedValues: ["modify", "audit", "disabled"], defaultValue: "modify" }
+        },
+        policyDefinitions: inheritanceInitiativeRefs
+      }
+    });
+
+    resources.push({
+      type: "Microsoft.Authorization/policyAssignments",
+      apiVersion: "2023-04-01",
+      name: tagAssignmentName,
+      dependsOn: [
+        `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInitiativeName}')]`
+      ],
+      properties: {
+        displayName: `${customer.name} Tag Governance Assignment`,
+        policyDefinitionId: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInitiativeName}')]`,
+        enforcementMode: "[parameters('enforcementMode')]",
+        notScopes: "[parameters('notScopes')]",
+        parameters: {
+          tagEffect: { value: "[parameters('tagEffect')]" }
+        },
+        nonComplianceMessages: [
+          { message: "Entity must contain mandatory governance tags with approved values." }
+        ]
+      }
+    });
+
+    resources.push({
+      type: "Microsoft.Authorization/policyAssignments",
+      apiVersion: "2023-04-01",
+      name: tagInheritanceAssignmentName,
+      location: "[parameters('location')]",
+      identity: {
+        type: "SystemAssigned"
+      },
+      dependsOn: [
+        `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInheritanceInitiativeName}')]`
+      ],
+      properties: {
+        displayName: `${customer.name} Tag Inheritance & Remediation Assignment`,
+        policyDefinitionId: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInheritanceInitiativeName}')]`,
+        enforcementMode: "[parameters('enforcementMode')]",
+        notScopes: "[parameters('notScopes')]",
+        parameters: {
+          tagInheritanceEffect: { value: "[parameters('tagInheritanceEffect')]" }
+        },
+        nonComplianceMessages: [
+          { message: "Entity must inherit common tags or default empty tags to NA." }
+        ]
+      }
+    });
+
+    resources.push({
+      type: "Microsoft.Authorization/roleAssignments",
+      apiVersion: "2022-04-01",
+      name: `[guid(subscription().id, subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagInheritanceAssignmentName}'), 'b24988ac-6180-42a0-ab88-20f7382dd24c')]`,
+      dependsOn: [
+        `[subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagInheritanceAssignmentName}')]`
+      ],
+      properties: {
+        roleDefinitionId: "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        principalId: `[reference(subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagInheritanceAssignmentName}'), '2023-04-01', 'Full').identity.principalId]`,
+        principalType: "ServicePrincipal"
+      }
+    });
+  }
+
+  const templateParameters = {};
+  const parametersValues = {};
+  const templateOutputs = {};
+
+  if (includeNaming) {
+    templateParameters.namingEffect = { type: "string", defaultValue: customer.namingEffect || "Audit", allowedValues: ["Audit", "Deny", "Disabled"] };
+    templateParameters.subnetEffect = { type: "string", defaultValue: customer.subnetEffect || "Audit", allowedValues: ["Audit", "Deny", "Disabled"] };
+    templateParameters.geoEffect = { type: "string", defaultValue: customer.geoRestrictions?.effect || "Audit", allowedValues: ["Audit", "Deny", "Disabled"] };
+
+    parametersValues.namingEffect = { value: customer.namingEffect || "Audit" };
+    parametersValues.subnetEffect = { value: customer.subnetEffect || "Audit" };
+    parametersValues.geoEffect = { value: customer.geoRestrictions?.effect || "Audit" };
+
+    templateOutputs.namingAssignmentId = {
+      type: "string",
+      value: `[subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${namingAssignmentName}')]`
+    };
+    templateOutputs.namingInitiativeId = {
+      type: "string",
+      value: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${namingInitiativeName}')]`
+    };
+  }
+
+  if (includeTagging) {
+    templateParameters.tagEffect = { type: "string", defaultValue: customer.tagEffect || "Audit", allowedValues: ["Audit", "Deny", "Disabled"] };
+    templateParameters.tagInheritanceEffect = { type: "string", defaultValue: customer.tagInheritance?.effect || "modify", allowedValues: ["modify", "audit", "disabled"] };
+    templateParameters.location = { type: "string", defaultValue: customer.defaultRegion || "canadacentral" };
+
+    parametersValues.tagEffect = { value: customer.tagEffect || "Audit" };
+    parametersValues.tagInheritanceEffect = { value: customer.tagInheritance?.effect || "modify" };
+    parametersValues.location = { value: customer.defaultRegion || "canadacentral" };
+
+    templateOutputs.tagAssignmentId = {
+      type: "string",
+      value: `[subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagAssignmentName}')]`
+    };
+    templateOutputs.tagInheritanceAssignmentId = {
+      type: "string",
+      value: `[subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagInheritanceAssignmentName}')]`
+    };
+    templateOutputs.tagInitiativeId = {
+      type: "string",
+      value: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInitiativeName}')]`
+    };
+    templateOutputs.tagInheritanceInitiativeId = {
+      type: "string",
+      value: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInheritanceInitiativeName}')]`
+    };
+  }
+
+  templateParameters.enforcementMode = { type: "string", defaultValue: customer.enforcementMode || "Default", allowedValues: ["Default", "DoNotEnforce"] };
+  templateParameters.notScopes = { type: "array", defaultValue: customer.notScopes || [] };
+
+  parametersValues.enforcementMode = { value: customer.enforcementMode || "Default" };
+  parametersValues.notScopes = { value: customer.notScopes || [] };
 
   const template = {
     $schema: "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
     contentVersion: `${version}.0`,
-    parameters: {
-      namingEffect: { type: "string", defaultValue: customer.namingEffect || "Audit", allowedValues: ["Audit", "Deny", "Disabled"] },
-      subnetEffect: { type: "string", defaultValue: customer.subnetEffect || "Audit", allowedValues: ["Audit", "Deny", "Disabled"] },
-      tagEffect: { type: "string", defaultValue: customer.tagEffect || "Audit", allowedValues: ["Audit", "Deny", "Disabled"] },
-      geoEffect: { type: "string", defaultValue: customer.geoRestrictions?.effect || "Audit", allowedValues: ["Audit", "Deny", "Disabled"] },
-      tagInheritanceEffect: { type: "string", defaultValue: customer.tagInheritance?.effect || "modify", allowedValues: ["modify", "audit", "disabled"] },
-      location: { type: "string", defaultValue: customer.defaultRegion || "canadacentral" },
-      enforcementMode: { type: "string", defaultValue: customer.enforcementMode || "Default", allowedValues: ["Default", "DoNotEnforce"] },
-      notScopes: { type: "array", defaultValue: customer.notScopes || [] }
-    },
+    parameters: templateParameters,
     resources,
-    outputs: {
-      namingAssignmentId: {
-        type: "string",
-        value: `[subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${namingAssignmentName}')]`
-      },
-      tagAssignmentId: {
-        type: "string",
-        value: `[subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagAssignmentName}')]`
-      },
-      tagInheritanceAssignmentId: {
-        type: "string",
-        value: `[subscriptionResourceId('Microsoft.Authorization/policyAssignments', '${tagInheritanceAssignmentName}')]`
-      },
-      namingInitiativeId: {
-        type: "string",
-        value: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${namingInitiativeName}')]`
-      },
-      tagInitiativeId: {
-        type: "string",
-        value: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInitiativeName}')]`
-      },
-      tagInheritanceInitiativeId: {
-        type: "string",
-        value: `[subscriptionResourceId('Microsoft.Authorization/policySetDefinitions', '${tagInheritanceInitiativeName}')]`
-      }
-    }
+    outputs: templateOutputs
   };
 
   const parameters = {
     $schema: "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     contentVersion: `${version}.0`,
-    parameters: {
-      namingEffect: { value: customer.namingEffect || "Audit" },
-      subnetEffect: { value: customer.subnetEffect || "Audit" },
-      tagEffect: { value: customer.tagEffect || "Audit" },
-      geoEffect: { value: customer.geoRestrictions?.effect || "Audit" },
-      tagInheritanceEffect: { value: customer.tagInheritance?.effect || "modify" },
-      location: { value: customer.defaultRegion || "canadacentral" },
-      enforcementMode: { value: customer.enforcementMode || "Default" },
-      notScopes: { value: customer.notScopes || [] }
-    }
+    parameters: parametersValues
   };
 
   return { template, parameters };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   AZURE_NAMING_CATALOG,
   DEFAULT_AIRGATE_OVERRIDES,
@@ -12,8 +12,12 @@ import {
   Plus,
   ExternalLink,
   Download,
-  Edit2
+  Edit2,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
+import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton } from "../theme";
+
 
 export function CatalogManager({
   customer,
@@ -99,6 +103,42 @@ export function CatalogManager({
       matchesOverride
     );
   });
+
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  // Group filtered catalog by category
+  const groupedCatalog = useMemo(() => {
+    const groups = {};
+    filteredCatalog.forEach((item) => {
+      const cat = item.category || "General";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
+    });
+    return groups;
+  }, [filteredCatalog]);
+
+  const categoryNames = useMemo(() => Object.keys(groupedCatalog), [groupedCatalog]);
+  const allCategoriesExpanded = categoryNames.length > 0 && categoryNames.every((c) => !!expandedCategories[c]);
+
+  const handleToggleAllCategories = () => {
+    if (allCategoriesExpanded) {
+      setExpandedCategories({});
+    } else {
+      const next = {};
+      categoryNames.forEach((c) => {
+        next[c] = true;
+      });
+      setExpandedCategories(next);
+    }
+  };
+
+  const toggleCategory = (cat) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [cat]: !prev[cat]
+    }));
+  };
+
 
   // Stats
   const totalCount = activeCatalog.length;
@@ -213,69 +253,68 @@ export function CatalogManager({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* 1. Header & Summary Banner */}
-      <div className="glass-panel" style={{ padding: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
-          <div>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "10px" }}>
-              <BookOpen size={22} color="var(--azure-cyan)" />
-              Microsoft CAF & AirGate Azure Resource Catalogue
-            </h2>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginTop: "4px", maxWidth: "800px" }}>
-              Single source of truth for <strong>200 Azure resource types</strong> across 14 service categories. Inspect official Microsoft Cloud Adoption Framework (CAF) abbreviations, AirGate enterprise standard overrides, character length limits, and governance scopes.
-            </p>
-          </div>
-
+      <AuHudCard
+        kicker="AZURE CLOUD ADOPTION FRAMEWORK"
+        title="Microsoft CAF & AirGate Azure Resource Catalogue"
+        meta="Single source of truth for 200 Azure resource types across 14 service categories"
+        action={
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            <button
-              className="btn btn-sm btn-secondary"
+            <AuButton
+              variant="secondary"
+              size="sm"
               onClick={handleRestoreAirGateDefaults}
               title="Restore standard AirGate overrides: sa, law, gw, conn, lb"
+              icon={<RotateCcw size={13} />}
             >
-              <RotateCcw size={14} />
               Restore AirGate Standards
-            </button>
-            <button
-              className="btn btn-sm btn-secondary"
+            </AuButton>
+            <AuButton
+              variant="secondary"
+              size="sm"
               onClick={handleResetAllToCaf}
               title="Reset all shortcodes to official Microsoft CAF defaults"
+              icon={<RotateCcw size={13} />}
             >
-              <RotateCcw size={14} />
               Reset All to CAF
-            </button>
-            <button className="btn btn-sm btn-outline-azure" onClick={handleExportJson}>
-              <Download size={14} />
-              Export Catalogue JSON
-            </button>
+            </AuButton>
+            <AuButton
+              variant="primary"
+              size="sm"
+              onClick={handleExportJson}
+              icon={<Download size={13} />}
+            >
+              Export JSON
+            </AuButton>
           </div>
-        </div>
-
+        }
+      >
         {/* KPI Summary Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px" }}>
-          <div className="glass-panel" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
-            <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Total Resource Types</span>
-            <span style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--text-main)" }}>{totalCount}</span>
-            <span style={{ fontSize: "0.7rem", color: "var(--azure-cyan)" }}>14 Service Categories</span>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginTop: "4px" }}>
+          <div className="glass-panel" style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "2px" }}>
+            <span className="au-mono-meta">Total Resource Types</span>
+            <span style={{ fontSize: "1.4rem", fontWeight: "700", color: "var(--text-primary)" }}>{totalCount}</span>
+            <span className="au-mono-meta" style={{ color: "var(--accent-primary)" }}>14 Service Categories</span>
           </div>
 
-          <div className="glass-panel" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
-            <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Official Microsoft CAF</span>
-            <span style={{ fontSize: "1.5rem", fontWeight: "800", color: "#38bdf8" }}>{cafStandardCount}</span>
-            <span style={{ fontSize: "0.7rem", color: "var(--text-dim)" }}>Microsoft Learn Standards</span>
+          <div className="glass-panel" style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "2px" }}>
+            <span className="au-mono-meta">Official Microsoft CAF</span>
+            <span style={{ fontSize: "1.4rem", fontWeight: "700", color: "var(--accent-teal)" }}>{cafStandardCount}</span>
+            <span className="au-mono-meta">Microsoft Learn Standards</span>
           </div>
 
-          <div className="glass-panel" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
-            <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>AirGate Enterprise Overrides</span>
-            <span style={{ fontSize: "1.5rem", fontWeight: "800", color: "#fbbf24" }}>{overrideCount}</span>
-            <span style={{ fontSize: "0.7rem", color: "#fbbf24" }}>e.g. sa, law, gw, conn, lb</span>
+          <div className="glass-panel" style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "2px" }}>
+            <span className="au-mono-meta">AirGate Overrides</span>
+            <span style={{ fontSize: "1.4rem", fontWeight: "700", color: "var(--accent-amber)" }}>{overrideCount}</span>
+            <span className="au-mono-meta" style={{ color: "var(--accent-amber)" }}>e.g. sa, law, gw, conn, lb</span>
           </div>
 
-          <div className="glass-panel" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
-            <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Taggable Leaf Resources</span>
-            <span style={{ fontSize: "1.5rem", fontWeight: "800", color: "#34d399" }}>{taggableCount}</span>
-            <span style={{ fontSize: "0.7rem", color: "var(--text-dim)" }}>Supports mode: Indexed</span>
+          <div className="glass-panel" style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "2px" }}>
+            <span className="au-mono-meta">Taggable Leaf Resources</span>
+            <span style={{ fontSize: "1.4rem", fontWeight: "700", color: "var(--accent-mint)" }}>{taggableCount}</span>
+            <span className="au-mono-meta">Supports mode: Indexed</span>
           </div>
         </div>
-      </div>
+      </AuHudCard>
 
       {/* 2. Search & Filter Bar */}
       <div className="glass-panel" style={{ padding: "16px 20px" }}>
@@ -369,10 +408,16 @@ export function CatalogManager({
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", fontSize: "0.8rem", color: "var(--text-dim)" }}>
-          <span>
-            Showing <strong>{filteredCatalog.length}</strong> of {totalCount} Azure Resource Types
-          </span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", fontSize: "0.8rem", color: "var(--text-dim)", flexWrap: "wrap", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span>
+              Showing <strong>{filteredCatalog.length}</strong> of {totalCount} Azure Resource Types ({categoryNames.length} Categories)
+            </span>
+            <AuExpandCollapseButton
+              allExpanded={allCategoriesExpanded}
+              onToggle={handleToggleAllCategories}
+            />
+          </div>
           {(searchQuery || selectedCategory !== "All" || selectedScope !== "All" || selectedTagFilter !== "All" || selectedOverrideFilter !== "All") && (
             <button
               style={{ background: "transparent", border: "none", color: "var(--azure-cyan)", cursor: "pointer", fontSize: "0.8rem" }}
@@ -390,31 +435,74 @@ export function CatalogManager({
         </div>
       </div>
 
-      {/* 3. Resource Catalogue Table */}
-      <div className="glass-panel" style={{ padding: "0", overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.85rem" }}>
-            <thead>
-              <tr style={{ background: "rgba(0,0,0,0.3)", borderBottom: "1px solid var(--border-subtle)", color: "var(--text-dim)", textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.05em" }}>
-                <th style={{ padding: "14px 18px" }}>Resource Type & Provider</th>
-                <th style={{ padding: "14px 14px" }}>Category & Scope</th>
-                <th style={{ padding: "14px 14px" }}>CAF Abbr</th>
-                <th style={{ padding: "14px 14px" }}>Active Standard</th>
-                <th style={{ padding: "14px 14px" }}>Platform Constraints</th>
-                <th style={{ padding: "14px 14px" }}>Tag Governance</th>
-                <th style={{ padding: "14px 18px", textAlign: "right" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCatalog.length === 0 ? (
-                <tr>
-                  <td colSpan={7} style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)" }}>
-                    No Azure resource types matched your filter criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredCatalog.map((item) => {
-                  const alreadyActive = isAlreadyInNamingPolicy(item);
+      {/* 3. Resource Catalogue Grouped by Category */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        {categoryNames.length === 0 ? (
+          <div className="glass-panel" style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)" }}>
+            No Azure resource types matched your filter criteria.
+          </div>
+        ) : (
+          categoryNames.map((cat) => {
+            const items = groupedCatalog[cat];
+            const isExpanded = !!expandedCategories[cat];
+            return (
+              <div
+                key={cat}
+                className="au-hud-card"
+                style={{
+                  border: "1px solid var(--border-hairline)",
+                  borderRadius: "var(--radius-sm)",
+                  overflow: "hidden"
+                }}
+              >
+                {/* Category Header */}
+                <div
+                  style={{
+                    padding: "12px 18px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    background: "rgba(255, 255, 255, 0.02)",
+                    borderBottom: isExpanded ? "1px solid var(--border-subtle)" : "none",
+                    transition: "background 0.2s ease"
+                  }}
+                  onClick={() => toggleCategory(cat)}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ color: "var(--text-muted)" }}>
+                      {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                    </div>
+                    <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                      {cat}
+                    </span>
+                    <span className="au-badge au-badge-mint" style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem" }}>
+                      {items.length} types
+                    </span>
+                  </div>
+                  <span className="au-mono-meta" style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
+                    {isExpanded ? "Click to collapse" : "Click to expand"}
+                  </span>
+                </div>
+
+                {/* Table for this Category */}
+                {isExpanded && (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.85rem" }}>
+                      <thead>
+                        <tr style={{ background: "rgba(0,0,0,0.3)", borderBottom: "1px solid var(--border-subtle)", color: "var(--text-dim)", textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.05em" }}>
+                          <th style={{ padding: "12px 18px" }}>Resource Type & Provider</th>
+                          <th style={{ padding: "12px 14px" }}>Category & Scope</th>
+                          <th style={{ padding: "12px 14px" }}>CAF Abbr</th>
+                          <th style={{ padding: "12px 14px" }}>Active Standard</th>
+                          <th style={{ padding: "12px 14px" }}>Platform Constraints</th>
+                          <th style={{ padding: "12px 14px" }}>Tag Governance</th>
+                          <th style={{ padding: "12px 18px", textAlign: "right" }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {items.map((item) => {
+                          const alreadyActive = isAlreadyInNamingPolicy(item);
 
                   return (
                     <tr
@@ -559,11 +647,15 @@ export function CatalogManager({
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
 
       {/* 4. Edit Override Modal */}

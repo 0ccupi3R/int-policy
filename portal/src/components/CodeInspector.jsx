@@ -8,10 +8,10 @@ import {
   getBaselineTopology
 } from "../engine/topologyGenerator.js";
 import { Copy, Download, Archive, Check, FileCode } from "lucide-react";
+import { AuHudCard, AuButton, AuBadge, AuCodeViewer } from "../theme";
 
 export function CodeInspector({ customer, catalog, onShowToast }) {
   const [activeFileTab, setActiveFileTab] = useState("bicep");
-  const [hasCopied, setHasCopied] = useState(false);
 
   const bicepCode = generateBicep(customer, catalog);
   const { template, parameters } = generateArmTemplate(customer, catalog);
@@ -27,51 +27,54 @@ export function CodeInspector({ customer, catalog, onShowToast }) {
 
   let currentContent = "";
   let currentFilename = "";
+  let currentLang = "bicep";
 
   switch (activeFileTab) {
     case "bicep":
       currentContent = bicepCode;
       currentFilename = "main.bicep";
+      currentLang = "bicep";
       break;
     case "bicepparam":
       currentContent = bicepParamsCode;
       currentFilename = "resources.bicepparam";
+      currentLang = "bicep";
       break;
     case "resbicep":
       currentContent = companionBicepCode;
       currentFilename = "resources.bicep";
+      currentLang = "bicep";
       break;
     case "arm":
       currentContent = armJson;
       currentFilename = "main.json";
+      currentLang = "json";
       break;
     case "params":
       currentContent = paramsJson;
       currentFilename = "parameters.json";
+      currentLang = "json";
       break;
     case "ps1":
       currentContent = ps1Code;
       currentFilename = "Deploy-Audit.ps1";
+      currentLang = "powershell";
       break;
     case "sh":
       currentContent = shCode;
       currentFilename = "deploy.sh";
+      currentLang = "bash";
       break;
     case "json":
       currentContent = customerJson;
       currentFilename = "customer-profile.json";
+      currentLang = "json";
       break;
     default:
       currentContent = bicepCode;
       currentFilename = "main.bicep";
+      currentLang = "bicep";
   }
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(currentContent);
-    setHasCopied(true);
-    onShowToast(`Copied ${currentFilename} to clipboard!`);
-    setTimeout(() => setHasCopied(false), 2000);
-  };
 
   const handleDownloadSingle = () => {
     const blob = new Blob([currentContent], { type: "text/plain;charset=utf-8" });
@@ -87,97 +90,83 @@ export function CodeInspector({ customer, catalog, onShowToast }) {
   };
 
   const lineCount = currentContent.split("\n").length;
-  const byteSize = new Blob([currentContent]).size;
+  const byteSize = `${(new Blob([currentContent]).size / 1024).toFixed(1)} KB`;
+
+  const fileTabs = [
+    { id: "bicep", label: "main.bicep", badge: "Policy" },
+    { id: "bicepparam", label: "resources.bicepparam", badge: "Topology" },
+    { id: "resbicep", label: "resources.bicep", badge: "Provisioning" },
+    { id: "arm", label: "main.json", badge: "ARM" },
+    { id: "params", label: "parameters.json", badge: "Params" },
+    { id: "ps1", label: "Deploy-Audit.ps1", badge: "PS" },
+    { id: "sh", label: "deploy.sh", badge: "Bash" },
+    { id: "json", label: "customer.json", badge: "Config" }
+  ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      {/* File Tabs & Actions */}
-      <div className="glass-panel" style={{ padding: "16px 20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-          {/* File Selector Tabs */}
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-            {[
-              { id: "bicep", label: "main.bicep", badge: "Policy Bicep" },
-              { id: "bicepparam", label: "resources.bicepparam", badge: "Topology Params" },
-              { id: "resbicep", label: "resources.bicep", badge: "Provisioning" },
-              { id: "arm", label: "main.json", badge: "ARM Template" },
-              { id: "params", label: "parameters.json", badge: "Policy Params" },
-              { id: "ps1", label: "Deploy-Audit.ps1", badge: "PowerShell" },
-              { id: "sh", label: "deploy.sh", badge: "Bash" },
-              { id: "json", label: "customer.json", badge: "Config" }
-            ].map((tab) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {/* HUD Telemetry File Navigator */}
+      <AuHudCard
+        kicker="INFRASTRUCTURE AS CODE COMPILER"
+        title="Artifact & Policy Template Inspector"
+        meta={`Target Workspace: ${customer.name} · v${customer.version || "1.0.0"} · ${fileTabs.length} Artifacts Generated`}
+        action={
+          <div style={{ display: "flex", gap: "8px" }}>
+            <AuButton
+              variant="secondary"
+              size="sm"
+              onClick={handleDownloadSingle}
+              icon={<Download size={13} />}
+            >
+              Download {currentFilename}
+            </AuButton>
+
+            <AuButton
+              variant="primary"
+              size="sm"
+              onClick={async () => {
+                onShowToast("Packaging full deployment ZIP bundle...");
+                await downloadZipBundle(customer, catalog);
+                onShowToast("Downloaded complete ALZ deployment ZIP!");
+              }}
+              icon={<Archive size={13} />}
+            >
+              Export Full Bundle (.zip)
+            </AuButton>
+          </div>
+        }
+      >
+        {/* File Selectors */}
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+          {fileTabs.map((tab) => {
+            const isActive = activeFileTab === tab.id;
+            return (
               <button
                 key={tab.id}
-                className={`btn btn-sm ${activeFileTab === tab.id ? "btn-primary" : "btn-secondary"}`}
-                style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem" }}
+                className={`au-btn au-btn-sm ${isActive ? "au-btn-primary" : "au-btn-secondary"}`}
+                style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem" }}
                 onClick={() => setActiveFileTab(tab.id)}
               >
-                <FileCode size={14} />
+                <FileCode size={13} />
                 <span>{tab.label}</span>
+                <span className={`au-badge ${isActive ? "au-badge-mint" : ""}`} style={{ fontSize: "0.68rem", padding: "0.1rem 0.4rem" }}>
+                  {tab.badge}
+                </span>
               </button>
-            ))}
-          </div>
-
-          {/* Quick Actions */}
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button className="btn btn-secondary btn-sm" onClick={handleCopy}>
-              {hasCopied ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-              <span>{hasCopied ? "Copied!" : "Copy Code"}</span>
-            </button>
-
-            <button className="btn btn-secondary btn-sm" onClick={handleDownloadSingle}>
-              <Download size={14} />
-              <span>Download File</span>
-            </button>
-
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => {
-                downloadBicepFile(customer, catalog);
-                onShowToast("Downloaded Bicep template!");
-              }}
-            >
-              <Download size={14} />
-              <span>Download Bicep</span>
-            </button>
-
-            <button
-              className="btn btn-outline-azure btn-sm"
-              onClick={async () => {
-                onShowToast("Generating full ZIP bundle...");
-                await downloadZipBundle(customer, catalog);
-                onShowToast("Downloaded complete deployment ZIP!");
-              }}
-            >
-              <Archive size={14} />
-              <span>Download Bundle (.zip)</span>
-            </button>
-          </div>
+            );
+          })}
         </div>
-      </div>
+      </AuHudCard>
 
-      {/* Code Viewer Container */}
-      <div className="code-container">
-        <div className="code-header">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontWeight: "600", color: "var(--azure-cyan)" }}>{currentFilename}</span>
-            <span className="chip" style={{ fontSize: "0.75rem", padding: "2px 8px" }}>
-              {lineCount} Lines
-            </span>
-            <span className="chip" style={{ fontSize: "0.75rem", padding: "2px 8px" }}>
-              {(byteSize / 1024).toFixed(1)} KB
-            </span>
-          </div>
-
-          <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
-            Customer: {customer.name} | Version: v{customer.version}
-          </span>
-        </div>
-
-        <pre className="code-pre">
-          <code>{currentContent}</code>
-        </pre>
-      </div>
+      {/* Code Viewer */}
+      <AuCodeViewer
+        code={currentContent}
+        language={currentLang}
+        filename={currentFilename}
+        lineCount={lineCount}
+        byteSize={byteSize}
+        onCopy={() => onShowToast(`Copied ${currentFilename} to clipboard!`)}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { DEFAULT_CUSTOMERS } from "./data/defaultCustomers.js";
 import { AZURE_RESOURCE_CATALOG } from "./data/azureResourceCatalog.js";
 import { DEFAULT_AIRGATE_OVERRIDES } from "./data/azureNamingCatalog.js";
 import { Layers, Tag, FolderTree, BookOpen, Code2, CheckCircle2 } from "lucide-react";
+import { AuTabs, AuTelemetryStrip, AuBadge } from "./theme";
 
 export function App() {
   // Load customers from localStorage or defaults
@@ -63,7 +64,7 @@ export function App() {
     } catch (e) {
       console.warn("Failed to load active tab from storage", e);
     }
-    return "naming";
+    return "topology";
   });
 
   // AirGate enterprise standard overrides state
@@ -77,7 +78,7 @@ export function App() {
     return { ...DEFAULT_AIRGATE_OVERRIDES };
   });
 
-  // Multi-Palette Theme State (Dark / Light & Palettes: azure, primer, cloudscape)
+  // Dual Theme State (Dark / Light)
   const [themeMode, setThemeMode] = useState(() => {
     try {
       const saved = localStorage.getItem("alz_theme_mode");
@@ -88,26 +89,14 @@ export function App() {
     return "dark";
   });
 
-  const [themePalette, setThemePalette] = useState(() => {
-    try {
-      const saved = localStorage.getItem("alz_theme_palette");
-      if (["linear", "catppuccin", "nord", "stone", "azure", "primer", "cloudscape"].includes(saved)) return saved;
-    } catch (e) {
-      console.warn("Failed to load theme palette from storage", e);
-    }
-    return "linear";
-  });
-
   useEffect(() => {
     try {
       document.documentElement.setAttribute("data-theme", themeMode);
-      document.documentElement.setAttribute("data-palette", themePalette);
       localStorage.setItem("alz_theme_mode", themeMode);
-      localStorage.setItem("alz_theme_palette", themePalette);
     } catch (e) {
-      console.warn("Failed to sync theme attributes to DOM", e);
+      console.warn("Failed to sync theme attribute to DOM", e);
     }
-  }, [themeMode, themePalette]);
+  }, [themeMode]);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -218,6 +207,50 @@ export function App() {
     setCatalog((prev) => [...prev, newType]);
   };
 
+  // Telemetry Metrics calculation
+  const totalTagRules =
+    (activeCustomer.tags?.subscription?.length || 0) +
+    (activeCustomer.tags?.resourceGroup?.length || 0) +
+    (activeCustomer.tags?.resource?.length || 0);
+
+  const stats = [
+    {
+      label: "Active Workspace",
+      value: activeCustomer.name,
+      meta: `${activeCustomer.subscriptionCode || "COR"} · v${activeCustomer.version || "1.0.0"}`,
+      accentValue: true
+    },
+    {
+      label: "Management Scope",
+      value: "4 Levels",
+      meta: "Root → Platform → LZ → Sandbox"
+    },
+    {
+      label: "Resource Types",
+      value: `${catalog.length}`,
+      meta: "CAF Standards Active"
+    },
+    {
+      label: "Tag Policy Rules",
+      value: `${totalTagRules}`,
+      meta: "FinOps & Security Enforced"
+    },
+    {
+      label: "Readiness Index",
+      value: "96%",
+      meta: "ALZ v2.4 Compliant",
+      accentValue: true
+    }
+  ];
+
+  const studioTabs = [
+    { id: "topology", num: "01", label: "TOPOLOGY & SCOPES", badge: "Unified" },
+    { id: "naming", num: "02", label: "NAMING STUDIO", badge: catalog.length },
+    { id: "tagging", num: "03", label: "TAG GOVERNANCE", badge: totalTagRules },
+    { id: "catalogue", num: "04", label: "RESOURCE CATALOG", badge: "200 CAF" },
+    { id: "code", num: "05", label: "IAC EXPORT", badge: `v${activeCustomer.version || "1.0"}` }
+  ];
+
   return (
     <div className="app-container">
       <Header
@@ -233,82 +266,34 @@ export function App() {
         onShowToast={showToast}
         themeMode={themeMode}
         onToggleThemeMode={() => setThemeMode((prev) => (prev === "dark" ? "light" : "dark"))}
-        themePalette={themePalette}
-        onSelectPalette={setThemePalette}
       />
 
       <main className="main-content">
-        {/* Navigation Tabs */}
-        <div className="nav-tabs" role="tablist" aria-label="Policy Studio Workspace Views">
-          <button
-            role="tab"
-            aria-selected={activeTab === "naming"}
-            className={`nav-tab-btn ${activeTab === "naming" ? "active" : ""}`}
-            onClick={() => setActiveTab("naming")}
-          >
-            <Layers size={18} />
-            <span>1. Naming Convention Studio</span>
-            <span className="tab-badge">{catalog.length} Types</span>
-          </button>
-
-          <button
-            role="tab"
-            aria-selected={activeTab === "tagging"}
-            className={`nav-tab-btn ${activeTab === "tagging" ? "active" : ""}`}
-            onClick={() => setActiveTab("tagging")}
-          >
-            <Tag size={18} />
-            <span>2. Granular Tag Governance</span>
-            <span className="tab-badge">
-              {(activeCustomer.tags?.subscription?.length || 0) +
-                (activeCustomer.tags?.resourceGroup?.length || 0) +
-                (activeCustomer.tags?.resource?.length || 0)}{" "}
-              Rules
-            </span>
-          </button>
-
-          <button
-            role="tab"
-            aria-selected={activeTab === "topology"}
-            className={`nav-tab-btn ${activeTab === "topology" ? "active" : ""}`}
-            onClick={() => setActiveTab("topology")}
-          >
-            <FolderTree size={18} />
-            <span>3. Resource Topology & Parameters</span>
-            <span className="tab-badge" style={{ background: "rgba(6, 182, 212, 0.2)", color: "#38bdf8" }}>
-              Unified Engine
-            </span>
-          </button>
-
-          <button
-            role="tab"
-            aria-selected={activeTab === "catalogue"}
-            className={`nav-tab-btn ${activeTab === "catalogue" ? "active" : ""}`}
-            onClick={() => setActiveTab("catalogue")}
-          >
-            <BookOpen size={18} />
-            <span>4. CAF & AirGate Catalogue</span>
-            <span className="tab-badge" style={{ background: "rgba(56, 189, 248, 0.2)", color: "#38bdf8" }}>
-              200 Types
-            </span>
-          </button>
-
-          <button
-            role="tab"
-            aria-selected={activeTab === "code"}
-            className={`nav-tab-btn ${activeTab === "code" ? "active" : ""}`}
-            onClick={() => setActiveTab("code")}
-          >
-            <Code2 size={18} />
-            <span>5. Bicep & Artifact Inspector</span>
-            <span className="tab-badge" style={{ background: "rgba(139, 92, 246, 0.2)", color: "#c4b5fd" }}>
-              v{activeCustomer.version}
-            </span>
-          </button>
+        {/* HUD Tactical Telemetry Ribbon */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <AuTelemetryStrip stats={stats} />
         </div>
 
-        {/* Tab Views */}
+        {/* Numbered HUD Tabs */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <AuTabs
+            tabs={studioTabs}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+          />
+        </div>
+
+        {/* Studio Tab Views */}
         <ErrorBoundary fallbackTitle="An error occurred rendering this studio tab.">
+          {activeTab === "topology" && (
+            <TopologyGenerator
+              customer={activeCustomer}
+              catalog={catalog}
+              onUpdateCustomer={handleUpdateCustomer}
+              onShowToast={showToast}
+            />
+          )}
+
           {activeTab === "naming" && (
             <NamingStudio
               customer={activeCustomer}
@@ -325,15 +310,6 @@ export function App() {
               onUpdateCustomer={handleUpdateCustomer}
               onShowToast={showToast}
               onNavigateToCatalogue={() => setActiveTab("catalogue")}
-            />
-          )}
-
-          {activeTab === "topology" && (
-            <TopologyGenerator
-              customer={activeCustomer}
-              catalog={catalog}
-              onUpdateCustomer={handleUpdateCustomer}
-              onShowToast={showToast}
             />
           )}
 
@@ -369,14 +345,15 @@ export function App() {
         canDelete={customers.length > 1}
       />
 
-      {/* Toast Notification */}
+      {/* Snappy Toast Notification */}
       {toastMessage && (
         <div className="toast-notice">
-          <CheckCircle2 size={18} />
+          <CheckCircle2 size={16} style={{ color: "var(--accent-mint)" }} />
           <span>{toastMessage}</span>
         </div>
       )}
     </div>
   );
 }
+
 export default App;

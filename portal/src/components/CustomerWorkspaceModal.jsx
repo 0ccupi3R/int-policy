@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { X, Save, Trash2, Building2, MapPin, Sliders } from "lucide-react";
+import { Building2, MapPin, Sliders, Save, Trash2 } from "lucide-react";
+import { AuModal, AuButton } from "../theme";
 
 export function CustomerWorkspaceModal({
   isOpen,
@@ -27,7 +28,10 @@ export function CustomerWorkspaceModal({
     enforcementMode: "Default"
   });
 
+  const [initialData, setInitialData] = useState(null);
+
   useEffect(() => {
+    let initial;
     if (customer && mode === "edit") {
       const regionsStr = Object.entries(customer.regions || {})
         .map(([loc, code]) => `${loc}: ${code}`)
@@ -37,7 +41,7 @@ export function CustomerWorkspaceModal({
         ? customer.purposes.join(", ")
         : "hub, core, monitoring, infrafw, apps";
 
-      setFormData({
+      initial = {
         id: customer.id,
         name: customer.name || "",
         abbreviation: customer.abbreviation || "",
@@ -52,9 +56,9 @@ export function CustomerWorkspaceModal({
         subnetEffect: customer.subnetEffect || "Audit",
         tagEffect: customer.tagEffect || "Audit",
         enforcementMode: customer.enforcementMode || "Default"
-      });
+      };
     } else {
-      setFormData({
+      initial = {
         id: `cust-${Date.now().toString().slice(-4)}`,
         name: "New Enterprise",
         abbreviation: "corp",
@@ -69,9 +73,14 @@ export function CustomerWorkspaceModal({
         subnetEffect: "Audit",
         tagEffect: "Audit",
         enforcementMode: "Default"
-      });
+      };
     }
+    setFormData(initial);
+    setInitialData(initial);
   }, [customer, mode, isOpen]);
+
+  const isDirty = initialData !== null && JSON.stringify(formData) !== JSON.stringify(initialData);
+
 
   // Dismiss modal on Escape key
   useEffect(() => {
@@ -139,236 +148,219 @@ export function CustomerWorkspaceModal({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="customer-workspace-modal-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-header">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Building2 size={20} color="var(--azure-cyan)" />
-            <h2 id="customer-workspace-modal-title" style={{ fontSize: "1.15rem", fontWeight: "700" }}>
-              {mode === "create" ? "Create Customer Workspace" : `Edit Profile: ${customer?.name}`}
-            </h2>
+    <AuModal
+      isOpen={isOpen}
+      onClose={onClose}
+      isDirty={isDirty}
+      kicker="ENTERPRISE WORKSPACE"
+      title={mode === "create" ? "Create Customer Workspace" : `Edit Profile: ${customer?.name}`}
+      maxWidth="720px"
+
+      footer={
+        <>
+          {mode === "edit" && canDelete && (
+            <AuButton
+              type="button"
+              variant="danger"
+              size="sm"
+              style={{ marginRight: "auto" }}
+              onClick={() => {
+                if (confirm(`Are you sure you want to delete workspace for ${formData.name}?`)) {
+                  onDelete(formData.id);
+                  onClose();
+                }
+              }}
+              icon={<Trash2 size={14} />}
+            >
+              Delete Workspace
+            </AuButton>
+          )}
+
+          <AuButton type="button" variant="secondary" size="sm" onClick={onClose}>
+            Cancel
+          </AuButton>
+
+          <AuButton type="button" variant="primary" size="sm" onClick={handleSubmit} icon={<Save size={14} />}>
+            {mode === "create" ? "Create Workspace" : "Save Changes"}
+          </AuButton>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* Customer Organization Details */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div>
+            <label className="form-label" htmlFor="cust-name">Customer Name</label>
+            <input
+              id="cust-name"
+              name="customer_name"
+              type="text"
+              required
+              className="form-input"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Contoso Health"
+            />
+            <span className="form-hint">Used for {`{ORGNAME}`} and {`{OrgName}`} tokens (Full Name)</span>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Close modal"
-            style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer" }}
-          >
-            <X size={20} />
-          </button>
+
+          <div>
+            <label className="form-label" htmlFor="cust-abbr">Customer Abbreviation</label>
+            <input
+              id="cust-abbr"
+              name="customer_abbreviation"
+              type="text"
+              required
+              className="form-input"
+              value={formData.abbreviation}
+              onChange={(e) => setFormData({ ...formData, abbreviation: e.target.value })}
+              placeholder="e.g. contoso or cust01"
+            />
+            <span className="form-hint">Used for {`{Org}`}, {`{org}`}, {`{ORG}`} tokens (Abbr)</span>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {/* Customer Organization Details */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-              <div>
-                <label className="form-label" htmlFor="cust-name">Customer Name</label>
-                <input
-                  id="cust-name"
-                  name="customer_name"
-                  type="text"
-                  required
-                  className="form-input"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. Contoso Health"
-                />
-                <span className="form-hint">Used for {`{ORGNAME}`} and {`{OrgName}`} tokens (Full Name)</span>
-              </div>
-
-              <div>
-                <label className="form-label" htmlFor="cust-abbr">Customer Abbreviation</label>
-                <input
-                  id="cust-abbr"
-                  name="customer_abbreviation"
-                  type="text"
-                  required
-                  className="form-input"
-                  value={formData.abbreviation}
-                  onChange={(e) => setFormData({ ...formData, abbreviation: e.target.value })}
-                  placeholder="e.g. contoso or cust01"
-                />
-                <span className="form-hint">Used for {`{Org}`}, {`{org}`}, {`{ORG}`} tokens (Abbr)</span>
-              </div>
-            </div>
-
-            {/* Subscription & Environment */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-              <div>
-                <label className="form-label" htmlFor="cust-sub-name">Subscription Name</label>
-                <input
-                  id="cust-sub-name"
-                  name="subscription_name"
-                  type="text"
-                  required
-                  className="form-input"
-                  value={formData.subscriptionName}
-                  onChange={(e) => setFormData({ ...formData, subscriptionName: e.target.value })}
-                  placeholder="e.g. Connectivity"
-                />
-                <span className="form-hint">Used for {`{SUBNAME}`} (Full Name)</span>
-              </div>
-
-              <div>
-                <label className="form-label" htmlFor="cust-sub-code">Sub Code / Abbr</label>
-                <input
-                  id="cust-sub-code"
-                  name="subscription_code"
-                  type="text"
-                  required
-                  className="form-input"
-                  value={formData.subscriptionCode}
-                  onChange={(e) => setFormData({ ...formData, subscriptionCode: e.target.value })}
-                  placeholder="e.g. CON, MGT, PRDA"
-                />
-                <span className="form-hint">Used for {`{SUB}`}, {`{sub}`} (Code)</span>
-              </div>
-
-              <div>
-                <label className="form-label" htmlFor="cust-version">Version</label>
-                <input
-                  id="cust-version"
-                  name="workspace_version"
-                  type="text"
-                  required
-                  className="form-input"
-                  value={formData.version}
-                  onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                  placeholder="e.g. 1.0.0"
-                />
-              </div>
-            </div>
-
-            {/* Regions Mapping */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                <MapPin size={14} color="var(--azure-cyan)" />
-                <label className="form-label" htmlFor="cust-regions" style={{ margin: 0 }}>Azure Regions Mapping</label>
-              </div>
-              <input
-                id="cust-regions"
-                name="regions_mapping"
-                type="text"
-                required
-                className="form-input form-input-mono"
-                value={formData.regionsText}
-                onChange={(e) => setFormData({ ...formData, regionsText: e.target.value })}
-                placeholder="canadacentral: cc, canadaeast: ce, eastus: eus"
-              />
-              <span className="form-hint">Comma-separated pairs: `azureRegionName: shortCode`</span>
-            </div>
-
-            {/* Workload & Network Purposes */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                <Sliders size={14} color="var(--azure-cyan)" />
-                <label className="form-label" htmlFor="cust-purposes" style={{ margin: 0 }}>Workload & Network Purposes</label>
-              </div>
-              <input
-                id="cust-purposes"
-                name="workload_purposes"
-                type="text"
-                className="form-input form-input-mono"
-                value={formData.purposesText}
-                onChange={(e) => setFormData({ ...formData, purposesText: e.target.value })}
-                placeholder="hub, core, monitoring, infrafw, apps"
-              />
-              <span className="form-hint">Comma-separated purpose list for {`{purpose}`} and {`{Purpose}`} tokens in subnets and resources</span>
-            </div>
-
-            {/* Default Policy Effects */}
-            <div style={{ background: "rgba(0,0,0,0.2)", padding: "14px", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
-                <Sliders size={14} color="var(--azure-cyan)" />
-                <span style={{ fontSize: "0.85rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>
-                  Default Policy Effects (Safety Controls)
-                </span>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
-                <div>
-                  <label className="form-label" htmlFor="cust-naming-effect">Naming Effect</label>
-                  <select
-                    id="cust-naming-effect"
-                    name="naming_effect"
-                    className="form-input"
-                    value={formData.namingEffect}
-                    onChange={(e) => setFormData({ ...formData, namingEffect: e.target.value })}
-                  >
-                    <option value="Audit">Audit (Safe)</option>
-                    <option value="Deny">Deny (Enforce)</option>
-                    <option value="Disabled">Disabled</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="form-label" htmlFor="cust-subnet-effect">Subnet Effect</label>
-                  <select
-                    id="cust-subnet-effect"
-                    name="subnet_effect"
-                    className="form-input"
-                    value={formData.subnetEffect}
-                    onChange={(e) => setFormData({ ...formData, subnetEffect: e.target.value })}
-                  >
-                    <option value="Audit">Audit (Safe)</option>
-                    <option value="Deny">Deny (Enforce)</option>
-                    <option value="Disabled">Disabled</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="form-label" htmlFor="cust-tag-effect">Tag Effect</label>
-                  <select
-                    id="cust-tag-effect"
-                    name="tag_effect"
-                    className="form-input"
-                    value={formData.tagEffect}
-                    onChange={(e) => setFormData({ ...formData, tagEffect: e.target.value })}
-                  >
-                    <option value="Audit">Audit (Safe)</option>
-                    <option value="Deny">Deny (Enforce)</option>
-                    <option value="Disabled">Disabled</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+        {/* Subscription & Environment */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
+          <div>
+            <label className="form-label" htmlFor="cust-sub-name">Subscription Name</label>
+            <input
+              id="cust-sub-name"
+              name="subscription_name"
+              type="text"
+              required
+              className="form-input"
+              value={formData.subscriptionName}
+              onChange={(e) => setFormData({ ...formData, subscriptionName: e.target.value })}
+              placeholder="e.g. Connectivity"
+            />
+            <span className="form-hint">Used for {`{SUBNAME}`} (Full Name)</span>
           </div>
 
-          <div className="modal-footer">
-            {mode === "edit" && canDelete && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{ marginRight: "auto", color: "var(--accent-rose)", borderColor: "rgba(244, 63, 94, 0.3)" }}
-                onClick={() => {
-                  if (confirm(`Are you sure you want to delete workspace for ${formData.name}?`)) {
-                    onDelete(formData.id);
-                    onClose();
-                  }
-                }}
+          <div>
+            <label className="form-label" htmlFor="cust-sub-code">Sub Code / Abbr</label>
+            <input
+              id="cust-sub-code"
+              name="subscription_code"
+              type="text"
+              required
+              className="form-input"
+              value={formData.subscriptionCode}
+              onChange={(e) => setFormData({ ...formData, subscriptionCode: e.target.value })}
+              placeholder="e.g. CON, MGT, PRDA"
+            />
+            <span className="form-hint">Used for {`{SUB}`}, {`{sub}`} (Code)</span>
+          </div>
+
+          <div>
+            <label className="form-label" htmlFor="cust-version">Version</label>
+            <input
+              id="cust-version"
+              name="workspace_version"
+              type="text"
+              required
+              className="form-input"
+              value={formData.version}
+              onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+              placeholder="e.g. 1.0.0"
+            />
+          </div>
+        </div>
+
+        {/* Regions Mapping */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+            <MapPin size={13} style={{ color: "var(--accent-primary)" }} />
+            <label className="form-label" htmlFor="cust-regions" style={{ margin: 0 }}>Azure Regions Mapping</label>
+          </div>
+          <input
+            id="cust-regions"
+            name="regions_mapping"
+            type="text"
+            required
+            className="form-input form-input-mono"
+            value={formData.regionsText}
+            onChange={(e) => setFormData({ ...formData, regionsText: e.target.value })}
+            placeholder="canadacentral: cc, canadaeast: ce, eastus: eus"
+          />
+          <span className="form-hint">Comma-separated pairs: `azureRegionName: shortCode`</span>
+        </div>
+
+        {/* Workload & Network Purposes */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+            <Sliders size={13} style={{ color: "var(--accent-primary)" }} />
+            <label className="form-label" htmlFor="cust-purposes" style={{ margin: 0 }}>Workload & Network Purposes</label>
+          </div>
+          <input
+            id="cust-purposes"
+            name="workload_purposes"
+            type="text"
+            className="form-input form-input-mono"
+            value={formData.purposesText}
+            onChange={(e) => setFormData({ ...formData, purposesText: e.target.value })}
+            placeholder="hub, core, monitoring, infrafw, apps"
+          />
+          <span className="form-hint">Comma-separated purpose list for {`{purpose}`} and {`{Purpose}`} tokens in subnets and resources</span>
+        </div>
+
+        {/* Default Policy Effects (Safety Controls) */}
+        <div style={{ background: "var(--bg-canvas)", padding: "12px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-sm)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+            <Sliders size={13} style={{ color: "var(--accent-mint)" }} />
+            <span className="au-mono-meta" style={{ color: "var(--text-primary)", fontWeight: 600 }}>
+              DEFAULT POLICY ENFORCEMENT EFFECTS
+            </span>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+            <div>
+              <label className="form-label" htmlFor="cust-naming-effect">Naming Effect</label>
+              <select
+                id="cust-naming-effect"
+                name="naming_effect"
+                className="form-input form-input-mono"
+                value={formData.namingEffect}
+                onChange={(e) => setFormData({ ...formData, namingEffect: e.target.value })}
               >
-                <Trash2 size={16} />
-                <span>Delete</span>
-              </button>
-            )}
+                <option value="Audit">Audit (Safe)</option>
+                <option value="Deny">Deny (Enforce)</option>
+                <option value="Disabled">Disabled</option>
+              </select>
+            </div>
 
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Cancel
-            </button>
+            <div>
+              <label className="form-label" htmlFor="cust-subnet-effect">Subnet Effect</label>
+              <select
+                id="cust-subnet-effect"
+                name="subnet_effect"
+                className="form-input form-input-mono"
+                value={formData.subnetEffect}
+                onChange={(e) => setFormData({ ...formData, subnetEffect: e.target.value })}
+              >
+                <option value="Audit">Audit (Safe)</option>
+                <option value="Deny">Deny (Enforce)</option>
+                <option value="Disabled">Disabled</option>
+              </select>
+            </div>
 
-            <button type="submit" className="btn btn-primary">
-              <Save size={16} />
-              <span>{mode === "create" ? "Create Workspace" : "Save Changes"}</span>
-            </button>
+            <div>
+              <label className="form-label" htmlFor="cust-tag-effect">Tag Effect</label>
+              <select
+                id="cust-tag-effect"
+                name="tag_effect"
+                className="form-input form-input-mono"
+                value={formData.tagEffect}
+                onChange={(e) => setFormData({ ...formData, tagEffect: e.target.value })}
+              >
+                <option value="Audit">Audit (Safe)</option>
+                <option value="Deny">Deny (Enforce)</option>
+                <option value="Disabled">Disabled</option>
+              </select>
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </AuModal>
   );
 }

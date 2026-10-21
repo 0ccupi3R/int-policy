@@ -17,6 +17,8 @@ import {
   saveCustomTemplate,
   deleteCustomTemplate
 } from "../data/namingTemplates.js";
+import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton } from "../theme";
+
 import {
   Layers,
   Search,
@@ -35,7 +37,9 @@ import {
   Bookmark,
   Save,
   Trash2,
-  Zap
+  Zap,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 
 const EMPTY_OBJ = {};
@@ -156,6 +160,42 @@ export function NamingStudio({
     const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  // Group filtered catalog by category
+  const groupedCatalog = useMemo(() => {
+    const groups = {};
+    filteredCatalog.forEach((item) => {
+      const cat = item.category || "General";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
+    });
+    return groups;
+  }, [filteredCatalog]);
+
+  const categoryNames = useMemo(() => Object.keys(groupedCatalog), [groupedCatalog]);
+  const allCategoriesExpanded = categoryNames.length > 0 && categoryNames.every((c) => !!expandedCategories[c]);
+
+  const handleToggleAllCategories = () => {
+    if (allCategoriesExpanded) {
+      setExpandedCategories({});
+    } else {
+      const next = {};
+      categoryNames.forEach((c) => {
+        next[c] = true;
+      });
+      setExpandedCategories(next);
+    }
+  };
+
+  const toggleCategory = (cat) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [cat]: !prev[cat]
+    }));
+  };
+
 
   // Handler for updating a type's custom pattern
   const handlePatternChange = (key, newPattern) => {
@@ -567,20 +607,25 @@ export function NamingStudio({
       </div>
 
       {/* 2. Interactive Live Sandbox Validator */}
-      <div
-        className="glass-panel"
-        style={{
-          padding: "20px 24px",
-          background: "linear-gradient(135deg, rgba(17, 24, 39, 0.8) 0%, rgba(14, 165, 233, 0.08) 100%)",
-          border: "1px solid rgba(6, 182, 212, 0.3)"
-        }}
+      <AuHudCard
+        kicker="INTERACTIVE TEST BENCH"
+        title="Live Azure Resource Name Compliance Sandbox"
+        meta="Real-time Cloud Adoption Framework (CAF) regex & ARM platform constraint evaluator"
+        action={
+          <AuButton
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              const sample = toSampleName(currentTestPattern, customer, currentTestItem, { region: testRegion, purpose: effectivePurpose });
+              setTestName(sample);
+              onShowToast(`Populated sample: ${sample}`);
+            }}
+            icon={<Sparkles size={13} style={{ color: "var(--accent-mint)" }} />}
+          >
+            Auto-Generate Sample
+          </AuButton>
+        }
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
-          <Sparkles size={18} color="var(--azure-cyan)" />
-          <h3 style={{ fontSize: "1rem", fontWeight: "700" }}>Live Name Compliance Sandbox</h3>
-          <span className="chip chip-azure" style={{ marginLeft: "auto" }}>Real-time Policy Evaluator</span>
-        </div>
-
         <div style={{ display: "grid", gridTemplateColumns: isTestVm ? "180px 150px 120px 140px 1fr" : "180px 120px 140px 1fr", gap: "12px", alignItems: "center" }}>
           <div>
             <label className="form-label" htmlFor="sandbox-resource-type">Resource Type</label>
@@ -588,7 +633,7 @@ export function NamingStudio({
               id="sandbox-resource-type"
               name="sandbox_resource_type"
               aria-label="Select resource type to test in sandbox"
-              className="form-input"
+              className="form-input form-input-mono"
               value={testTypeKey}
               onChange={(e) => setTestTypeKey(e.target.value)}
             >
@@ -607,11 +652,11 @@ export function NamingStudio({
                 id="sandbox-os-type"
                 name="sandbox_os_type"
                 aria-label="Select OS platform for VM sandbox"
-                className="form-input"
+                className="form-input form-input-mono"
                 value={testOsType}
                 onChange={(e) => setTestOsType(e.target.value)}
                 style={{
-                  borderColor: testOsType === "Windows" ? "var(--azure-cyan)" : "var(--accent-purple)",
+                  borderColor: testOsType === "Windows" ? "var(--accent-teal)" : "var(--accent-mint)",
                   fontWeight: "600"
                 }}
               >
@@ -627,7 +672,7 @@ export function NamingStudio({
               id="sandbox-region"
               name="sandbox_region"
               aria-label="Select Azure region for sandbox test"
-              className="form-input"
+              className="form-input form-input-mono"
               value={testRegion}
               onChange={(e) => setTestRegion(e.target.value)}
             >
@@ -645,7 +690,7 @@ export function NamingStudio({
               id="sandbox-purpose"
               name="sandbox_purpose"
               aria-label="Select purpose token for sandbox test"
-              className="form-input"
+              className="form-input form-input-mono"
               value={testPurpose}
               onChange={(e) => setTestPurpose(e.target.value)}
             >
@@ -681,32 +726,32 @@ export function NamingStudio({
             style={{
               marginTop: "14px",
               padding: "12px 16px",
-              borderRadius: "8px",
+              borderRadius: "var(--radius-sm)",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               gap: "12px",
               background: isTestItemUnrestricted
-                ? "rgba(100, 116, 139, 0.15)"
+                ? "var(--bg-canvas)"
                 : testValidation.valid
-                ? "rgba(16, 185, 129, 0.15)"
-                : "rgba(244, 63, 94, 0.15)",
+                ? "var(--accent-mint-tint)"
+                : "var(--accent-rose-tint)",
               border: `1px solid ${
                 isTestItemUnrestricted
-                  ? "rgba(100, 116, 139, 0.3)"
+                  ? "var(--border-hairline)"
                   : testValidation.valid
-                  ? "rgba(16, 185, 129, 0.4)"
-                  : "rgba(244, 63, 94, 0.4)"
+                  ? "var(--accent-mint)"
+                  : "var(--accent-rose)"
               }`
             }}
           >
             <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", flex: 1 }}>
               {isTestItemUnrestricted ? (
-                <HelpCircle size={20} color="#94a3b8" style={{ marginTop: "2px", flexShrink: 0 }} />
+                <HelpCircle size={20} color="var(--text-muted)" style={{ marginTop: "2px", flexShrink: 0 }} />
               ) : testValidation.valid ? (
-                <CheckCircle size={20} color="#10b981" style={{ marginTop: "2px", flexShrink: 0 }} />
+                <CheckCircle size={20} color="var(--accent-mint)" style={{ marginTop: "2px", flexShrink: 0 }} />
               ) : (
-                <XCircle size={20} color="#f43f5e" style={{ marginTop: "2px", flexShrink: 0 }} />
+                <XCircle size={20} color="var(--accent-rose)" style={{ marginTop: "2px", flexShrink: 0 }} />
               )}
 
               <div>
@@ -719,18 +764,18 @@ export function NamingStudio({
                     ? "ARM PLATFORM REJECTION: Fails Azure Physical Constraints"
                     : "NON-COMPLIANT: Would be blocked or audited by Azure Policy"}
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
                   {testValidation.reason}
                 </div>
                 {testValidation.errors && testValidation.errors.length > 1 && (
-                  <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: "0.75rem", color: "var(--status-danger-text)" }}>
+                  <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: "0.75rem", color: "var(--accent-rose)" }}>
                     {testValidation.errors.map((e, idx) => (
                       <li key={idx}>{e}</li>
                     ))}
                   </ul>
                 )}
                 {testValidation.warnings && testValidation.warnings.length > 0 && (
-                  <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#fef08a" }}>
+                  <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "var(--accent-amber)" }}>
                     ⚠️ {testValidation.warnings.join("; ")}
                   </div>
                 )}
@@ -739,27 +784,20 @@ export function NamingStudio({
 
             {testValidation.length !== undefined && !isTestItemUnrestricted && (
               <span
-                className="chip"
+                className="au-badge"
                 style={{
-                  fontSize: "0.72rem",
-                  padding: "4px 8px",
+                  fontSize: "0.75rem",
                   fontFamily: "var(--font-mono)",
-                  background:
+                  borderColor:
                     testValidation.length > testValidation.maxLength ||
                     testValidation.length < testValidation.minLength
-                      ? "rgba(244, 63, 94, 0.25)"
-                      : "rgba(16, 185, 129, 0.2)",
+                      ? "var(--accent-rose)"
+                      : "var(--accent-mint)",
                   color:
                     testValidation.length > testValidation.maxLength ||
                     testValidation.length < testValidation.minLength
                       ? "var(--accent-rose)"
-                      : "var(--accent-emerald)",
-                  border: `1px solid ${
-                    testValidation.length > testValidation.maxLength ||
-                    testValidation.length < testValidation.minLength
-                      ? "rgba(244, 63, 94, 0.4)"
-                      : "rgba(16, 185, 129, 0.4)"
-                  }`
+                      : "var(--accent-mint)"
                 }}
               >
                 {testValidation.length} / {testValidation.maxLength} chars
@@ -767,7 +805,7 @@ export function NamingStudio({
             )}
           </div>
         )}
-      </div>
+      </AuHudCard>
 
       {/* 3. Subnet Allowlist Special Module */}
       <div className="glass-panel" style={{ padding: "20px 24px" }}>
@@ -900,12 +938,66 @@ export function NamingStudio({
                 </option>
               ))}
             </select>
+
+            <AuExpandCollapseButton
+              allExpanded={allCategoriesExpanded}
+              onToggle={handleToggleAllCategories}
+            />
           </div>
         </div>
 
-        {/* Resource Cards Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: "16px" }}>
-          {filteredCatalog.map((item) => {
+        {/* Resource Cards Grouped by Category */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {categoryNames.length === 0 ? (
+            <div className="glass-panel" style={{ padding: "30px", textAlign: "center", color: "var(--text-dim)" }}>
+              No resource types matched your filter criteria.
+            </div>
+          ) : (
+            categoryNames.map((cat) => {
+              const items = groupedCatalog[cat];
+              const isExpanded = !!expandedCategories[cat];
+              return (
+                <div
+                  key={cat}
+                  className="au-hud-card"
+                  style={{
+                    border: "1px solid var(--border-hairline)",
+                    borderRadius: "var(--radius-sm)",
+                    overflow: "hidden"
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "12px 18px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      background: "rgba(255, 255, 255, 0.02)",
+                      borderBottom: isExpanded ? "1px solid var(--border-subtle)" : "none",
+                      transition: "background 0.2s ease"
+                    }}
+                    onClick={() => toggleCategory(cat)}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div style={{ color: "var(--text-muted)" }}>
+                        {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                      </div>
+                      <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                        {cat}
+                      </span>
+                      <span className="au-badge au-badge-mint" style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem" }}>
+                        {items.length} types
+                      </span>
+                    </div>
+                    <span className="au-mono-meta" style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
+                      {isExpanded ? "Click to collapse" : "Click to expand"}
+                    </span>
+                  </div>
+
+                  {isExpanded && (
+                    <div style={{ padding: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: "16px" }}>
+                      {items.map((item) => {
             const meta = getEnrichedResourceMeta(item);
             const isUnrestricted = unrestrictedTypes.includes(item.key);
             const isVm = item.key === "vm" || (item.resourceType || "").toLowerCase().includes("virtualmachines");
@@ -1301,6 +1393,12 @@ export function NamingStudio({
               </div>
             );
           })}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { ShieldCheck, Download, Plus, Settings, Archive, Sparkles, ChevronDown, Sun, Moon, Palette } from "lucide-react";
+import { ShieldCheck, Download, Plus, Settings, Archive, Sparkles, ChevronDown, Sun, Moon } from "lucide-react";
 import { downloadBicepFile, downloadZipBundle } from "../engine/bundleExporter.js";
+import { AuButton, AuBadge, AuDropdown } from "../theme";
 
 export function Header({
   customers,
@@ -12,10 +13,8 @@ export function Header({
   onShowToast,
   themeMode,
   onToggleThemeMode,
-  themePalette,
-  onSelectPalette
 }) {
-  const [showVersionMenu, setShowVersionMenu] = useState(false);
+
 
   const handleDownloadBicep = () => {
     downloadBicepFile(activeCustomer, catalog);
@@ -30,25 +29,40 @@ export function Header({
 
   return (
     <header className="header-bar">
+      {/* Brand & Monospace Kicker */}
       <div className="logo-group">
-        <div className="logo-icon">
-          <ShieldCheck size={22} />
+        <div className="logo-icon" style={{ background: "var(--accent-primary)", color: "#06252D" }}>
+          <ShieldCheck size={20} />
         </div>
         <div className="logo-text">
-          <h1>Azure Policy Studio</h1>
-          <span>Landing Zone Architect</span>
+          <div className="au-kicker" style={{ fontSize: "0.68rem", marginBottom: "0.1rem" }}>
+            AZURE GOVERNANCE
+          </div>
+          <h1>Landing Zone Studio</h1>
+        </div>
+
+        {/* Tenant Breadcrumb */}
+        <div style={{ marginLeft: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span className="au-mono-meta" style={{ color: "var(--accent-mint)", fontSize: "0.74rem" }}>
+            ● ALZ READY
+          </span>
+          <span className="au-mono-meta">·</span>
+          <span className="au-mono-meta">
+            {activeCustomer.tenantId ? `Tenant: ${activeCustomer.tenantId.slice(0, 8)}...` : "Default Tenant"}
+          </span>
         </div>
       </div>
 
+      {/* Header Actions */}
       <div className="header-actions">
         {/* Customer Workspace Selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <select
             id="active-customer-select"
             name="active_customer_id"
             aria-label="Active customer workspace selector"
-            className="form-input"
-            style={{ width: "auto", minWidth: "180px", cursor: "pointer", fontWeight: "600" }}
+            className="form-input form-input-mono"
+            style={{ width: "auto", minWidth: "170px", cursor: "pointer", fontWeight: "600", padding: "0.45rem 0.75rem" }}
             value={activeCustomer.id}
             onChange={(e) => onSelectCustomer(e.target.value)}
           >
@@ -59,187 +73,92 @@ export function Header({
             ))}
           </select>
 
-          <button
-            className="btn btn-secondary btn-sm"
+          <AuButton
+            variant="secondary"
+            size="sm"
             onClick={() => onOpenCustomerModal("edit")}
             title="Edit Customer Profile & Settings"
+            icon={<Settings size={14} />}
           >
-            <Settings size={15} />
-            <span>Profile</span>
-          </button>
+            Profile
+          </AuButton>
 
-          <button
-            className="btn btn-secondary btn-sm"
+          <AuButton
+            variant="secondary"
+            size="sm"
             onClick={() => onOpenCustomerModal("create")}
             title="Create New Customer Workspace"
+            icon={<Plus size={14} />}
           >
-            <Plus size={15} />
-            <span>New Customer</span>
-          </button>
+            New
+          </AuButton>
         </div>
 
-        {/* Semantic Version Badge & Quick Bump */}
-        <div style={{ position: "relative" }}>
-          <button
-            className="chip chip-purple"
-            style={{ cursor: "pointer", border: "1px solid rgba(139, 92, 246, 0.4)", padding: "6px 12px" }}
-            onClick={() => setShowVersionMenu(!showVersionMenu)}
-            aria-haspopup="true"
-            aria-expanded={showVersionMenu}
-            title="Click to bump version"
-          >
-            <Sparkles size={12} />
-            <span>v{activeCustomer.version || "1.0.0"}</span>
-            <ChevronDown size={12} />
-          </button>
-
-          {showVersionMenu && (
+        {/* Semantic Version Badge & Quick Bump Dropdown with Auto-Close */}
+        <AuDropdown
+          trigger={
             <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                right: 0,
-                marginTop: "6px",
-                background: "var(--bg-surface-elevated)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "8px",
-                padding: "6px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "4px",
-                zIndex: 60,
-                boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
-                minWidth: "150px"
-              }}
+              className="au-badge"
+              style={{ cursor: "pointer", padding: "0.35rem 0.75rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+              title="Click to bump version"
             >
-              <button
-                className="btn btn-secondary btn-sm"
-                style={{ justifyContent: "flex-start", width: "100%" }}
-                onClick={() => {
-                  onBumpVersion("patch");
-                  setShowVersionMenu(false);
-                }}
-              >
-                + Bump Patch (x.x.+1)
-              </button>
-              <button
-                className="btn btn-secondary btn-sm"
-                style={{ justifyContent: "flex-start", width: "100%" }}
-                onClick={() => {
-                  onBumpVersion("minor");
-                  setShowVersionMenu(false);
-                }}
-              >
-                + Bump Minor (x.+1.0)
-              </button>
+              <Sparkles size={11} style={{ color: "var(--accent-primary)" }} />
+              <span>v{activeCustomer.version || "1.0.0"}</span>
+              <ChevronDown size={11} />
             </div>
-          )}
-        </div>
+          }
+          items={[
+            {
+              id: "patch",
+              label: "+ Bump Patch (x.x.+1)",
+              onClick: () => onBumpVersion("patch"),
+            },
+            {
+              id: "minor",
+              label: "+ Bump Minor (x.+1.0)",
+              onClick: () => onBumpVersion("minor"),
+            },
+          ]}
+        />
 
-        {/* Multi-Palette Theme Switcher */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            background: "var(--bg-surface-elevated)",
-            padding: "2px 6px",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--border-subtle)"
+
+        {/* Theme Toggle (Dark Command / Light Editorial) */}
+        <AuButton
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            onToggleThemeMode();
+            onShowToast(`Switched to ${themeMode === "dark" ? "Light Editorial" : "Dark Command"} mode`);
           }}
+          title={`Switch to ${themeMode === "dark" ? "Light" : "Dark"} Mode`}
+          aria-label={`Switch to ${themeMode === "dark" ? "Light" : "Dark"} Mode`}
+          icon={themeMode === "dark" ? <Sun size={13} style={{ color: "var(--accent-amber)" }} /> : <Moon size={13} style={{ color: "var(--accent-teal)" }} />}
         >
-          {/* Palette Selector */}
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <Palette size={13} style={{ color: "var(--text-muted)", marginLeft: "4px" }} />
-            <select
-              aria-label="Theme visual palette selector"
-              value={themePalette}
-              onChange={(e) => {
-                onSelectPalette(e.target.value);
-                const nameMap = {
-                  linear: "Linear / Stripe Slate",
-                  catppuccin: "Catppuccin Latte",
-                  nord: "Nord Arctic Frost",
-                  stone: "Warm Ceramic Stone",
-                  azure: "Azure Fluent",
-                  primer: "GitHub Primer",
-                  cloudscape: "Cloudscape Console"
-                };
-                onShowToast(`Switched palette to ${nameMap[e.target.value] || e.target.value}`);
-              }}
-              className="form-input"
-              style={{
-                fontSize: "0.78rem",
-                padding: "4px 6px",
-                width: "auto",
-                border: "none",
-                background: "transparent",
-                fontWeight: "600",
-                cursor: "pointer"
-              }}
-            >
-              <optgroup label="Modern Internet (Zero Eye Strain)">
-                <option value="linear">Linear / Stripe Slate</option>
-                <option value="catppuccin">Catppuccin Latte (Warm Paper)</option>
-                <option value="nord">Nord Arctic Frost</option>
-                <option value="stone">Warm Ceramic (Stone)</option>
-              </optgroup>
-              <optgroup label="Calibrated Cloud Consoles">
-                <option value="azure">Azure Fluent</option>
-                <option value="primer">GitHub Primer</option>
-                <option value="cloudscape">Cloudscape Console</option>
-              </optgroup>
-            </select>
-          </div>
-
-          <div style={{ width: "1px", height: "16px", background: "var(--border-subtle)" }} />
-
-          {/* Dark / Light Mode Toggle Button */}
-          <button
-            onClick={() => {
-              onToggleThemeMode();
-              onShowToast(`Switched to ${themeMode === "dark" ? "Light" : "Dark"} mode`);
-            }}
-            className="btn btn-sm"
-            style={{
-              padding: "4px 8px",
-              background: "transparent",
-              border: "none",
-              color: "var(--text-main)",
-              display: "flex",
-              alignItems: "center",
-              gap: "5px",
-              cursor: "pointer",
-              fontSize: "0.78rem",
-              fontWeight: "600"
-            }}
-            title={`Switch to ${themeMode === "dark" ? "Light" : "Dark"} Mode`}
-            aria-label={`Switch to ${themeMode === "dark" ? "Light" : "Dark"} Mode`}
-          >
-            {themeMode === "dark" ? (
-              <>
-                <Moon size={14} style={{ color: "var(--azure-cyan)" }} />
-                <span>Dark</span>
-              </>
-            ) : (
-              <>
-                <Sun size={14} style={{ color: "var(--accent-amber)" }} />
-                <span>Light</span>
-              </>
-            )}
-          </button>
-        </div>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>
+            {themeMode === "dark" ? "LIGHT" : "DARK"}
+          </span>
+        </AuButton>
 
         {/* Action Buttons */}
-        <button className="btn btn-outline-azure" onClick={handleDownloadZip} title="Download complete deployment package as ZIP">
-          <Archive size={16} />
-          <span>ZIP Package</span>
-        </button>
+        <AuButton
+          variant="secondary"
+          size="sm"
+          onClick={handleDownloadZip}
+          title="Download complete deployment package as ZIP"
+          icon={<Archive size={14} />}
+        >
+          Export ZIP
+        </AuButton>
 
-        <button className="btn btn-primary" onClick={handleDownloadBicep} title="Download Bicep policy template">
-          <Download size={16} />
-          <span>Download Bicep</span>
-        </button>
+        <AuButton
+          variant="primary"
+          size="sm"
+          onClick={handleDownloadBicep}
+          title="Download Bicep policy template"
+          icon={<Download size={14} />}
+        >
+          Download Bicep
+        </AuButton>
       </div>
     </header>
   );

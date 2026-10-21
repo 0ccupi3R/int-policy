@@ -7,6 +7,7 @@
 node_modules/
 portal/node_modules/
 portal/dist/
+apisec-theme-pack/
 
 # OS metadata
 .DS_Store

@@ -19,6 +19,8 @@ import {
   KeyRound
 } from "lucide-react";
 import { BASELINE_TAGS } from "../data/baselineTags.js";
+import { AuHudCard, AuButton, AuBadge, AuModal } from "../theme";
+
 
 /**
  * Controlled Allowed Values Editor
@@ -214,18 +216,152 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
     onShowToast("Updated Regional Geo-Boundary settings");
   };
 
-  const handleAddTag = () => {
-    const newTag = {
-      key: `NewTag${currentTags.length + 1}`,
-      displayName: `New Tag ${currentTags.length + 1}`,
+  // Multi-Scope Add Tag Modal State
+  const [showAddTagModal, setShowAddTagModal] = useState(false);
+  const [tagFormData, setTagFormData] = useState({
+    key: "",
+    displayName: "",
+    description: "",
+    required: true,
+    caseSensitive: false,
+    allowedValuesText: "Prod, NonProd, Dev, Stage",
+    scopes: {
+      subscription: false,
+      resourceGroup: false,
+      resource: false
+    }
+  });
+  const [initialTagFormData, setInitialTagFormData] = useState(null);
+  const [tagModalError, setTagModalError] = useState("");
+
+  const handleOpenAddTagModal = () => {
+    const isSub = activeScope === "subscription";
+    const isRg = activeScope === "resourceGroup";
+    const isRes = activeScope === "resource" || activeScope === "inheritance";
+
+    const initial = {
+      key: "",
+      displayName: "",
+      description: "",
       required: true,
       caseSensitive: false,
-      allowedValues: ["Value1", "Value2", "Value3"],
-      description: "Governance tag description."
+      allowedValuesText: "Prod, NonProd, Dev, Stage",
+      scopes: {
+        subscription: isSub,
+        resourceGroup: isRg,
+        resource: isRes
+      }
     };
-    handleUpdateCurrentTags([...currentTags, newTag]);
-    onShowToast(`Added new tag to ${activeScope} scope`);
+    setTagFormData(initial);
+    setInitialTagFormData(initial);
+    setTagModalError("");
+    setShowAddTagModal(true);
   };
+
+  const handleSelectBaselineSuggestion = (baseline) => {
+    setTagFormData((prev) => ({
+      ...prev,
+      key: baseline.key,
+      displayName: baseline.displayName,
+      description: baseline.description,
+      allowedValuesText: (baseline.defaultAllowed || []).join(", "),
+      scopes: {
+        ...prev.scopes,
+        [baseline.recommendedTier]: true
+      }
+    }));
+    setTagModalError("");
+  };
+
+  const handleToggleScope = (scopeKey) => {
+    setTagFormData((prev) => ({
+      ...prev,
+      scopes: {
+        ...prev.scopes,
+        [scopeKey]: !prev.scopes[scopeKey]
+      }
+    }));
+    setTagModalError("");
+  };
+
+  const handleSelectAllScopes = (selectAll) => {
+    setTagFormData((prev) => ({
+      ...prev,
+      scopes: {
+        subscription: selectAll,
+        resourceGroup: selectAll,
+        resource: selectAll
+      }
+    }));
+    setTagModalError("");
+  };
+
+  const handleSaveTagModal = (e) => {
+    if (e) e.preventDefault();
+
+    const trimmedKey = tagFormData.key.trim();
+    if (!trimmedKey) {
+      setTagModalError("Please enter a Tag Key Name.");
+      return;
+    }
+
+    const selectedScopeKeys = Object.entries(tagFormData.scopes)
+      .filter(([_, enabled]) => enabled)
+      .map(([scope]) => scope);
+
+    if (selectedScopeKeys.length === 0) {
+      setTagModalError("Please select at least one target scope (Subscription, Resource Group, or Resource).");
+      return;
+    }
+
+    const parsedValues = tagFormData.allowedValuesText
+      .split(",")
+      .map((v) => v.trim())
+      .filter((v) => v.length > 0);
+
+    const newTag = {
+      key: trimmedKey,
+      displayName: tagFormData.displayName.trim() || trimmedKey,
+      required: tagFormData.required,
+      caseSensitive: tagFormData.caseSensitive,
+      allowedValues: parsedValues.length > 0 ? parsedValues : ["Value1", "Value2"],
+      description: tagFormData.description.trim() || `Governance tag for ${trimmedKey}`
+    };
+
+    const updatedTags = {
+      subscription: [...(tags.subscription || [])],
+      resourceGroup: [...(tags.resourceGroup || [])],
+      resource: [...(tags.resource || [])]
+    };
+
+    selectedScopeKeys.forEach((scope) => {
+      const existingIdx = updatedTags[scope].findIndex(
+        (t) => t.key.toLowerCase() === trimmedKey.toLowerCase()
+      );
+      if (existingIdx >= 0) {
+        // Overwrite / synchronize existing tag in this scope
+        updatedTags[scope][existingIdx] = newTag;
+      } else {
+        // Add new tag to this scope
+        updatedTags[scope].push(newTag);
+      }
+    });
+
+    onUpdateCustomer({
+      ...customer,
+      tags: updatedTags
+    });
+
+    setShowAddTagModal(false);
+    const scopeNames = selectedScopeKeys
+      .map((s) => (s === "subscription" ? "Subscription" : s === "resourceGroup" ? "Resource Group" : "Resource"))
+      .join(", ");
+    onShowToast(`Saved tag '${trimmedKey}' across ${selectedScopeKeys.length} scope(s) (${scopeNames})!`);
+  };
+
+  const isTagModalDirty =
+    initialTagFormData !== null && JSON.stringify(tagFormData) !== JSON.stringify(initialTagFormData);
+
 
   const handleDeleteTag = (index) => {
     const updatedList = currentTags.filter((_, i) => i !== index);
@@ -248,6 +384,41 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
       allowedValues: parsedList
     };
     handleUpdateCurrentTags(updatedList);
+  };
+
+  const handleApplyPreset = (presetType) => {
+    let tagsToAdd = [];
+    if (presetType === "finops") {
+      tagsToAdd = [
+        { key: "CostCenter", displayName: "Cost Center", required: true, caseSensitive: false, allowedValues: ["1001-Core", "1002-Infra", "1003-Apps", "1004-Data"], description: "FinOps financial cost allocation code" },
+        { key: "ProjectCode", displayName: "Project Code", required: false, caseSensitive: false, allowedValues: ["PRJ-ALZ", "PRJ-CLOUD", "PRJ-MIGRATION"], description: "Enterprise accounting project code" },
+        { key: "BusinessUnit", displayName: "Business Unit", required: true, caseSensitive: false, allowedValues: ["Engineering", "Finance", "Security", "Operations"], description: "Owning business division" },
+        { key: "Owner", displayName: "Technical Owner", required: true, caseSensitive: false, allowedValues: ["CloudOps", "SecOps", "AppDev"], description: "Contact email or team responsible" }
+      ];
+    } else if (presetType === "security") {
+      tagsToAdd = [
+        { key: "DataClassification", displayName: "Data Classification", required: true, caseSensitive: false, allowedValues: ["Public", "Internal", "Confidential", "Restricted"], description: "NIST/ISO data sensitivity level" },
+        { key: "Confidentiality", displayName: "Confidentiality", required: false, caseSensitive: false, allowedValues: ["Low", "Moderate", "High"], description: "Security confidentiality tier" },
+        { key: "SecurityContact", displayName: "Security Contact", required: true, caseSensitive: false, allowedValues: ["secops@enterprise.com", "soc@enterprise.com"], description: "SOC triage contact" }
+      ];
+    } else if (presetType === "operations") {
+      tagsToAdd = [
+        { key: "Environment", displayName: "Environment", required: true, caseSensitive: false, allowedValues: ["Prod", "NonProd", "Dev", "Stage", "Sandbox"], description: "Operational lifecycle environment" },
+        { key: "MaintenanceWindow", displayName: "Maintenance Window", required: false, caseSensitive: false, allowedValues: ["Weekend-0200-0600", "Weekday-0000-0400", "None"], description: "Patching and downtime window" },
+        { key: "DisasterRecovery", displayName: "Disaster Recovery", required: true, caseSensitive: false, allowedValues: ["Critical-Tier1", "Essential-Tier2", "Standard-Tier3", "NonCritical"], description: "DR tier and failover SLA" }
+      ];
+    }
+
+    const existingKeys = currentTags.map((t) => t.key.toLowerCase());
+    const newItems = tagsToAdd.filter((t) => !existingKeys.includes(t.key.toLowerCase()));
+
+    if (newItems.length === 0) {
+      onShowToast("All tags from this preset are already present in this scope.");
+      return;
+    }
+
+    handleUpdateCurrentTags([...currentTags, ...newItems]);
+    onShowToast(`Added ${newItems.length} ${presetType.toUpperCase()} preset tags to ${activeScope} scope!`);
   };
 
   const handleAddCafBaselines = () => {
@@ -275,38 +446,76 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* 1. Header & Hierarchy Explanation */}
-      <div className="glass-panel" style={{ padding: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-          <div>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Tag size={20} color="var(--azure-cyan)" />
-              Granular Tag Governance & Inheritance Studio
-            </h2>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginTop: "4px" }}>
-              Enforce fixed tag keys and strictly allowed values across the Azure hierarchy, automate one-way downward tag inheritance (Subscription ➔ RG ➔ Resource), and default empty leaf tags to <code>NA</code>.
-            </p>
-          </div>
-
-          <div style={{ display: "flex", gap: "10px" }}>
+      <AuHudCard
+        kicker="FINOPS & COMPLIANCE GOVERNANCE"
+        title="Granular Tag Governance & Inheritance Studio"
+        meta={`Scope: ${activeScope.toUpperCase()} · Enforce allowed values and one-way downward inheritance`}
+        action={
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
             {activeScope !== "inheritance" ? (
               <>
-                <button className="btn btn-secondary btn-sm" onClick={handleAddCafBaselines}>
-                  <Sparkles size={15} color="var(--azure-cyan)" />
-                  <span>Import CAF Baseline</span>
-                </button>
-                <button className="btn btn-primary btn-sm" onClick={handleAddTag}>
-                  <Plus size={16} />
-                  <span>Add Tag</span>
-                </button>
+                <AuButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleApplyPreset("finops")}
+                  title="Inject FinOps Cost Allocation Suite (CostCenter, ProjectCode, BusinessUnit, Owner)"
+                  icon={<Sparkles size={13} style={{ color: "var(--accent-mint)" }} />}
+                >
+                  + FinOps Suite
+                </AuButton>
+
+                <AuButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleApplyPreset("security")}
+                  title="Inject Security & Data Classification Suite"
+                  icon={<ShieldCheck size={13} style={{ color: "var(--accent-teal)" }} />}
+                >
+                  + Security Suite
+                </AuButton>
+
+                <AuButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleApplyPreset("operations")}
+                  title="Inject Operational Environment & DR Suite"
+                >
+                  + Ops Suite
+                </AuButton>
+
+                <AuButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleOpenAddTagModal}
+                  icon={<Plus size={14} />}
+                >
+                  Add Tag
+                </AuButton>
               </>
             ) : (
-              <span className="chip chip-emerald" style={{ padding: "6px 14px", fontSize: "0.82rem" }}>
-                <RefreshCw size={14} className="spin-slow" />
-                <span>Automated Remediation Active</span>
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span className="au-badge au-badge-mint" style={{ padding: "6px 12px", fontSize: "0.8rem" }}>
+                  <RefreshCw size={13} className="spin-slow" />
+                  <span>Automated Remediation Active</span>
+                </span>
+                <AuButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleOpenAddTagModal}
+                  icon={<Plus size={14} />}
+                >
+                  Add Tag
+                </AuButton>
+              </div>
             )}
+
           </div>
-        </div>
+        }
+      >
+        <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: 0 }}>
+          Enforce fixed tag keys and strictly allowed values across the Azure hierarchy, automate one-way downward tag inheritance (Subscription ➔ RG ➔ Resource), and default empty leaf tags to <code>NA</code>.
+        </p>
+      </AuHudCard>
 
         {/* Catalogue Scope Guidance Banner */}
         <div
@@ -383,7 +592,6 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
             </span>
           </button>
         </div>
-      </div>
 
       {/* 3. Scope Details Banner */}
       <div
@@ -946,6 +1154,380 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
           )}
         </div>
       )}
+
+      {/* Multi-Scope Add Tag Policy Modal */}
+
+      <AuModal
+        isOpen={showAddTagModal}
+        onClose={() => setShowAddTagModal(false)}
+        isDirty={isTagModalDirty}
+        kicker="TAG GOVERNANCE POLICY"
+        title="Add New Tag Policy Rule"
+        maxWidth="680px"
+        footer={
+          <>
+            <AuButton
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowAddTagModal(false)}
+            >
+              Cancel
+            </AuButton>
+            <AuButton
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleSaveTagModal}
+              icon={<Plus size={14} />}
+            >
+              {`Save Tag to ${Object.values(tagFormData.scopes).filter(Boolean).length} Scope(s)`}
+            </AuButton>
+          </>
+        }
+      >
+        <form onSubmit={handleSaveTagModal} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Validation Error Banner */}
+          {tagModalError && (
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--accent-rose-tint)",
+                border: "1px solid var(--accent-rose)",
+                color: "var(--accent-rose)",
+                fontSize: "0.82rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}
+            >
+              <AlertCircle size={15} />
+              <span>{tagModalError}</span>
+            </div>
+          )}
+
+          {/* Quick Baseline Suggestions */}
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <span className="au-label" style={{ margin: 0 }}>
+                Microsoft CAF Recommended Baselines:
+              </span>
+              <span className="au-mono-meta" style={{ fontSize: "0.72rem" }}>
+                Click to 1-Click Autofill
+              </span>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {BASELINE_TAGS.slice(0, 7).map((bt) => (
+                <button
+                  key={bt.key}
+                  type="button"
+                  className="au-badge"
+                  style={{
+                    cursor: "pointer",
+                    fontSize: "0.72rem",
+                    padding: "0.25rem 0.6rem",
+                    background: tagFormData.key === bt.key ? "var(--accent-primary)" : "var(--bg-canvas)",
+                    color: tagFormData.key === bt.key ? "#06252D" : "var(--text-secondary)",
+                    borderColor: tagFormData.key === bt.key ? "var(--accent-primary)" : "var(--border-hairline)"
+                  }}
+                  onClick={() => handleSelectBaselineSuggestion(bt)}
+                  title={`Autofill ${bt.displayName}`}
+                >
+                  <Sparkles size={11} />
+                  <span>{bt.key}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tag Key and Display Name */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div className="au-form-group">
+              <label className="au-label" htmlFor="new-tag-key">
+                Tag Key Name *
+              </label>
+              <input
+                id="new-tag-key"
+                name="new_tag_key"
+                type="text"
+                required
+                className="au-input au-input-mono"
+                value={tagFormData.key}
+                onChange={(e) => {
+                  setTagFormData({ ...tagFormData, key: e.target.value });
+                  setTagModalError("");
+                }}
+                placeholder="e.g. CostCenter or Environment"
+                autoFocus
+              />
+            </div>
+
+            <div className="au-form-group">
+              <label className="au-label" htmlFor="new-tag-display-name">
+                Display Name
+              </label>
+              <input
+                id="new-tag-display-name"
+                name="new_tag_display_name"
+                type="text"
+                className="au-input"
+                value={tagFormData.displayName}
+                onChange={(e) => setTagFormData({ ...tagFormData, displayName: e.target.value })}
+                placeholder="e.g. Cost Center"
+              />
+            </div>
+          </div>
+
+          {/* Allowed Values (Comma-Separated) */}
+          <div className="au-form-group">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <label className="au-label" htmlFor="new-tag-allowed-values" style={{ margin: 0 }}>
+                Allowed Values (Comma-Separated)
+              </label>
+              {!tagFormData.required && (
+                <span className="au-mono-meta" style={{ color: "var(--accent-amber)", fontSize: "0.72rem" }}>
+                  (Optional tag auto-accepts 'NA' fallback)
+                </span>
+              )}
+            </div>
+            <input
+              id="new-tag-allowed-values"
+              name="new_tag_allowed_values"
+              type="text"
+              className="au-input"
+              value={tagFormData.allowedValuesText}
+              onChange={(e) => setTagFormData({ ...tagFormData, allowedValuesText: e.target.value })}
+              placeholder="e.g. Prod, NonProd, Dev, Stage"
+            />
+            {/* Live Value Pill Preview */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
+              {tagFormData.allowedValuesText
+                .split(",")
+                .map((v) => v.trim())
+                .filter((v) => v.length > 0)
+                .map((val, idx) => (
+                  <span key={idx} className="au-badge au-badge-neutral" style={{ fontSize: "0.72rem", padding: "0.15rem 0.5rem" }}>
+                    {val}
+                  </span>
+                ))}
+              {!tagFormData.required && (
+                <span className="au-badge au-badge-amber" style={{ fontSize: "0.72rem", padding: "0.15rem 0.5rem" }}>
+                  NA (Fallback)
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="au-form-group">
+            <label className="au-label" htmlFor="new-tag-description">
+              Business Purpose / Description
+            </label>
+            <input
+              id="new-tag-description"
+              name="new_tag_description"
+              type="text"
+              className="au-input"
+              value={tagFormData.description}
+              onChange={(e) => setTagFormData({ ...tagFormData, description: e.target.value })}
+              placeholder="Brief explanation of governance purpose..."
+            />
+          </div>
+
+          {/* Requirement Status & Case Sensitivity Checkboxes */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "10px 14px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--bg-canvas)",
+                border: "1px solid var(--border-hairline)",
+                cursor: "pointer"
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={tagFormData.required}
+                onChange={(e) => setTagFormData({ ...tagFormData, required: e.target.checked })}
+                style={{ width: "16px", height: "16px", cursor: "pointer" }}
+              />
+              <div>
+                <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>Mandatory / Required</strong>
+                <div className="au-mono-meta" style={{ fontSize: "0.72rem" }}>Strict enforcement</div>
+              </div>
+            </label>
+
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "10px 14px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--bg-canvas)",
+                border: "1px solid var(--border-hairline)",
+                cursor: "pointer"
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={tagFormData.caseSensitive}
+                onChange={(e) => setTagFormData({ ...tagFormData, caseSensitive: e.target.checked })}
+                style={{ width: "16px", height: "16px", cursor: "pointer" }}
+              />
+              <div>
+                <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>Case-Sensitive</strong>
+                <div className="au-mono-meta" style={{ fontSize: "0.72rem" }}>Exact case matching</div>
+              </div>
+            </label>
+          </div>
+
+          {/* MULTI-SCOPE TARGET SELECTION BOX */}
+          <div
+            style={{
+              padding: "14px 16px",
+              borderRadius: "var(--radius-sm)",
+              background: "var(--bg-surface-elevated)",
+              border: "1px solid var(--border-strong)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px"
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div className="au-kicker" style={{ fontSize: "0.68rem", marginBottom: "0.1rem" }}>
+                  TARGET HIERARCHY
+                </div>
+                <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                  Assign to Scopes (Multi-Select)
+                </h4>
+              </div>
+              <div style={{ display: "flex", gap: "6px" }}>
+                <AuButton
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleSelectAllScopes(true)}
+                  style={{ fontSize: "0.72rem", padding: "0.2rem 0.5rem" }}
+                >
+                  Select All
+                </AuButton>
+                <AuButton
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleSelectAllScopes(false)}
+                  style={{ fontSize: "0.72rem", padding: "0.2rem 0.5rem" }}
+                >
+                  Clear
+                </AuButton>
+              </div>
+            </div>
+
+            {/* Scope 1: Subscription */}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "10px 14px",
+                borderRadius: "var(--radius-sm)",
+                background: tagFormData.scopes.subscription ? "var(--accent-tint)" : "var(--bg-canvas)",
+                border: tagFormData.scopes.subscription ? "1px solid var(--accent-primary)" : "1px solid var(--border-hairline)",
+                cursor: "pointer",
+                transition: "all var(--ease-snappy)"
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={tagFormData.scopes.subscription}
+                onChange={() => handleToggleScope("subscription")}
+                style={{ width: "16px", height: "16px", cursor: "pointer" }}
+              />
+              <Building size={18} style={{ color: "var(--accent-primary)" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>1. Subscription Scope</strong>
+                  <span className="au-badge au-badge-teal" style={{ fontSize: "0.68rem" }}>Root Policy</span>
+                </div>
+                <div className="au-mono-meta" style={{ fontSize: "0.74rem", marginTop: "2px" }}>
+                  Evaluated at subscription level. Enforces financial & executive accountability.
+                </div>
+              </div>
+            </label>
+
+            {/* Scope 2: Resource Group */}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "10px 14px",
+                borderRadius: "var(--radius-sm)",
+                background: tagFormData.scopes.resourceGroup ? "var(--accent-mint-tint)" : "var(--bg-canvas)",
+                border: tagFormData.scopes.resourceGroup ? "1px solid var(--accent-mint)" : "1px solid var(--border-hairline)",
+                cursor: "pointer",
+                transition: "all var(--ease-snappy)"
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={tagFormData.scopes.resourceGroup}
+                onChange={() => handleToggleScope("resourceGroup")}
+                style={{ width: "16px", height: "16px", cursor: "pointer" }}
+              />
+              <FolderTree size={18} style={{ color: "var(--accent-mint)" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>2. Resource Group Scope</strong>
+                  <span className="au-badge au-badge-mint" style={{ fontSize: "0.68rem" }}>RG Context</span>
+                </div>
+                <div className="au-mono-meta" style={{ fontSize: "0.74rem", marginTop: "2px" }}>
+                  Targets Microsoft.Resources/subscriptions/resourceGroups. Ideal for Environment & Project tags.
+                </div>
+              </div>
+            </label>
+
+            {/* Scope 3: Resource */}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "10px 14px",
+                borderRadius: "var(--radius-sm)",
+                background: tagFormData.scopes.resource ? "var(--accent-amber-tint)" : "var(--bg-canvas)",
+                border: tagFormData.scopes.resource ? "1px solid var(--accent-amber)" : "1px solid var(--border-hairline)",
+                cursor: "pointer",
+                transition: "all var(--ease-snappy)"
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={tagFormData.scopes.resource}
+                onChange={() => handleToggleScope("resource")}
+                style={{ width: "16px", height: "16px", cursor: "pointer" }}
+              />
+              <Box size={18} style={{ color: "var(--accent-amber)" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>3. Leaf Resource Scope</strong>
+                  <span className="au-badge au-badge-amber" style={{ fontSize: "0.68rem" }}>mode: Indexed</span>
+                </div>
+                <div className="au-mono-meta" style={{ fontSize: "0.74rem", marginTop: "2px" }}>
+                  Targets individual Azure resources supporting tags without impacting internal child objects.
+                </div>
+              </div>
+            </label>
+          </div>
+        </form>
+      </AuModal>
     </div>
   );
 }
+

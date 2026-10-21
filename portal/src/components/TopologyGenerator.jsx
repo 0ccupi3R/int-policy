@@ -12,6 +12,7 @@ import {
   validateResourceInput,
   getNextAvailableInstance
 } from "../engine/topologyGenerator.js";
+import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton, AuCodeViewer } from "../theme";
 import {
   Layers,
   Plus,
@@ -65,11 +66,13 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   }, [activeSubIndex, customer.id]);
 
   const [selectedResId, setSelectedResId] = useState(null);
-  const [expandedRgs, setExpandedRgs] = useState({ "rg-hub": true, "rg-core": true, "rg-apps": true });
+  const [expandedRgs, setExpandedRgs] = useState({});
+
   const [expandedTagEditors, setExpandedTagEditors] = useState({}); // { [id]: boolean }
   const [codeDrawerOpen, setCodeDrawerOpen] = useState(false);
   const [codeTab, setCodeTab] = useState("bicepparam"); // "bicepparam" | "armparam" | "bicepmodule"
   const [copied, setCopied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Deletion Confirmation Modal state: { type: "sub"|"rg", id, name, subIndex, rgCount, resCount }
   const [deleteModal, setDeleteModal] = useState(null);
@@ -124,7 +127,22 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
     }));
   };
 
+  const allRgsExpanded = resourceGroups.length > 0 && resourceGroups.every((rg) => !!expandedRgs[rg.id]);
+
+  const handleToggleAllRgs = () => {
+    if (allRgsExpanded) {
+      setExpandedRgs({});
+    } else {
+      const next = {};
+      resourceGroups.forEach((rg) => {
+        next[rg.id] = true;
+      });
+      setExpandedRgs(next);
+    }
+  };
+
   const toggleTagEditor = (id) => {
+
     setExpandedTagEditors((prev) => ({
       ...prev,
       [id]: !prev[id]
@@ -630,87 +648,58 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Top Banner & KPI Ribbon */}
-      <div
-        className="glass-card"
-        style={{
-          padding: "20px 24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-          borderLeft: "4px solid var(--azure-cyan)",
-          background: "linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(17, 24, 39, 0.8) 100%)"
-        }}
-      >
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-            <FolderTree size={22} color="var(--azure-cyan)" />
-            <h2 style={{ fontSize: "1.3rem", fontWeight: "700", fontFamily: "var(--font-display)" }}>
-              Resource Topology & Parameter Generator
-            </h2>
-            <span className="chip chip-azure" style={{ fontSize: "0.75rem" }}>
-              Unified Governance Engine
-            </span>
-            <span className="chip" style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", background: "rgba(255,255,255,0.06)" }}>
-              {totalResourcesCount} Resources
-            </span>
+      <AuHudCard
+        kicker="TOPOLOGY & CANONICAL GOVERNANCE"
+        title="Resource Topology & Parameter Generator"
+        meta={
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
+            <span className="au-badge au-badge-mint">Unified Engine</span>
+            <span className="au-mono-meta">· {totalResourcesCount} Resources</span>
             {validationErrorCount > 0 ? (
-              <span className="chip" style={{ fontSize: "0.75rem", background: "rgba(244, 63, 94, 0.15)", color: "var(--accent-rose)" }}>
-                ⚠ {validationErrorCount} Non-Compliant
-              </span>
+              <span className="au-badge au-badge-rose">⚠ {validationErrorCount} Non-Compliant</span>
             ) : (
-              <span className="chip" style={{ fontSize: "0.75rem", background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-emerald)" }}>
-                ✔ All Compliant
-              </span>
+              <span className="au-badge au-badge-mint">✔ All Compliant</span>
             )}
           </div>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>
-            Scaffold your Subscription → Resource Group → Leaf Resource topology with automated canonical
-            resource naming and multi-tier governance tag inheritance.
-          </p>
-        </div>
+        }
+        action={
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <AuButton
+              variant="secondary"
+              size="sm"
+              onClick={() => setPresetModal("airgate")}
+              title="Scaffold standard 5-subscription enterprise architecture"
+              icon={<Zap size={13} style={{ color: "var(--accent-primary)" }} />}
+            >
+              AirGate Default Platform
+            </AuButton>
 
-        {/* Action Controls & Presets */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-          {/* Preset Buttons */}
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setPresetModal("airgate")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              background: "rgba(6, 182, 212, 0.15)",
-              borderColor: "rgba(6, 182, 212, 0.35)",
-              color: "#38bdf8"
-            }}
-            title="Scaffold standard 5-subscription enterprise architecture"
-          >
-            <Zap size={14} color="#38bdf8" />
-            <span>AirGate Default Platform</span>
-          </button>
+            <AuButton
+              variant="secondary"
+              size="sm"
+              onClick={() => setPresetModal("reset")}
+              title="Reset to customer profile baseline"
+              icon={<RotateCcw size={13} />}
+            >
+              Reset Baseline
+            </AuButton>
 
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setPresetModal("reset")}
-            style={{ display: "flex", alignItems: "center", gap: "6px" }}
-            title="Reset to customer profile baseline"
-          >
-            <RotateCcw size={14} />
-            <span>Reset Baseline</span>
-          </button>
-
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setCodeDrawerOpen(!codeDrawerOpen)}
-            style={{ display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            <Code2 size={15} />
-            <span>{codeDrawerOpen ? "Hide Live Code" : "Live Bicep & ARM Parameters"}</span>
-          </button>
-        </div>
-      </div>
+            <AuButton
+              variant="primary"
+              size="sm"
+              onClick={() => setCodeDrawerOpen(!codeDrawerOpen)}
+              icon={<Code2 size={13} />}
+            >
+              {codeDrawerOpen ? "Hide Live Code" : "Live IaC Parameters"}
+            </AuButton>
+          </div>
+        }
+      >
+        <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: 0 }}>
+          Scaffold your Subscription → Resource Group → Leaf Resource topology with automated canonical
+          resource naming and multi-tier governance tag inheritance.
+        </p>
+      </AuHudCard>
 
       {/* Subscription Selector Bar */}
       <div className="glass-panel" style={{ padding: "12px 18px" }}>
@@ -800,29 +789,57 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
         {/* Visual Topology Designer */}
         <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
           {/* RG Group Header Action */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ fontSize: "1.05rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Layers size={18} color="var(--azure-cyan)" />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+              <Layers size={18} style={{ color: "var(--accent-primary)" }} />
               <span>Resource Groups in {activeSub.name}</span>
-              <span className="chip" style={{ fontSize: "0.7rem" }}>
+              <span className="au-badge">
                 {resourceGroups.length} Groups
               </span>
             </h3>
 
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={openAddRgModal}
-              style={{ display: "flex", alignItems: "center", gap: "6px" }}
-            >
-              <Plus size={14} />
-              <span>Add Resource Group</span>
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ position: "relative" }}>
+                <Search size={13} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+                <input
+                  type="text"
+                  placeholder="Filter groups & resources..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="form-input form-input-mono"
+                  style={{ paddingLeft: "30px", width: "220px", fontSize: "0.8rem", padding: "0.4rem 0.6rem 0.4rem 1.9rem" }}
+                />
+              </div>
+
+              <AuExpandCollapseButton
+                allExpanded={allRgsExpanded}
+                onToggle={handleToggleAllRgs}
+              />
+
+              <AuButton
+                variant="primary"
+                size="sm"
+                onClick={openAddRgModal}
+                icon={<Plus size={14} />}
+              >
+                Add Resource Group
+              </AuButton>
+            </div>
           </div>
 
           {/* Resource Groups Cards */}
-          {resourceGroups.map((rg) => {
+          {(searchQuery.trim()
+            ? resourceGroups.filter((rg) => {
+                const q = searchQuery.toLowerCase().trim();
+                const evalName = evaluateRgNode(customer, catalog, activeSub, rg).evaluatedName.toLowerCase();
+                const matchRes = (rg.resources || []).some((res) => (res.purpose || res.resourceTypeKey || "").toLowerCase().includes(q));
+                return (rg.purpose || "").toLowerCase().includes(q) || evalName.includes(q) || matchRes;
+              })
+            : resourceGroups
+          ).map((rg) => {
             const evalRg = evaluateRgNode(customer, catalog, activeSub, rg);
-            const isExpanded = expandedRgs[rg.id] ?? true;
+            const isExpanded = !!expandedRgs[rg.id];
+
             const isRgTagEditorOpen = expandedTagEditors[rg.id] ?? false;
             const resCount = rg.resources?.length || 0;
             const hasRgOverrides = rg.tags && Object.keys(rg.tags).length > 0;
@@ -833,10 +850,10 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
             return (
               <div
                 key={rg.id}
-                className="glass-card"
+                className="au-hud-card"
                 style={{
-                  border: isDuplicateRg ? "1px solid var(--accent-rose)" : "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-md)",
+                  border: isDuplicateRg ? "1px solid var(--accent-rose)" : "1px solid var(--border-hairline)",
+                  borderRadius: "var(--radius-sm)",
                   overflow: "hidden",
                   transition: "all 0.2s ease"
                 }}
@@ -1535,14 +1552,14 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
         {/* Live Code Drawer / Split-Pane Preview */}
         {codeDrawerOpen && (
           <div
-            className="glass-card"
+            className="au-hud-card"
             style={{
               position: "sticky",
               top: "20px",
               display: "flex",
               flexDirection: "column",
               gap: "14px",
-              padding: "16px 20px",
+              padding: "16px",
               maxHeight: "88vh",
               overflow: "hidden"
             }}
@@ -1550,73 +1567,58 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
             {/* Header & Tabs */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
               <div style={{ display: "flex", gap: "6px" }}>
-                <button
-                  className={`btn btn-sm ${codeTab === "bicepparam" ? "btn-primary" : "btn-secondary"}`}
+                <AuButton
+                  variant={codeTab === "bicepparam" ? "primary" : "secondary"}
+                  size="sm"
                   onClick={() => setCodeTab("bicepparam")}
-                  style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)" }}
+                  icon={<FileCode size={13} />}
                 >
-                  <FileCode size={13} />
-                  <span>.bicepparam</span>
-                </button>
-                <button
-                  className={`btn btn-sm ${codeTab === "armparam" ? "btn-primary" : "btn-secondary"}`}
+                  .bicepparam
+                </AuButton>
+                <AuButton
+                  variant={codeTab === "armparam" ? "primary" : "secondary"}
+                  size="sm"
                   onClick={() => setCodeTab("armparam")}
-                  style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)" }}
+                  icon={<FileCode size={13} />}
                 >
-                  <FileCode size={13} />
-                  <span>parameters.json</span>
-                </button>
-                <button
-                  className={`btn btn-sm ${codeTab === "bicepmodule" ? "btn-primary" : "btn-secondary"}`}
+                  parameters.json
+                </AuButton>
+                <AuButton
+                  variant={codeTab === "bicepmodule" ? "primary" : "secondary"}
+                  size="sm"
                   onClick={() => setCodeTab("bicepmodule")}
-                  style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)" }}
+                  icon={<FileCode size={13} />}
                 >
-                  <FileCode size={13} />
-                  <span>resources.bicep</span>
-                </button>
+                  resources.bicep
+                </AuButton>
               </div>
 
               <div style={{ display: "flex", gap: "6px" }}>
-                <button
-                  className="btn btn-secondary btn-sm"
-                  onClick={handleCopyCode}
-                  style={{ fontSize: "0.75rem", padding: "4px 8px" }}
-                  title="Copy Code"
-                >
-                  <Copy size={13} />
-                  <span>{copied ? "Copied!" : "Copy"}</span>
-                </button>
-                <button
-                  className="btn btn-secondary btn-sm"
+                <AuButton
+                  variant="secondary"
+                  size="sm"
                   onClick={handleDownloadSingle}
-                  style={{ fontSize: "0.75rem", padding: "4px 8px" }}
                   title="Download File"
+                  icon={<Download size={13} />}
                 >
-                  <Download size={13} />
-                  <span>Download</span>
-                </button>
+                  Download
+                </AuButton>
               </div>
             </div>
 
-            {/* Code Box */}
-            <div
-              className="code-container"
-              style={{
-                flex: 1,
-                overflowY: "auto",
-                maxHeight: "calc(88vh - 120px)",
-                background: "var(--code-bg)",
-                padding: "12px",
-                borderRadius: "var(--radius-sm)",
-                fontSize: "0.78rem"
-              }}
-            >
-              <pre style={{ margin: 0, color: "var(--code-text)", fontFamily: "var(--font-mono)", lineHeight: 1.45 }}>
-                <code>{currentCodeContent}</code>
-              </pre>
+            {/* Code Box with Syntax Highlighting and Gutter */}
+            <div style={{ flex: 1, overflowY: "auto", maxHeight: "calc(88vh - 120px)" }}>
+              <AuCodeViewer
+                code={currentCodeContent}
+                language={codeTab === "armparam" ? "json" : "bicep"}
+                filename={currentCodeFilename}
+                showLineNumbers={true}
+                onCopy={() => onShowToast(`Copied ${currentCodeFilename} to clipboard!`)}
+              />
             </div>
           </div>
         )}
+
       </div>
 
       {/* Delete Confirmation Modal */}

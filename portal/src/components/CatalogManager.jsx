@@ -16,7 +16,7 @@ import {
   ChevronDown,
   ChevronRight
 } from "lucide-react";
-import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton } from "../theme";
+import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton, AuSelect } from "../theme";
 
 
 export function CatalogManager({
@@ -337,76 +337,57 @@ export function CatalogManager({
 
           {/* Category Filter */}
           <div>
-            <select
+            <AuSelect
               id="catalog-category-filter"
-              name="catalog_category_filter"
               aria-label="Filter catalog by category"
-              className="form-input"
-              style={{ fontSize: "0.85rem" }}
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  Category: {c}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedCategory}
+              options={categories.map((c) => ({ value: c, label: `Category: ${c}` }))}
+            />
           </div>
 
           {/* Scope Filter */}
           <div>
-            <select
+            <AuSelect
               id="catalog-scope-filter"
-              name="catalog_scope_filter"
               aria-label="Filter catalog by scope"
-              className="form-input"
-              style={{ fontSize: "0.85rem" }}
               value={selectedScope}
-              onChange={(e) => setSelectedScope(e.target.value)}
-            >
-              {scopes.map((s) => (
-                <option key={s} value={s}>
-                  Scope: {s}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedScope}
+              options={scopes.map((s) => ({ value: s, label: `Scope: ${s}` }))}
+            />
           </div>
 
           {/* Tag Filter */}
           <div>
-            <select
+            <AuSelect
               id="catalog-tag-filter"
-              name="catalog_tag_filter"
               aria-label="Filter catalog by tag governance"
-              className="form-input"
-              style={{ fontSize: "0.85rem" }}
               value={selectedTagFilter}
-              onChange={(e) => setSelectedTagFilter(e.target.value)}
-            >
-              <option value="All">Tag Governance: All</option>
-              <option value="taggable">Taggable Leaf Only (mode: Indexed)</option>
-              <option value="untaggable">Untaggable Sub-Resources</option>
-            </select>
+              onChange={setSelectedTagFilter}
+              options={[
+                { value: "All", label: "Tag Governance: All" },
+                { value: "taggable", label: "Taggable Leaf Only (mode: Indexed)" },
+                { value: "untaggable", label: "Untaggable Sub-Resources" }
+              ]}
+            />
           </div>
 
           {/* Override Filter */}
           <div>
-            <select
+            <AuSelect
               id="catalog-standards-filter"
-              name="catalog_standards_filter"
               aria-label="Filter catalog by standards"
-              className="form-input"
-              style={{ fontSize: "0.85rem" }}
               value={selectedOverrideFilter}
-              onChange={(e) => setSelectedOverrideFilter(e.target.value)}
-            >
-              <option value="All">Standards: All</option>
-              <option value="overrides">AirGate Overrides Only</option>
-              <option value="caf">Official CAF Only</option>
-            </select>
+              onChange={setSelectedOverrideFilter}
+              options={[
+                { value: "All", label: "Standards: All" },
+                { value: "overrides", label: "AirGate Overrides Only" },
+                { value: "caf", label: "Official CAF Only" }
+              ]}
+            />
           </div>
         </div>
+
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", fontSize: "0.8rem", color: "var(--text-dim)", flexWrap: "wrap", gap: "8px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

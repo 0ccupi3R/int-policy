@@ -15,11 +15,17 @@ import {
   AuTelemetryStripProps,
   AuValidationBoxProps,
   AuDropdownProps,
+  AuSelectOption,
   AuSelectProps,
+  AuValidatedInputProps,
+  AuCheckboxProps,
+  AuTokenChipProps,
+  AuIconButtonProps,
   AuExpandCollapseButtonProps,
 } from './types';
 import { useClickOutside } from './useClickOutside';
 import { highlightLine } from './syntaxHighlighter';
+import { sanitizeInput } from './inputValidators';
 
 
 /* ==========================================================================
@@ -369,34 +375,395 @@ export const AuDropdown: React.FC<AuDropdownProps> = ({
 };
 
 /* ==========================================================================
-   7c. HUD SELECT BOX (.au-select)
+   7c. TACTICAL CUSTOM SELECT DROPDOWN (.au-select-*)
    ========================================================================== */
 export const AuSelect: React.FC<AuSelectProps> = ({
   options,
   value,
   onChange,
+  id,
+  name,
   label,
+  placeholder = 'Select option...',
+  className = '',
+  style,
+  disabled = false,
+  searchable = false,
+  'aria-label': ariaLabel,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useClickOutside(containerRef, () => {
+    if (isOpen) {
+      setIsOpen(false);
+      setSearch('');
+    }
+  });
+
+  // Normalize options to { value, label, badge, icon, disabled }
+  const normalizedOptions: AuSelectOption[] = options.map((opt) => {
+    if (typeof opt === 'string') {
+      return { value: opt, label: opt };
+    }
+    return opt;
+  });
+
+  const filteredOptions = normalizedOptions.filter((opt) => {
+    if (!search.trim()) return true;
+    const term = search.toLowerCase();
+    return (
+      opt.label.toLowerCase().includes(term) ||
+      opt.value.toLowerCase().includes(term) ||
+      (opt.badge && opt.badge.toLowerCase().includes(term))
+    );
+  });
+
+  const selectedOption = normalizedOptions.find((opt) => opt.value === value);
+
+  // Auto-enable search if option count > 8
+  const isSearchEnabled = searchable || normalizedOptions.length > 8;
+
+  const handleToggle = () => {
+    if (disabled) return;
+    const nextState = !isOpen;
+    setIsOpen(nextState);
+    if (nextState) {
+      setSearch('');
+      const currentIndex = filteredOptions.findIndex((opt) => opt.value === value);
+      setHighlightedIndex(currentIndex >= 0 ? currentIndex : 0);
+      if (isSearchEnabled) {
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+      }
+    }
+  };
+
+  const handleSelect = (val: string, isDisabled?: boolean) => {
+    if (isDisabled) return;
+    onChange(val);
+    setIsOpen(false);
+    setSearch('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return;
+
+    if (!isOpen) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        handleToggle();
+      }
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsOpen(false);
+      setSearch('');
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev < filteredOptions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : filteredOptions.length - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
+        const target = filteredOptions[highlightedIndex];
+        handleSelect(target.value, target.disabled);
+      }
+    }
+  };
+
+  return (
+    <div className={`au-form-group ${className}`} style={style} ref={containerRef}>
+      {label && <label className="au-label" htmlFor={id}>{label}</label>}
+      <div className="au-select-wrapper">
+        <button
+          type="button"
+          id={id}
+          name={name}
+          aria-label={ariaLabel || label || placeholder}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          disabled={disabled}
+          onClick={handleToggle}
+          onKeyDown={handleKeyDown}
+          className={`au-select-trigger ${isOpen ? 'is-open' : ''}`}
+        >
+          <span className="au-select-trigger-text">
+            {selectedOption ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                {selectedOption.icon}
+                <span>{selectedOption.label}</span>
+                {selectedOption.badge && <span className="au-select-option-badge">{selectedOption.badge}</span>}
+              </span>
+            ) : (
+              <span style={{ color: 'var(--text-muted)' }}>{placeholder}</span>
+            )}
+          </span>
+          <span className="au-select-trigger-chevron">▼</span>
+        </button>
+
+        {isOpen && (
+          <div className="au-select-dropdown" role="listbox">
+            {isSearchEnabled && (
+              <div className="au-select-search-box">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  className="au-select-search-input"
+                  placeholder="Filter options..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setHighlightedIndex(0);
+                  }}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
+            )}
+            <ul className="au-select-options-list">
+              {filteredOptions.length === 0 ? (
+                <li style={{ padding: '0.6rem 0.85rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                  No matching options found
+                </li>
+              ) : (
+                filteredOptions.map((opt, idx) => {
+                  const isSelected = opt.value === value;
+                  const isFocused = idx === highlightedIndex;
+                  return (
+                    <li
+                      key={opt.value}
+                      role="option"
+                      aria-selected={isSelected}
+                      className={`au-select-option ${isSelected ? 'is-selected' : ''} ${isFocused ? 'is-focused' : ''} ${opt.disabled ? 'is-disabled' : ''}`}
+                      onClick={() => handleSelect(opt.value, opt.disabled)}
+                      onMouseEnter={() => setHighlightedIndex(idx)}
+                    >
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                        {isSelected && <span style={{ color: 'var(--accent-mint)', fontSize: '0.75rem' }}>✓</span>}
+                        {opt.icon}
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                          {opt.label}
+                        </span>
+                      </span>
+                      {opt.badge && <span className="au-select-option-badge">{opt.badge}</span>}
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ==========================================================================
+   7d. VALIDATED INPUT WITH CHAR COUNT & SYNTAX PILLS (.au-validated-input-*)
+   ========================================================================== */
+export const AuValidatedInput: React.FC<AuValidatedInputProps> = ({
+  value,
+  onChange,
+  label,
+  validator,
+  maxLen,
+  showCharCount = true,
+  autoSanitize,
+  error: customError,
+  warning: customWarning,
+  hint,
+  id,
+  className = '',
+  disabled,
+  placeholder,
+  ...rest
+}) => {
+  const [internalError, setInternalError] = useState<string>('');
+  const [internalWarning, setInternalWarning] = useState<string>('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let raw = e.target.value;
+    if (autoSanitize) {
+      raw = sanitizeInput(raw, autoSanitize);
+    }
+    onChange(raw);
+
+    if (validator) {
+      const result = validator(raw);
+      setInternalError(result.errors?.[0] || '');
+      setInternalWarning(result.warnings?.[0] || '');
+    }
+  };
+
+  const activeError = customError || internalError || (maxLen && value.length > maxLen ? `Exceeds max length (${value.length}/${maxLen})` : '');
+  const activeWarning = customWarning || internalWarning;
+  const isInvalid = Boolean(activeError);
+
+  const charCountFraction = maxLen ? `${value.length} / ${maxLen}` : `${value.length}`;
+  const isCharWarning = maxLen && value.length > maxLen * 0.85 && value.length <= maxLen;
+  const isCharError = maxLen && value.length > maxLen;
+
+  return (
+    <div className={`au-validated-input-container ${className}`}>
+      {(label || (showCharCount && maxLen)) && (
+        <div className="au-input-header">
+          {label && <label className="au-label" htmlFor={id}>{label}</label>}
+          {showCharCount && maxLen && (
+            <span
+              className={`au-input-char-count ${isCharError ? 'is-error' : isCharWarning ? 'is-warning' : ''}`}
+            >
+              [{charCountFraction}]
+            </span>
+          )}
+        </div>
+      )}
+      <input
+        id={id}
+        value={value}
+        onChange={handleChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        className={`au-input ${isInvalid ? 'au-input-invalid' : value ? 'au-input-valid' : ''}`}
+        {...rest}
+      />
+      {hint && !activeError && !activeWarning && (
+        <span className="au-mono-meta" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{hint}</span>
+      )}
+      {activeError && (
+        <div className="au-input-pill au-input-pill-error">
+          <span>✕</span>
+          <span>{activeError}</span>
+        </div>
+      )}
+      {!activeError && activeWarning && (
+        <div className="au-input-pill au-input-pill-warning">
+          <span>⚠</span>
+          <span>{activeWarning}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ==========================================================================
+   7e. TACTICAL HUD CHECKBOX (.au-checkbox)
+   ========================================================================== */
+export const AuCheckbox: React.FC<AuCheckboxProps> = ({
+  id,
+  name,
+  checked,
+  onChange,
+  label,
+  description,
+  badge,
+  disabled = false,
+  className = '',
+  style,
+}) => (
+  <label
+    htmlFor={id}
+    className={`au-checkbox ${className}`}
+    style={{
+      display: 'inline-flex',
+      alignItems: 'flex-start',
+      gap: '8px',
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      opacity: disabled ? 0.5 : 1,
+      ...style,
+    }}
+  >
+    <input
+      type="checkbox"
+      id={id}
+      name={name}
+      checked={checked}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.checked)}
+      className="au-checkbox-input"
+    />
+    {(label || description) && (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {label && <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)' }}>{label}</span>}
+          {badge && <span className="au-badge" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>{badge}</span>}
+        </div>
+        {description && (
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{description}</span>
+        )}
+      </div>
+    )}
+  </label>
+);
+
+/* ==========================================================================
+   7f. QUICK-INSERT TOKEN CHIP (.au-token-chip)
+   ========================================================================== */
+export const AuTokenChip: React.FC<AuTokenChipProps> = ({
+  token,
+  example,
+  description,
+  onInsert,
+  className = '',
+}) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleClick = () => {
+    if (onInsert) {
+      onInsert(token);
+    } else {
+      navigator.clipboard.writeText(token);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className={`au-token-chip token-chip-btn ${className}`}
+      title={description ? `${description}${example ? ` -> Example: ${example}` : ''}` : `Insert token ${token}`}
+      onClick={handleClick}
+    >
+      <span className="token-chip-badge">{token}</span>
+      {example && <span className="token-chip-example">({example})</span>}
+      <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: '2px' }}>
+        {copied ? '✓' : '⧉'}
+      </span>
+    </button>
+  );
+};
+
+/* ==========================================================================
+   7g. STANDARDIZED ACTION BUTTON (.au-icon-btn)
+   ========================================================================== */
+export const AuIconButton: React.FC<AuIconButtonProps> = ({
+  icon,
+  variant = 'default',
+  title,
   className = '',
   disabled,
   ...rest
-}) => (
-  <div className="au-form-group">
-    {label && <label className="au-label">{label}</label>}
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
+}) => {
+  const variantClass = variant === 'danger' ? 'btn-danger' : variant === 'primary' ? 'au-btn-primary' : '';
+  return (
+    <button
+      type="button"
+      title={title}
       disabled={disabled}
-      className={`au-select ${className}`}
+      className={`btn-icon ${variantClass} ${className}`}
       {...rest}
     >
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value} disabled={opt.disabled}>
-          {opt.label} {opt.badge ? `(${opt.badge})` : ''}
-        </option>
-      ))}
-    </select>
-  </div>
-);
+      {icon}
+    </button>
+  );
+};
+
 
 /* ==========================================================================
    7d. EXPAND / COLLAPSE ALL TOGGLE BUTTON (.au-expand-collapse-btn)

@@ -64,7 +64,7 @@ export default function RootLayout({ children }) {
 }
 \`\`\`
 
-### 3. Use Typed React Primitives
+### 3. Use Typed React Primitives & Validators
 \`\`\`typescript
 import {
   AuHudCard,
@@ -72,9 +72,14 @@ import {
   AuButton,
   AuBadge,
   AuModal,
-  AuTelemetryStrip,
+  AuSelect,
+  AuValidatedInput,
+  AuCheckbox,
+  AuTokenChip,
   AuCodeViewer,
-  AuValidationBox
+  validateTagKey,
+  validateTagAllowedValues,
+  validateNamingPattern
 } from './theme';
 
 export function Dashboard() {
@@ -85,11 +90,18 @@ export function Dashboard() {
       meta="4 Management Groups · 42 Policies Enforced"
       action={<AuButton variant="primary" size="sm">Export IaC</AuButton>}
     >
-      <p>All core infrastructure policies are currently in enforce mode.</p>
+      <AuSelect
+        label="Environment Tier"
+        value="prod"
+        onChange={(val) => console.log(val)}
+        options={['prod', 'nonprod', 'dev', 'stage']}
+      />
     </AuHudCard>
   );
 }
 \`\`\`
+
+
 
 ## 🎨 Design Tokens & Visual Architecture
 - **Palette**: Deep Petrol canvas (\`#06252D\`), surface (\`#12323E\`), elevated (\`#16404C\`), and tactical accents (\`#48A9A6\` teal, \`#64BA6D\` mint, \`#249D79\` HUD emerald).

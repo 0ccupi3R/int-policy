@@ -290,7 +290,30 @@
   font-size: 0.78rem;
 }
 
+.btn-danger {
+  background: var(--status-danger-bg) !important;
+  color: var(--accent-rose) !important;
+  border-color: var(--status-danger-border) !important;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(230, 92, 92, 0.22) !important;
+  border-color: var(--accent-rose) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 10px rgba(230, 92, 92, 0.3) !important;
+}
+
+.btn-icon {
+  padding: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+}
+
 /* Form Controls */
+
 .form-input {
   width: 100%;
   padding: 0.55rem 0.8rem;

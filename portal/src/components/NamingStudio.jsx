@@ -17,7 +17,15 @@ import {
   saveCustomTemplate,
   deleteCustomTemplate
 } from "../data/namingTemplates.js";
-import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton } from "../theme";
+import {
+  AuHudCard,
+  AuButton,
+  AuBadge,
+  AuExpandCollapseButton,
+  AuSelect,
+  AuTokenChip,
+  validateNamingPattern,
+} from "../theme";
 
 import {
   Layers,
@@ -589,18 +597,16 @@ export function NamingStudio({
           <span className="form-label" style={{ marginBottom: "8px" }}>Quick-Insert Tokens</span>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {AVAILABLE_TOKENS.map((t) => (
-              <button
+              <AuTokenChip
                 key={t.token}
-                className="token-chip-btn"
-                title={`${t.description} -> Example: ${t.example}`}
-                onClick={() => {
-                  navigator.clipboard.writeText(t.token);
-                  onShowToast(`Copied token ${t.token} to clipboard!`);
+                token={t.token}
+                example={t.example}
+                description={t.description}
+                onInsert={(tok) => {
+                  navigator.clipboard.writeText(tok);
+                  onShowToast(`Copied token ${tok} to clipboard!`);
                 }}
-              >
-                <span>{t.token}</span>
-                <span style={{ opacity: 0.6, fontSize: "0.75rem", marginLeft: "4px" }}>({t.example})</span>
-              </button>
+              />
             ))}
           </div>
         </div>
@@ -626,84 +632,64 @@ export function NamingStudio({
           </AuButton>
         }
       >
-        <div style={{ display: "grid", gridTemplateColumns: isTestVm ? "180px 150px 120px 140px 1fr" : "180px 120px 140px 1fr", gap: "12px", alignItems: "center" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isTestVm ? "220px 170px 170px 150px 1fr" : "220px 170px 150px 1fr", gap: "12px", alignItems: "flex-end" }}>
           <div>
-            <label className="form-label" htmlFor="sandbox-resource-type">Resource Type</label>
-            <select
+            <AuSelect
               id="sandbox-resource-type"
-              name="sandbox_resource_type"
-              aria-label="Select resource type to test in sandbox"
-              className="form-input form-input-mono"
+              label="Resource Type"
+              searchable={true}
               value={testTypeKey}
-              onChange={(e) => setTestTypeKey(e.target.value)}
-            >
-              {catalog.map((c) => (
-                <option key={c.key} value={c.key}>
-                  {c.name} ({c.abbreviation})
-                </option>
-              ))}
-            </select>
+              onChange={setTestTypeKey}
+              options={catalog.map((c) => ({
+                value: c.key,
+                label: c.name,
+                badge: c.abbreviation
+              }))}
+            />
           </div>
 
           {isTestVm && (
             <div>
-              <label className="form-label" htmlFor="sandbox-os-type">OS Platform</label>
-              <select
+              <AuSelect
                 id="sandbox-os-type"
-                name="sandbox_os_type"
-                aria-label="Select OS platform for VM sandbox"
-                className="form-input form-input-mono"
+                label="OS Platform"
                 value={testOsType}
-                onChange={(e) => setTestOsType(e.target.value)}
-                style={{
-                  borderColor: testOsType === "Windows" ? "var(--accent-teal)" : "var(--accent-mint)",
-                  fontWeight: "600"
-                }}
-              >
-                <option value="Windows">🪟 Windows (15 max)</option>
-                <option value="Linux">🐧 Linux (64 max)</option>
-              </select>
+                onChange={setTestOsType}
+                options={[
+                  { value: "Windows", label: "Windows (15 max)", badge: "🪟 Win" },
+                  { value: "Linux", label: "Linux (64 max)", badge: "🐧 Lnx" }
+                ]}
+              />
             </div>
           )}
 
           <div>
-            <label className="form-label" htmlFor="sandbox-region">Region</label>
-            <select
+            <AuSelect
               id="sandbox-region"
-              name="sandbox_region"
-              aria-label="Select Azure region for sandbox test"
-              className="form-input form-input-mono"
+              label="Region"
               value={testRegion}
-              onChange={(e) => setTestRegion(e.target.value)}
-            >
-              {Object.entries(customer.regions || {}).map(([loc, code]) => (
-                <option key={loc} value={code}>
-                  {loc} ({code})
-                </option>
-              ))}
-            </select>
+              onChange={setTestRegion}
+              options={Object.entries(customer.regions || {}).map(([loc, code]) => ({
+                value: code,
+                label: loc,
+                badge: code
+              }))}
+            />
           </div>
 
           <div>
-            <label className="form-label" htmlFor="sandbox-purpose">Purpose</label>
-            <select
+            <AuSelect
               id="sandbox-purpose"
-              name="sandbox_purpose"
-              aria-label="Select purpose token for sandbox test"
-              className="form-input form-input-mono"
+              label="Purpose"
               value={testPurpose}
-              onChange={(e) => setTestPurpose(e.target.value)}
-            >
-              {(customer.purposes && customer.purposes.length > 0
+              onChange={setTestPurpose}
+              options={(customer.purposes && customer.purposes.length > 0
                 ? customer.purposes
                 : ["hub", "core", "monitoring", "infrafw", "apps"]
-              ).map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+              ).map((p) => ({ value: p, label: p }))}
+            />
           </div>
+
 
           <div>
             <label className="form-label" htmlFor="sandbox-test-name">Test Candidate Name</label>
@@ -923,21 +909,16 @@ export function NamingStudio({
             </div>
 
             {/* Category Filter */}
-            <select
-              id="naming-category-filter"
-              name="category_filter"
-              aria-label="Filter resource types by category"
-              className="form-input"
-              style={{ width: "auto", fontSize: "0.85rem" }}
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+            <div style={{ minWidth: "180px" }}>
+              <AuSelect
+                id="naming-category-filter"
+                aria-label="Filter resource types by category"
+                value={selectedCategory}
+                onChange={setSelectedCategory}
+                options={categories.map((cat) => ({ value: cat, label: cat }))}
+              />
+            </div>
+
 
             <AuExpandCollapseButton
               allExpanded={allCategoriesExpanded}
@@ -1027,6 +1008,7 @@ export function NamingStudio({
 
             const sampleVal = validateAzurePlatformConstraints(sampleName, meta, { osType: effectiveOsType });
             const structVal = validatePatternStructure(pattern, meta, { osType: effectiveOsType });
+            const tokenSyntaxVal = validateNamingPattern(pattern);
             const hasError = !isUnrestricted && (!sampleVal.valid || !structVal.valid);
             const autoFixSuggestion = hasError && !isVm ? autoFixPatternForResource(pattern, meta) : null;
             const charCount = sampleName ? sampleName.length : 0;
@@ -1242,6 +1224,13 @@ export function NamingStudio({
                       value={pattern}
                       onChange={(e) => handlePatternChange(patternKey, e.target.value)}
                     />
+
+                    {tokenSyntaxVal && tokenSyntaxVal.warnings.length > 0 && (
+                      <div className="au-input-pill au-input-pill-warning" style={{ marginTop: "6px" }}>
+                        <span>⚠</span>
+                        <span>{tokenSyntaxVal.warnings[0]}</span>
+                      </div>
+                    )}
 
                     {/* Constraint Error Callout */}
                     {hasError && (

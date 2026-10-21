@@ -16,6 +16,7 @@ Thumbs.db
 # Temp & scratch files
 *.tmp
 *.log
+scratch/
 portal/scratch/
 __pycache__/
 *.pyc

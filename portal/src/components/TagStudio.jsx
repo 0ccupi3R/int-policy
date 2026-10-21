@@ -18,8 +18,17 @@ import {
   RefreshCw,
   KeyRound
 } from "lucide-react";
-import { BASELINE_TAGS } from "../data/baselineTags.js";
-import { AuHudCard, AuButton, AuBadge, AuModal } from "../theme";
+import {
+  AuHudCard,
+  AuButton,
+  AuBadge,
+  AuModal,
+  AuSelect,
+  AuCheckbox,
+  AuIconButton,
+  validateTagKey,
+  validateTagAllowedValues
+} from "../theme";
 
 
 /**
@@ -36,6 +45,8 @@ function TagAllowedValuesEditor({ allowedValues = [], isRequired, activeScope, i
       setText((allowedValues || []).join(", "));
     }
   }, [allowedValues, isFocused]);
+
+  const validation = validateTagAllowedValues(text);
 
   const handleChange = (e) => {
     const rawVal = e.target.value;
@@ -67,20 +78,25 @@ function TagAllowedValuesEditor({ allowedValues = [], isRequired, activeScope, i
 
   return (
     <div>
-      <label className="form-label" htmlFor={`tag-values-${activeScope}-${idx}`}>
-        Allowed Values (Comma-Separated)
-        {!isRequired && (
-          <span style={{ color: "var(--accent-amber)", fontSize: "0.75rem", marginLeft: "8px" }}>
-            (Automatically accepts "NA")
-          </span>
-        )}
-      </label>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <label className="form-label" htmlFor={`tag-values-${activeScope}-${idx}`}>
+          Allowed Values (Comma-Separated)
+          {!isRequired && (
+            <span style={{ color: "var(--accent-amber)", fontSize: "0.75rem", marginLeft: "8px" }}>
+              (Automatically accepts "NA")
+            </span>
+          )}
+        </label>
+        <span className="au-mono-meta" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+          {allowedValues.length} items
+        </span>
+      </div>
       <input
         id={`tag-values-${activeScope}-${idx}`}
         name={`tag_values_${activeScope}_${idx}`}
         aria-label={`Allowed values for tag ${tagKey || idx + 1}`}
         type="text"
-        className="form-input"
+        className={`form-input ${!validation.valid ? "au-input-invalid" : ""}`}
         value={text}
         onFocus={() => setIsFocused(true)}
         onBlur={handleBlur}
@@ -93,6 +109,20 @@ function TagAllowedValuesEditor({ allowedValues = [], isRequired, activeScope, i
         }}
         placeholder="Prod, NonProd, Dev, Stage"
       />
+
+      {/* Syntax Error / Warning Pills */}
+      {!validation.valid && validation.errors.length > 0 && (
+        <div className="au-input-pill au-input-pill-error">
+          <span>✕</span>
+          <span>{validation.errors[0]}</span>
+        </div>
+      )}
+      {validation.valid && validation.warnings.length > 0 && (
+        <div className="au-input-pill au-input-pill-warning">
+          <span>⚠</span>
+          <span>{validation.warnings[0]}</span>
+        </div>
+      )}
 
       {/* Badges Preview of Allowed Values with interactive remove */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", marginTop: "8px" }}>
@@ -299,11 +329,12 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
   const handleSaveTagModal = (e) => {
     if (e) e.preventDefault();
 
-    const trimmedKey = tagFormData.key.trim();
-    if (!trimmedKey) {
-      setTagModalError("Please enter a Tag Key Name.");
+    const keyVal = validateTagKey(tagFormData.key);
+    if (!keyVal.valid) {
+      setTagModalError(keyVal.errors[0]);
       return;
     }
+    const trimmedKey = keyVal.sanitized || tagFormData.key.trim();
 
     const selectedScopeKeys = Object.entries(tagFormData.scopes)
       .filter(([_, enabled]) => enabled)
@@ -314,10 +345,12 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
       return;
     }
 
-    const parsedValues = tagFormData.allowedValuesText
-      .split(",")
-      .map((v) => v.trim())
-      .filter((v) => v.length > 0);
+    const valVal = validateTagAllowedValues(tagFormData.allowedValuesText);
+    if (!valVal.valid) {
+      setTagModalError(valVal.errors[0]);
+      return;
+    }
+    const parsedValues = valVal.sanitized;
 
     const newTag = {
       key: trimmedKey,
@@ -774,33 +807,23 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                   (tags.subscription || []).map((t) => {
                     const isChecked = (tagInheritance.subToRg || []).includes(t.key);
                     return (
-                      <label
+                      <div
                         key={t.key}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          padding: "8px 12px",
-                          borderRadius: "6px",
-                          background: isChecked ? "rgba(0, 120, 212, 0.12)" : "rgba(255, 255, 255, 0.03)",
-                          border: isChecked ? "1px solid rgba(0, 120, 212, 0.4)" : "1px solid var(--border-subtle)",
-                          cursor: "pointer"
-                        }}
+                        className={`au-selection-row ${isChecked ? "is-checked" : ""}`}
+                        onClick={() => handleToggleSubToRg(t.key)}
                       >
-                        <input
+                        <AuCheckbox
                           id={`chk-sub-rg-${t.key}`}
-                          name={`chk_sub_rg_${t.key}`}
-                          type="checkbox"
                           checked={isChecked}
                           onChange={() => handleToggleSubToRg(t.key)}
                         />
                         <div style={{ fontSize: "0.82rem" }}>
-                          <strong>{t.key}</strong>
+                          <strong style={{ color: "var(--text-primary)" }}>{t.key}</strong>
                           <div style={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>
-                            Allowed: {(t.allowedValues || []).slice(0, 2).join(", ")}...
+                            Allowed: {(t.allowedValues || []).slice(0, 3).join(", ")}
                           </div>
                         </div>
-                      </label>
+                      </div>
                     );
                   })
                 )}
@@ -826,33 +849,23 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                   (tags.resourceGroup || []).map((t) => {
                     const isChecked = (tagInheritance.rgToResource || []).includes(t.key);
                     return (
-                      <label
+                      <div
                         key={t.key}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          padding: "8px 12px",
-                          borderRadius: "6px",
-                          background: isChecked ? "rgba(16, 185, 129, 0.12)" : "rgba(255, 255, 255, 0.03)",
-                          border: isChecked ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid var(--border-subtle)",
-                          cursor: "pointer"
-                        }}
+                        className={`au-selection-row ${isChecked ? "is-checked" : ""}`}
+                        onClick={() => handleToggleRgToRes(t.key)}
                       >
-                        <input
+                        <AuCheckbox
                           id={`chk-rg-res-${t.key}`}
-                          name={`chk_rg_res_${t.key}`}
-                          type="checkbox"
                           checked={isChecked}
                           onChange={() => handleToggleRgToRes(t.key)}
                         />
                         <div style={{ fontSize: "0.82rem" }}>
-                          <strong>{t.key}</strong>
+                          <strong style={{ color: "var(--text-primary)" }}>{t.key}</strong>
                           <div style={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>
-                            Allowed: {(t.allowedValues || []).slice(0, 2).join(", ")}...
+                            Allowed: {(t.allowedValues || []).slice(0, 3).join(", ")}
                           </div>
                         </div>
-                      </label>
+                      </div>
                     );
                   })
                 )}
@@ -878,38 +891,29 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
                   (tags.resource || []).map((t) => {
                     const isChecked = (tagInheritance.defaultResourceNA || []).includes(t.key);
                     return (
-                      <label
+                      <div
                         key={t.key}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          padding: "8px 12px",
-                          borderRadius: "6px",
-                          background: isChecked ? "rgba(245, 158, 11, 0.12)" : "rgba(255, 255, 255, 0.03)",
-                          border: isChecked ? "1px solid rgba(245, 158, 11, 0.4)" : "1px solid var(--border-subtle)",
-                          cursor: "pointer"
-                        }}
+                        className={`au-selection-row ${isChecked ? "is-checked" : ""}`}
+                        onClick={() => handleToggleDefaultNA(t.key)}
                       >
-                        <input
+                        <AuCheckbox
                           id={`chk-res-na-${t.key}`}
-                          name={`chk_res_na_${t.key}`}
-                          type="checkbox"
                           checked={isChecked}
                           onChange={() => handleToggleDefaultNA(t.key)}
                         />
                         <div style={{ fontSize: "0.82rem" }}>
-                          <strong>{t.key}</strong>
+                          <strong style={{ color: "var(--text-primary)" }}>{t.key}</strong>
                           <div style={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>
                             Defaults to: <span style={{ color: "var(--accent-amber)" }}>"NA"</span>
                           </div>
                         </div>
-                      </label>
+                      </div>
                     );
                   })
                 )}
               </div>
             </div>
+
           </div>
 
           {/* Regional Geo-Boundary Lockdown (Canada Central & Canada East) */}
@@ -928,24 +932,25 @@ export function TagStudio({ customer, onUpdateCustomer, onShowToast, onNavigateT
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <select
-                  id="geo-restrictions-effect"
-                  name="geo_restrictions_effect"
-                  aria-label="Regional Geo-Boundary policy effect"
-                  className="form-select form-select-sm"
-                  style={{ width: "110px" }}
-                  value={geoRestrictions.effect || "Audit"}
-                  onChange={(e) =>
-                    handleUpdateGeoRestrictions({
-                      ...geoRestrictions,
-                      effect: e.target.value
-                    })
-                  }
-                >
-                  <option value="Audit">Audit</option>
-                  <option value="Deny">Deny</option>
-                  <option value="Disabled">Disabled</option>
-                </select>
+                <div style={{ width: "130px" }}>
+                  <AuSelect
+                    id="geo-restrictions-effect"
+                    aria-label="Regional Geo-Boundary policy effect"
+                    value={geoRestrictions.effect || "Audit"}
+                    onChange={(val) =>
+                      handleUpdateGeoRestrictions({
+                        ...geoRestrictions,
+                        effect: val
+                      })
+                    }
+                    options={[
+                      { value: "Audit", label: "Audit" },
+                      { value: "Deny", label: "Deny" },
+                      { value: "Disabled", label: "Disabled" }
+                    ]}
+                  />
+                </div>
+
 
                 <button
                   className={`btn btn-sm ${geoRestrictions.enabled ? "btn-primary" : "btn-secondary"}`}

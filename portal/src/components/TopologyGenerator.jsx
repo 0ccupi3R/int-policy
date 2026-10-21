@@ -12,7 +12,7 @@ import {
   validateResourceInput,
   getNextAvailableInstance
 } from "../engine/topologyGenerator.js";
-import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton, AuCodeViewer } from "../theme";
+import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton, AuCodeViewer, AuSelect } from "../theme";
 import {
   Layers,
   Plus,
@@ -1830,46 +1830,38 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
-                      Environment Tier:
-                    </label>
-                    <select
-                      className="input-field"
+                    <AuSelect
+                      label="Environment Tier:"
                       value={subModal.environment}
-                      onChange={(e) => setSubModal({ ...subModal, environment: e.target.value })}
-                      style={{ fontSize: "0.85rem", padding: "6px 10px" }}
-                    >
-                      <option value="prod">Production (prod)</option>
-                      <option value="nonprod">Non-Production (nonprod)</option>
-                      <option value="dev">Development (dev)</option>
-                      <option value="stage">Staging (stage)</option>
-                      <option value="test">Testing (test)</option>
-                    </select>
+                      onChange={(val) => setSubModal({ ...subModal, environment: val })}
+                      options={[
+                        { value: "prod", label: "Production (prod)" },
+                        { value: "nonprod", label: "Non-Production (nonprod)" },
+                        { value: "dev", label: "Development (dev)" },
+                        { value: "stage", label: "Staging (stage)" },
+                        { value: "test", label: "Testing (test)" }
+                      ]}
+                    />
                   </div>
                 </div>
 
                 {/* Location / Region */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
-                    Default Deployment Region:
-                  </label>
-                  <select
-                    className="input-field"
+                  <AuSelect
+                    label="Default Deployment Region:"
                     value={subModal.location}
-                    onChange={(e) => setSubModal({ ...subModal, location: e.target.value })}
-                    style={{ fontSize: "0.85rem", padding: "6px 10px" }}
-                  >
-                    {customer.regions ? (
-                      Object.entries(customer.regions).map(([regKey, code]) => (
-                        <option key={regKey} value={regKey}>
-                          {regKey} ({code})
-                        </option>
-                      ))
+                    onChange={(val) => setSubModal({ ...subModal, location: val })}
+                    options={customer.regions ? (
+                      Object.entries(customer.regions).map(([regKey, code]) => ({
+                        value: regKey,
+                        label: `${regKey} (${code})`
+                      }))
                     ) : (
-                      <option value="canadacentral">canadacentral (cc)</option>
+                      [{ value: "canadacentral", label: "canadacentral (cc)" }]
                     )}
-                  </select>
+                  />
                 </div>
+
 
                 {/* Real-time Preview & Validation Card */}
                 <div
@@ -2061,46 +2053,38 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                 {/* Optional Name Override & Region */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
-                      Region:
-                    </label>
-                    <select
-                      className="input-field"
+                  <div>
+                    <AuSelect
+                      label="Region:"
                       value={rgModal.location}
-                      onChange={(e) => setRgModal({ ...rgModal, location: e.target.value })}
-                      style={{ fontSize: "0.85rem", padding: "6px 10px" }}
-                    >
-                      {customer.regions ? (
-                        Object.entries(customer.regions).map(([regKey, code]) => (
-                          <option key={regKey} value={regKey}>
-                            {regKey} ({code})
-                          </option>
-                        ))
+                      onChange={(val) => setRgModal({ ...rgModal, location: val })}
+                      options={customer.regions ? (
+                        Object.entries(customer.regions).map(([regKey, code]) => ({
+                          value: regKey,
+                          label: `${regKey} (${code})`
+                        }))
                       ) : (
-                        <option value="canadacentral">canadacentral (cc)</option>
+                        [{ value: "canadacentral", label: "canadacentral (cc)" }]
                       )}
-                    </select>
+                    />
                   </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
-                      Initial Resource:
-                    </label>
-                    <select
-                      className="input-field"
+                  <div>
+                    <AuSelect
+                      label="Initial Resource:"
                       value={rgModal.initialResourceType}
-                      onChange={(e) => setRgModal({ ...rgModal, initialResourceType: e.target.value })}
-                      style={{ fontSize: "0.85rem", padding: "6px 10px" }}
-                    >
-                      <option value="vnet">Virtual Network (vnet)</option>
-                      <option value="storage">Storage Account (storage)</option>
-                      <option value="vm">Virtual Machine (vm)</option>
-                      <option value="kv">Key Vault (kv)</option>
-                      <option value="none">None (Empty Resource Group)</option>
-                    </select>
+                      onChange={(val) => setRgModal({ ...rgModal, initialResourceType: val })}
+                      options={[
+                        { value: "vnet", label: "Virtual Network (vnet)" },
+                        { value: "storage", label: "Storage Account (storage)" },
+                        { value: "vm", label: "Virtual Machine (vm)" },
+                        { value: "kv", label: "Key Vault (kv)" },
+                        { value: "none", label: "None (Empty Resource Group)" }
+                      ]}
+                    />
                   </div>
                 </div>
+
 
                 {/* Optional Custom Name Override */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -2313,11 +2297,10 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                       />
                     </div>
 
-                    <select
-                      className="input-field"
+                    <AuSelect
+                      searchable={true}
                       value={resModal.resourceTypeKey}
-                      onChange={(e) => {
-                        const newKey = e.target.value;
+                      onChange={(newKey) => {
                         const nextInst = getNextAvailableInstance(targetRg, newKey, resModal.purpose);
                         setResModal({
                           ...resModal,
@@ -2326,16 +2309,16 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                           osType: newKey === "vm" ? "Windows" : resModal.osType
                         });
                       }}
-                      style={{ fontSize: "0.8rem", fontWeight: "600", fontFamily: "var(--font-mono)", maxWidth: "260px" }}
-                    >
-                      {filteredCatalog.map((catItem) => (
-                        <option key={catItem.key || catItem.id} value={catItem.key || catItem.abbreviation}>
-                          {catItem.name} ({catItem.abbreviation || catItem.key})
-                        </option>
-                      ))}
-                    </select>
+                      options={filteredCatalog.map((catItem) => ({
+                        value: catItem.key || catItem.abbreviation,
+                        label: catItem.name,
+                        badge: catItem.abbreviation || catItem.key
+                      }))}
+                      style={{ maxWidth: "280px" }}
+                    />
                   </div>
                 </div>
+
 
                 {/* Role / Purpose & Instance Number */}
                 <div style={{ display: "grid", gridTemplateColumns: isVm ? "1fr 1fr 1fr" : "1.2fr 1fr", gap: "12px" }}>
@@ -2389,19 +2372,17 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
                   {isVm && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                      <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-main)" }}>
-                        OS Type:
-                      </label>
-                      <select
-                        className="input-field"
+                      <AuSelect
+                        label="OS Type:"
                         value={resModal.osType || "Windows"}
-                        onChange={(e) => setResModal({ ...resModal, osType: e.target.value })}
-                        style={{ fontSize: "0.8rem", padding: "6px 8px", fontWeight: "600" }}
-                      >
-                        <option value="Windows">🪟 Windows (15 max)</option>
-                        <option value="Linux">🐧 Linux (64 max)</option>
-                      </select>
+                        onChange={(val) => setResModal({ ...resModal, osType: val })}
+                        options={[
+                          { value: "Windows", label: "Windows (15 max)", badge: "🪟 Win" },
+                          { value: "Linux", label: "Linux (64 max)", badge: "🐧 Lnx" }
+                        ]}
+                      />
                     </div>
+
                   )}
                 </div>
 

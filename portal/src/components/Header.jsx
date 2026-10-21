@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ShieldCheck, Download, Plus, Settings, Archive, Sparkles, ChevronDown, Sun, Moon } from "lucide-react";
 import { downloadBicepFile, downloadZipBundle } from "../engine/bundleExporter.js";
-import { AuButton, AuBadge, AuDropdown } from "../theme";
+import { AuButton, AuBadge, AuDropdown, AuSelect } from "../theme";
 
 export function Header({
   customers,
@@ -57,21 +57,20 @@ export function Header({
       <div className="header-actions">
         {/* Customer Workspace Selector */}
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <select
-            id="active-customer-select"
-            name="active_customer_id"
-            aria-label="Active customer workspace selector"
-            className="form-input form-input-mono"
-            style={{ width: "auto", minWidth: "170px", cursor: "pointer", fontWeight: "600", padding: "0.45rem 0.75rem" }}
-            value={activeCustomer.id}
-            onChange={(e) => onSelectCustomer(e.target.value)}
-          >
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.subscriptionCode})
-              </option>
-            ))}
-          </select>
+          <div style={{ minWidth: "190px" }}>
+            <AuSelect
+              id="active-customer-select"
+              aria-label="Active customer workspace selector"
+              value={activeCustomer.id}
+              onChange={onSelectCustomer}
+              options={customers.map((c) => ({
+                value: c.id,
+                label: c.name,
+                badge: c.subscriptionCode
+              }))}
+            />
+          </div>
+
 
           <AuButton
             variant="secondary"

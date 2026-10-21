@@ -149,14 +149,63 @@ export interface AuSelectOption {
   value: string;
   label: string;
   badge?: string;
+  icon?: ReactNode;
   disabled?: boolean;
 }
 
-export interface AuSelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
-  options: AuSelectOption[];
+export interface AuSelectProps {
+  options: (AuSelectOption | string)[];
   value: string;
   onChange: (value: string) => void;
+  id?: string;
+  name?: string;
   label?: string;
+  placeholder?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  disabled?: boolean;
+  searchable?: boolean;
+  'aria-label'?: string;
+}
+
+export interface AuValidatedInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+  value: string;
+  onChange: (val: string) => void;
+  label?: string;
+  validator?: (val: string) => { valid: boolean; errors: string[]; warnings: string[] };
+  maxLen?: number;
+  showCharCount?: boolean;
+  autoSanitize?: 'alphanumeric' | 'tag-key' | 'tag-value' | 'pattern';
+  error?: string;
+  warning?: string;
+  hint?: string;
+}
+
+export interface AuCheckboxProps {
+  id?: string;
+  name?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label?: ReactNode;
+  description?: ReactNode;
+  badge?: string;
+  disabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export interface AuTokenChipProps {
+  token: string;
+  example?: string;
+  description?: string;
+  onInsert?: (token: string) => void;
+  className?: string;
+}
+
+export interface AuIconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  icon: ReactNode;
+  variant?: 'default' | 'primary' | 'danger' | 'ghost';
+  title?: string;
   className?: string;
 }
 
@@ -167,4 +216,5 @@ export interface AuExpandCollapseButtonProps {
   collapseText?: string;
   className?: string;
 }
+
 

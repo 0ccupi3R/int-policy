@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Building2, MapPin, Sliders, Save, Trash2 } from "lucide-react";
-import { AuModal, AuButton } from "../theme";
+import { AuModal, AuButton, AuSelect } from "../theme";
 
 export function CustomerWorkspaceModal({
   isOpen,
@@ -315,50 +315,48 @@ export function CustomerWorkspaceModal({
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
             <div>
-              <label className="form-label" htmlFor="cust-naming-effect">Naming Effect</label>
-              <select
+              <AuSelect
                 id="cust-naming-effect"
-                name="naming_effect"
-                className="form-input form-input-mono"
+                label="Naming Effect"
                 value={formData.namingEffect}
-                onChange={(e) => setFormData({ ...formData, namingEffect: e.target.value })}
-              >
-                <option value="Audit">Audit (Safe)</option>
-                <option value="Deny">Deny (Enforce)</option>
-                <option value="Disabled">Disabled</option>
-              </select>
+                onChange={(val) => setFormData({ ...formData, namingEffect: val })}
+                options={[
+                  { value: "Audit", label: "Audit (Safe)" },
+                  { value: "Deny", label: "Deny (Enforce)" },
+                  { value: "Disabled", label: "Disabled" }
+                ]}
+              />
             </div>
 
             <div>
-              <label className="form-label" htmlFor="cust-subnet-effect">Subnet Effect</label>
-              <select
+              <AuSelect
                 id="cust-subnet-effect"
-                name="subnet_effect"
-                className="form-input form-input-mono"
+                label="Subnet Effect"
                 value={formData.subnetEffect}
-                onChange={(e) => setFormData({ ...formData, subnetEffect: e.target.value })}
-              >
-                <option value="Audit">Audit (Safe)</option>
-                <option value="Deny">Deny (Enforce)</option>
-                <option value="Disabled">Disabled</option>
-              </select>
+                onChange={(val) => setFormData({ ...formData, subnetEffect: val })}
+                options={[
+                  { value: "Audit", label: "Audit (Safe)" },
+                  { value: "Deny", label: "Deny (Enforce)" },
+                  { value: "Disabled", label: "Disabled" }
+                ]}
+              />
             </div>
 
             <div>
-              <label className="form-label" htmlFor="cust-tag-effect">Tag Effect</label>
-              <select
+              <AuSelect
                 id="cust-tag-effect"
-                name="tag_effect"
-                className="form-input form-input-mono"
+                label="Tag Effect"
                 value={formData.tagEffect}
-                onChange={(e) => setFormData({ ...formData, tagEffect: e.target.value })}
-              >
-                <option value="Audit">Audit (Safe)</option>
-                <option value="Deny">Deny (Enforce)</option>
-                <option value="Disabled">Disabled</option>
-              </select>
+                onChange={(val) => setFormData({ ...formData, tagEffect: val })}
+                options={[
+                  { value: "Audit", label: "Audit (Safe)" },
+                  { value: "Deny", label: "Deny (Enforce)" },
+                  { value: "Disabled", label: "Disabled" }
+                ]}
+              />
             </div>
           </div>
+
         </div>
       </form>
     </AuModal>

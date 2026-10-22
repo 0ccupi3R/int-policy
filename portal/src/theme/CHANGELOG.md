@@ -14,7 +14,7 @@ All notable updates to this portable design system are documented here so AI age
 - Tactical HUD Cyber-Physical fusion (corner reticles, 22px radial dot matrix, Spectral serif + IBM Plex fonts).
 - `<AuHudCard>`, `<AuSelect>`, `<AuValidatedInput>`, `<AuCheckbox>`, `<AuTokenChip>`, `<AuModal>`, `<AuCodeViewer>`, and `<AuExpandCollapseButton>`.
 - Centralized input validation engine (`inputValidators.ts`).
-- Standalone packaging script `build-theme-pack.mjs` generating `apisec-theme-pack.zip`.
+- Standalone packaging script `build-tactical-ui.mjs` generating `tactical-ui.zip`.
 
 ## [1.0.0] - 2026-10-21
 ### Added

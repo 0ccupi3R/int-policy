@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "npm run dev --prefix portal",
     "build": "npm run build --prefix portal",
+    "build:theme": "node build-tactical-ui.mjs",
     "preview": "npm run preview --prefix portal",
     "test:offline": "python3 tools/generate.py && python3 tests/offline.py",
     "test:regression": "python3 tests/regression.py"

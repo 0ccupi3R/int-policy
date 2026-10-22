@@ -2,7 +2,7 @@
 
 :root,
 [data-theme="dark"] {
-  /* apisec|con 2026 Deep Petrol & HUD Tactical Telemetry */
+  /* @0ccupi3r/tactical-ui: Deep Petrol & HUD Tactical Telemetry Palette */
   --bg-canvas: #06252D;
   --bg-surface: #12323E;
   --bg-surface-elevated: #16404C;

@@ -1,6 +1,6 @@
 {
   "name": "@0ccupi3r/tactical-ui",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "Tactical HUD & Editorial Swiss Grid React UI Theme System",
   "main": "index.ts",
@@ -24,6 +24,7 @@
   "author": "0ccupi3R",
   "license": "MIT",
   "peerDependencies": {
+    "lucide-react": ">=1.0.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   }

@@ -1,9 +1,9 @@
-# Common Theme Catalog: Tactical HUD & Editorial Swiss Grid (`apisec-theme`)
+# Common Theme Catalog: Tactical HUD & Editorial Swiss Grid (`@0ccupi3r/tactical-ui`)
 
-> **Version**: 2.1.0  
-> **Source Directory**: `src/theme/`  
-> **Local Package**: `apisec-theme-pack`  
-> **Public Distribution Alias**: `swiss-hud-theme` (MIT License)
+> **Version**: 2.0.0  
+> **Source Directory**: `portal/src/theme/`  
+> **Package**: `@0ccupi3r/tactical-ui` (`tactical-ui/`)  
+> **Portable Archive**: `tactical-ui.zip` (MIT License)
 
 This catalog serves as the central documentation and single source of truth for the portable design system. It details every design token, React primitive, input validator, syntax highlighter, and architectural guideline so this theme can be leveraged across any project.
 
@@ -297,11 +297,11 @@ The entire theme system is completely self-contained in `src/theme/`. It has **0
 ### To migrate this theme to ANY new React/Next.js/Vite project:
 1. Run the packager script:
    ```bash
-   node build-theme-pack.mjs
+   node build-tactical-ui.mjs
    ```
-2. Copy the resulting `apisec-theme-pack/` directory or extract `apisec-theme-pack.zip` into your new project:
+2. Copy the resulting `tactical-ui/` directory or extract `tactical-ui.zip` into your new project:
    ```bash
-   cp -r apisec-theme-pack /path/to/my-new-app/src/theme
+   cp -r tactical-ui /path/to/my-new-app/src/theme
    ```
 3. In your root entry file (`main.tsx` or `app/layout.tsx`):
    ```tsx
@@ -322,39 +322,23 @@ The entire theme system is completely self-contained in `src/theme/`. It has **0
 
 Whenever new UI components, colors, or validators are built:
 1. **Adding a New Color or Token**:
-   - Add the key/value to `src/theme/tokens.json`.
-   - Map it to a CSS variable in `:root` inside `src/theme/theme.css`.
-   - Update `src/theme/tailwind.preset.js` if Tailwind is used.
+   - Add the key/value to `portal/src/theme/tokens.json`.
+   - Map it to a CSS variable in `:root` inside `portal/src/theme/theme.css`.
+   - Update `portal/src/theme/tailwind.preset.js` if Tailwind is used.
 2. **Adding a New Component Primitive**:
-   - Create the component in `src/theme/components.tsx` or as a standalone file in `src/theme/`.
-   - Export its interface and component in `src/theme/index.ts`.
-   - Add matching `.au-*` styles in `src/theme/theme.css`.
+   - Create the component in `portal/src/theme/components.tsx` or as a standalone file in `portal/src/theme/`.
+   - Export its interface and component in `portal/src/theme/index.ts`.
+   - Add matching `.au-*` styles in `portal/src/theme/theme.css`.
 3. **Updating the Pack**:
-   - Log changes in `src/theme/CHANGELOG.md`.
-   - Run `node build-theme-pack.mjs` to keep `apisec-theme-pack.zip` always up-to-date.
+   - Log changes in `portal/src/theme/CHANGELOG.md`.
+   - Run `npm run build:theme` (or `node build-tactical-ui.mjs`) to keep `tactical-ui.zip` always up-to-date.
 
 ---
 
-## 8. Legal & Open Source Licensing Assessment
+## 8. Package Distribution & Licensing
 
-> [!IMPORTANT]
-> ### Can you publicly open-source this as `apisec-theme`?
->
-> **1. Trademark Assessment (APIsec Inc.)**:
-> - **"APIsec"** and **"APIsec University"** are registered trademarks belonging to APIsec Inc.
-> - While you may have drawn design inspiration from conference materials, naming a public repository, npm package, or published library `apisec-theme` or `apisec-*` without written authorization creates a trademark infringement liability (Lanham Act, risk of DMCA or trademark takedowns).
->
-> **2. Code & Design System Copyright**:
-> - The source code, React component implementations, TypeScript types, validation logic, syntax highlighting engine, and HUD CSS rules are original code created in this project.
-> - APIsec Inc. does **not** own this code. You have full legal ownership to use, sell, modify, or open-source this codebase.
->
-> **3. Recommended Strategy (Dual-Naming Architecture)**:
-> - **Private / Local Enterprise Projects**:
->   - Feel free to retain the local directory and package name `apisec-theme` or `apisec-theme-pack` in your private repositories and client projects.
-> - **Public Open-Source Distribution (GitHub / npm)**:
->   - Use an independent, trademark-free name such as:
->     - **`swiss-hud-theme`** (Recommended)
->     - **`tactical-ui`**
->     - **`telemetry-grid-theme`**
->   - Release under the standard **MIT License**.
->   - In the public version, replace conference URLs and brand references with neutral telemetry terminology.
+> [!NOTE]
+> **Open Source / Portability**:
+> - Package name: **`@0ccupi3r/tactical-ui`**
+> - Release license: **MIT License**.
+> - The source code, React component implementations, TypeScript types, validation logic, syntax highlighting engine, and HUD CSS rules are 100% original code. You have full legal ownership to use, distribute, or open-source this library.

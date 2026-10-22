@@ -232,8 +232,8 @@ export function BrownfieldIngestionModal({
     activeScriptTab === "powershell"
       ? DISCOVERY_SCRIPT_POWERSHELL
       : activeScriptTab === "cli"
-      ? DISCOVERY_SCRIPT_CLI
-      : DISCOVERY_SCRIPT_GRAPH;
+        ? DISCOVERY_SCRIPT_CLI
+        : DISCOVERY_SCRIPT_GRAPH;
 
   const handleCopyScript = (scriptText, type) => {
     navigator.clipboard.writeText(scriptText);
@@ -489,25 +489,29 @@ export function BrownfieldIngestionModal({
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
         {/* Step 1: Run Discovery Script */}
+        <label htmlFor="brownfield-json-input" className="form-label" style={{ margin: 0 }}>
+          Step 1: Choose Discovery Method & Run in Azure Cloud Shell / CLI
+          {/* <div>
+            <button
+              type="button"
+              className="au-btn au-btn-primary au-btn-xs"
+              onClick={handleLoadSample}
+            >
+              <Sparkles size={11} />
+              <span>Load Sample Tenant</span>
+            </button>
+          </div> */}
+        </label>
         <div style={{ background: "var(--bg-canvas)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-sm)", padding: "14px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Terminal size={15} style={{ color: "var(--accent-amber)" }} />
-              <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>
+
+              {/* <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>
                 Step 1: Choose Discovery Method & Run in Azure Cloud Shell / CLI
-              </strong>
+              </strong> */}
             </div>
 
-            <div>
-              <button
-                type="button"
-                className="au-btn au-btn-primary au-btn-xs"
-                onClick={handleLoadSample}
-              >
-                <Sparkles size={11} />
-                <span>Load Sample Tenant</span>
-              </button>
-            </div>
+
           </div>
 
           {/* Script Type Selector Tabs */}
@@ -561,8 +565,8 @@ export function BrownfieldIngestionModal({
                     activeScriptTab === "powershell"
                       ? "PowerShell"
                       : activeScriptTab === "cli"
-                      ? "Azure CLI"
-                      : "Resource Graph"
+                        ? "Azure CLI"
+                        : "Resource Graph"
                   )
                 }
               >

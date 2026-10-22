@@ -1,12 +1,12 @@
 # AI Design System Mandate: Technical-Editorial Architecture
 
-You are working inside a project powered by the **apisec-theme-pack** (`src/theme/`).
+You are working inside a project powered by the **@0ccupi3r/tactical-ui** theme system (`portal/src/theme/` or `tactical-ui/`).
 Whenever you create, refactor, or style ANY page, view, dashboard, form, modal, or component, you MUST strictly use this folder's tokens, CSS variables, and React primitives.
 
 ## 1. Single Source of Truth
-- **Tokens:** `src/theme/tokens.json`
-- **Styles & Variables:** `src/theme/theme.css`
-- **React Primitives:** `src/theme/components.tsx` (`AuNavbar`, `AuSection`, `AuKeyValueGrid`, `AuShiftCardGrid`, `AuTierMatrix`, `AuAgendaTrack`, `AuStatStrip`)
+- **Tokens:** `tokens.json`
+- **Styles & Variables:** `theme.css`
+- **React Primitives:** `components.tsx` (`AuHudCard`, `AuTabs`, `AuButton`, `AuBadge`, `AuModal`, `AuSelect`, `AuValidatedInput`, `AuTokenChip`, `AuCodeViewer`, etc.)
 
 ## 2. Core Aesthetic & Architectural Rules
 1. **1px Hairline Grids Over Floating Shadows:**

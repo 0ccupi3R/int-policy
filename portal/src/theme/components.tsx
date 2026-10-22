@@ -853,10 +853,10 @@ export const AuNavbar: React.FC<{
   primaryCtaHref?: string;
   children?: React.ReactNode;
 }> = ({
-  brandPrefix = 'apisec',
-  brandSuffix = 'con',
+  brandPrefix = 'tactical',
+  brandSuffix = 'ui',
   year = '2026',
-  subBrand = 'An apisec University event',
+  subBrand = 'Telemetry Design System',
   secondaryLinkText = 'See the agenda →',
   secondaryLinkHref = '#agenda',
   primaryCtaText = 'Register free',

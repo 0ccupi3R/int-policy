@@ -5,7 +5,7 @@
 
 @import './theme/theme.css';
 
-/* Universal Variable Aliases mapping directly to src/theme/tokens.json */
+/* Universal Variable Aliases mapping directly to ./theme/tokens.json */
 :root {
   --bg-darkest: var(--bg-canvas);
   --bg-primary: var(--bg-surface);

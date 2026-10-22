@@ -95,6 +95,8 @@ export function GuidedStepper({ activeTab, onSelectTab, customer }) {
         {steps.map((step, idx) => {
           const isActive = idx === currentIndex;
           const isCompleted = idx < currentIndex;
+          const themeColor = isBrownfield ? "var(--accent-amber)" : "var(--accent-mint)";
+          const themeTint = isBrownfield ? "var(--accent-amber-tint)" : "var(--accent-mint-tint)";
 
           return (
             <React.Fragment key={step.id}>
@@ -105,18 +107,14 @@ export function GuidedStepper({ activeTab, onSelectTab, customer }) {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  background: isActive
-                    ? (isBrownfield ? "var(--accent-amber-tint)" : "var(--accent-mint-tint)")
-                    : "transparent",
-                  border: isActive
-                    ? (isBrownfield ? "1px solid var(--accent-amber)" : "1px solid var(--accent-mint)")
-                    : "1px solid transparent",
+                  background: isActive ? themeTint : "transparent",
+                  border: isActive ? `1px solid ${themeColor}` : "1px solid transparent",
                   borderRadius: "var(--radius-xs)",
                   padding: "4px 8px",
                   cursor: "pointer",
                   color: isActive
-                    ? (isBrownfield ? "var(--accent-amber)" : "var(--accent-mint)")
-                    : (isCompleted ? "var(--text-secondary)" : "var(--text-muted)"),
+                    ? themeColor
+                    : (isCompleted ? "var(--text-primary)" : "var(--text-muted)"),
                   fontFamily: "var(--font-mono)",
                   fontSize: "0.74rem",
                   transition: "all var(--ease-snappy)"
@@ -124,8 +122,8 @@ export function GuidedStepper({ activeTab, onSelectTab, customer }) {
               >
                 <span
                   style={{
-                    width: "16px",
-                    height: "16px",
+                    width: "18px",
+                    height: "18px",
                     borderRadius: "50%",
                     display: "inline-flex",
                     alignItems: "center",
@@ -133,9 +131,13 @@ export function GuidedStepper({ activeTab, onSelectTab, customer }) {
                     fontSize: "0.68rem",
                     fontWeight: 700,
                     background: isActive
-                      ? (isBrownfield ? "var(--accent-amber)" : "var(--accent-mint)")
-                      : (isCompleted ? "var(--border-subtle)" : "rgba(255, 255, 255, 0.05)"),
-                    color: isActive ? "#061A1D" : "inherit"
+                      ? themeColor
+                      : (isCompleted ? themeTint : "var(--bg-surface-elevated)"),
+                    border: isActive
+                      ? `1px solid ${themeColor}`
+                      : (isCompleted ? `1px solid ${themeColor}` : "1px solid var(--border-hairline)"),
+                    color: isActive ? "#061A1D" : (isCompleted ? themeColor : "var(--text-muted)"),
+                    boxShadow: isActive ? (isBrownfield ? "0 0 8px rgba(230, 154, 56, 0.35)" : "0 0 8px rgba(100, 186, 109, 0.35)") : "none"
                   }}
                 >
                   {isCompleted ? <Check size={10} /> : step.num}
@@ -144,53 +146,36 @@ export function GuidedStepper({ activeTab, onSelectTab, customer }) {
               </button>
 
               {idx < steps.length - 1 && (
-                <ChevronRight size={13} style={{ color: "var(--text-dim)", margin: "0 -2px" }} />
+                <ChevronRight size={13} style={{ color: "var(--text-muted)", opacity: 0.5, margin: "0 -2px" }} />
               )}
             </React.Fragment>
           );
         })}
       </div>
 
-      {/* Right: Step Guidance & Next/Previous Controls */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-        <span
-          className="au-mono-meta"
-          style={{
-            fontSize: "0.74rem",
-            color: "var(--text-secondary)",
-            maxWidth: "380px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap"
-          }}
-          title={activeStep.hint}
+      {/* Right: Next / Previous Workflow Navigation (Clean, no cramped hint text) */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <AuButton
+          variant="secondary"
+          size="sm"
+          onClick={handlePrev}
+          disabled={currentIndex === 0}
+          icon={<ChevronLeft size={13} />}
+          title="Go to previous workflow step"
         >
-          {activeStep.hint}
-        </span>
+          Prev
+        </AuButton>
 
-        <div style={{ display: "flex", gap: "6px" }}>
-          <AuButton
-            variant="secondary"
-            size="sm"
-            onClick={handlePrev}
-            disabled={currentIndex === 0}
-            icon={<ChevronLeft size={13} />}
-            title="Go to previous workflow step"
-          >
-            Prev
-          </AuButton>
-
-          <AuButton
-            variant="primary"
-            size="sm"
-            onClick={handleNext}
-            disabled={currentIndex === steps.length - 1}
-            icon={<ArrowRight size={13} />}
-            title="Advance to next workflow step"
-          >
-            Next
-          </AuButton>
-        </div>
+        <AuButton
+          variant="primary"
+          size="sm"
+          onClick={handleNext}
+          disabled={currentIndex === steps.length - 1}
+          icon={<ArrowRight size={13} />}
+          title="Advance to next workflow step"
+        >
+          Next
+        </AuButton>
       </div>
     </div>
   );

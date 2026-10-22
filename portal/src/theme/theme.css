@@ -20,12 +20,13 @@
   --accent-hud: #249D79;
   --accent-cyan: #00E5FF;
   --accent-amber: #E69A38;
-  --accent-rose: #E65C5C;
+  --accent-rose: #FF5252;
+  --accent-rose-hover: #FF6E6E;
 
   --accent-tint: rgba(72, 169, 166, 0.12);
   --accent-mint-tint: rgba(100, 186, 109, 0.12);
   --accent-amber-tint: rgba(230, 154, 56, 0.12);
-  --accent-rose-tint: rgba(230, 92, 92, 0.12);
+  --accent-rose-tint: rgba(255, 82, 82, 0.18);
 
   --border-hairline: rgba(39, 74, 86, 0.85);
   --border-strong: rgba(155, 165, 177, 0.28);
@@ -76,7 +77,9 @@
   --grid-dot-color: rgba(6, 37, 45, 0.05);
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -107,7 +110,7 @@ body {
   border-color: var(--border-accent);
 }
 
-.au-hud-card > :not(.au-card-arrow) {
+.au-hud-card> :not(.au-card-arrow) {
   position: relative;
   z-index: 2;
 }
@@ -168,21 +171,65 @@ body {
   opacity: 1;
 }
 
-.au-card-arrow-tl { top: 0; left: 0; }
-.au-card-arrow-tl::before { top: 2px; left: 0; }
-.au-card-arrow-tl::after { top: 0; left: 0; }
+.au-card-arrow-tl {
+  top: 0;
+  left: 0;
+}
 
-.au-card-arrow-tr { top: 0; right: 0; }
-.au-card-arrow-tr::before { top: 2px; right: 0; }
-.au-card-arrow-tr::after { top: 0; right: 0; }
+.au-card-arrow-tl::before {
+  top: 2px;
+  left: 0;
+}
 
-.au-card-arrow-bl { bottom: 0; left: 0; }
-.au-card-arrow-bl::before { bottom: 2px; left: 0; }
-.au-card-arrow-bl::after { bottom: 0; left: 0; }
+.au-card-arrow-tl::after {
+  top: 0;
+  left: 0;
+}
 
-.au-card-arrow-br { bottom: 0; right: 0; }
-.au-card-arrow-br::before { bottom: 2px; right: 0; }
-.au-card-arrow-br::after { bottom: 0; right: 0; }
+.au-card-arrow-tr {
+  top: 0;
+  right: 0;
+}
+
+.au-card-arrow-tr::before {
+  top: 2px;
+  right: 0;
+}
+
+.au-card-arrow-tr::after {
+  top: 0;
+  right: 0;
+}
+
+.au-card-arrow-bl {
+  bottom: 0;
+  left: 0;
+}
+
+.au-card-arrow-bl::before {
+  bottom: 2px;
+  left: 0;
+}
+
+.au-card-arrow-bl::after {
+  bottom: 0;
+  left: 0;
+}
+
+.au-card-arrow-br {
+  bottom: 0;
+  right: 0;
+}
+
+.au-card-arrow-br::before {
+  bottom: 2px;
+  right: 0;
+}
+
+.au-card-arrow-br::after {
+  bottom: 0;
+  right: 0;
+}
 
 /* ==========================================================================
    LAYOUT & CONTAINERS
@@ -473,8 +520,17 @@ body {
 
 .au-badge-rose {
   background: var(--accent-rose-tint);
-  border-color: rgba(230, 92, 92, 0.35);
+  border: 1px solid rgba(255, 82, 82, 0.55);
   color: var(--accent-rose);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 8px rgba(255, 82, 82, 0.12);
+}
+
+.au-badge-rose:hover {
+  background: rgba(255, 82, 82, 0.25);
+  border-color: rgba(255, 82, 82, 0.85);
+  box-shadow: 0 0 12px rgba(255, 82, 82, 0.22);
 }
 
 /* ==========================================================================
@@ -554,7 +610,10 @@ select.input-field {
    ========================================================================== */
 .au-modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(4, 20, 26, 0.78);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -602,8 +661,15 @@ select.input-field {
 }
 
 @keyframes auFadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ==========================================================================
@@ -659,13 +725,35 @@ select.input-field {
 /* ==========================================================================
    SYNTAX HIGHLIGHTING & CODE TABLE
    ========================================================================== */
-.au-token-keyword { color: #E5855E; font-weight: 600; }
-.au-token-string { color: #4ECDC4; }
-.au-token-comment { color: #5C7682; font-style: italic; }
-.au-token-function { color: #F3B562; }
-.au-token-decorator { color: #9B72CF; }
-.au-token-number { color: #72C0EB; }
-.au-token-type { color: #E7C970; }
+.au-token-keyword {
+  color: #E5855E;
+  font-weight: 600;
+}
+
+.au-token-string {
+  color: #4ECDC4;
+}
+
+.au-token-comment {
+  color: #5C7682;
+  font-style: italic;
+}
+
+.au-token-function {
+  color: #F3B562;
+}
+
+.au-token-decorator {
+  color: #9B72CF;
+}
+
+.au-token-number {
+  color: #72C0EB;
+}
+
+.au-token-type {
+  color: #E7C970;
+}
 
 .au-code-table {
   width: 100%;
@@ -807,9 +895,21 @@ select.input-field {
    MODAL SAFETY SHAKE ANIMATION
    ========================================================================== */
 @keyframes auShake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
 }
 
 .au-modal-shake {
@@ -832,7 +932,8 @@ select.input-field {
 }
 
 /* Native select & option dark fallback */
-select, select option {
+select,
+select option {
   background-color: var(--bg-surface-elevated) !important;
   color: var(--text-primary) !important;
 }
@@ -1226,5 +1327,3 @@ input[type="checkbox"].au-checkbox-input:focus-visible,
 .au-input-valid {
   border-color: var(--accent-mint) !important;
 }
-
-

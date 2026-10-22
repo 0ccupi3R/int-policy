@@ -57,10 +57,14 @@ export function Header({
               GREENFIELD
             </span>
           )}
-          <span className="au-mono-meta">·</span>
-          <span className="au-mono-meta">
-            {activeCustomer.tenantId ? `Tenant: ${activeCustomer.tenantId.slice(0, 8)}...` : "Default Tenant"}
-          </span>
+          {activeCustomer.tenantId ? (
+            <>
+              <span className="au-mono-meta">·</span>
+              <span className="au-mono-meta">
+                Tenant: {activeCustomer.tenantId.slice(0, 8)}...
+              </span>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -160,25 +164,15 @@ export function Header({
           </span>
         </AuButton>
 
-        {/* Action Buttons */}
-        <AuButton
-          variant="secondary"
-          size="sm"
-          onClick={handleDownloadZip}
-          title="Download complete deployment package as ZIP"
-          icon={<Archive size={14} />}
-        >
-          Export ZIP
-        </AuButton>
-
+        {/* Action Button: Complete Deployment Bundle Export */}
         <AuButton
           variant="primary"
           size="sm"
-          onClick={handleDownloadBicep}
-          title="Download Bicep policy template"
-          icon={<Download size={14} />}
+          onClick={handleDownloadZip}
+          title="Download complete deployment package as ZIP (Policies, Parameters, Scripts)"
+          icon={<Archive size={14} />}
         >
-          Download Bicep
+          Export Bundle (.zip)
         </AuButton>
       </div>
     </header>

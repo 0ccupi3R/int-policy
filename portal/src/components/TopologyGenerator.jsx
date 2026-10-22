@@ -705,12 +705,13 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                 className="au-badge au-badge-rose"
                 style={{
                   cursor: "pointer",
-                  border: "none",
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "5px",
-                  padding: "0.25rem 0.65rem",
-                  transition: "transform 0.15s ease"
+                  gap: "6px",
+                  padding: "0.28rem 0.75rem",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  transition: "all 0.15s ease"
                 }}
                 onClick={handleJumpToTopologyViolation}
                 title="Click to expand RG and jump to the first non-compliant resource"

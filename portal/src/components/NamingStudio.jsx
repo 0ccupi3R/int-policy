@@ -49,7 +49,9 @@ import {
   ChevronDown,
   ChevronRight,
   Filter,
-  ArrowDown
+  ArrowDown,
+  Braces,
+  X
 } from "lucide-react";
 
 const EMPTY_OBJ = {};
@@ -90,10 +92,52 @@ export function NamingStudio({
   const [newTemplateName, setNewTemplateName] = useState("");
   const [newTemplateDesc, setNewTemplateDesc] = useState("");
 
-  // Dismiss modals on Escape key
+  // Token Palette Drawer state
+  const [tokenDrawerOpen, setTokenDrawerOpen] = useState(false);
+  const [activePatternTarget, setActivePatternTarget] = useState(null); // { key, patternKey }
+
+  const handleInsertToken = (tokenStr) => {
+    if (activePatternTarget) {
+      if (activePatternTarget.key === "newType") {
+        setNewType((prev) => ({
+          ...prev,
+          defaultPattern: (prev.defaultPattern || "") + (prev.defaultPattern ? `-${tokenStr}` : tokenStr)
+        }));
+        onShowToast(`Inserted ${tokenStr} into custom type pattern`);
+        return;
+      }
+
+      const inputEl = document.getElementById(`pattern-input-${activePatternTarget.key}`) || document.getElementById(`pattern-input-${activePatternTarget.patternKey}`);
+      const currentPattern = customPatterns[activePatternTarget.patternKey] || "";
+      let nextPattern = currentPattern;
+
+      if (inputEl) {
+        const start = inputEl.selectionStart ?? currentPattern.length;
+        const end = inputEl.selectionEnd ?? currentPattern.length;
+        nextPattern = currentPattern.slice(0, start) + tokenStr + currentPattern.slice(end);
+        handlePatternChange(activePatternTarget.patternKey, nextPattern);
+        setTimeout(() => {
+          inputEl.focus();
+          inputEl.setSelectionRange(start + tokenStr.length, start + tokenStr.length);
+        }, 20);
+      } else {
+        nextPattern = currentPattern ? `${currentPattern}-${tokenStr}` : tokenStr;
+        handlePatternChange(activePatternTarget.patternKey, nextPattern);
+      }
+      onShowToast(`Inserted ${tokenStr} into pattern`);
+    } else {
+      navigator.clipboard.writeText(tokenStr);
+      onShowToast(`Copied ${tokenStr} to clipboard!`);
+    }
+  };
+
+  // Dismiss modals and drawer on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
+        if (tokenDrawerOpen) {
+          setTokenDrawerOpen(false);
+        }
         if (showAddTypeModal) {
           setShowAddTypeModal(false);
           setSelectedCafItem(null);
@@ -104,11 +148,11 @@ export function NamingStudio({
         }
       }
     };
-    if (showAddTypeModal || showTemplateModal) {
+    if (showAddTypeModal || showTemplateModal || tokenDrawerOpen) {
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
     }
-  }, [showAddTypeModal, showTemplateModal]);
+  }, [showAddTypeModal, showTemplateModal, tokenDrawerOpen]);
   const [newType, setNewType] = useState({
     key: "",
     name: "",
@@ -617,6 +661,262 @@ export function NamingStudio({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      {/* 0. Contextual Token Palette Drawer (Hidden by default, slides in from left on focus/click) */}
+      <div
+        id="naming-token-palette-drawer"
+        style={{
+          position: "fixed",
+          top: "64px",
+          left: 0,
+          bottom: 0,
+          width: "310px",
+          zIndex: 1050,
+          background: "var(--bg-surface)",
+          borderRight: "1px solid var(--border-hairline)",
+          boxShadow: tokenDrawerOpen ? "8px 0 32px rgba(0, 0, 0, 0.55)" : "none",
+          transform: tokenDrawerOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden"
+        }}
+      >
+        {/* Drawer Header */}
+        <div
+          style={{
+            padding: "12px 16px",
+            borderBottom: "1px solid var(--border-hairline)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: "var(--bg-canvas)"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Braces size={16} style={{ color: "var(--accent-primary)" }} />
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", fontWeight: 700, letterSpacing: "0.04em", color: "var(--text-primary)" }}>
+                SMART TOKENS
+              </div>
+              <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
+                Click to insert into active input
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setTokenDrawerOpen(false)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "var(--text-muted)",
+              cursor: "pointer",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              borderRadius: "4px"
+            }}
+            title="Close Token Palette (Esc)"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Active Target Banner */}
+        <div
+          style={{
+            padding: "8px 16px",
+            background: "var(--bg-surface-elevated)",
+            borderBottom: "1px solid var(--border-hairline)",
+            fontSize: "0.72rem",
+            fontFamily: "var(--font-mono)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}
+        >
+          {activePatternTarget ? (
+            <span>
+              Target: <strong style={{ color: "var(--accent-primary)" }}>{activePatternTarget.key}</strong>
+            </span>
+          ) : (
+            <span style={{ color: "var(--text-muted)" }}>Click an input to target</span>
+          )}
+          <span style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Auto-Inserts</span>
+        </div>
+
+        {/* Scrollable Token Categories */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "12px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px"
+          }}
+        >
+          {/* Section 1: Core Context */}
+          <div>
+            <div style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
+              Core Context
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              {[
+                { token: "{org}", desc: "Organization code", ex: "air" },
+                { token: "{sub}", desc: "Subscription code", ex: "prod" },
+                { token: "{env}", desc: "Environment code", ex: "prd" },
+                { token: "{rg}", desc: "Resource group token", ex: "core" },
+                { token: "{region}", desc: "Azure region code", ex: "cc" },
+                { token: "{purpose}", desc: "Workload purpose", ex: "app" }
+              ].map((t) => (
+                <button
+                  key={t.token}
+                  type="button"
+                  onClick={() => handleInsertToken(t.token)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "6px 10px",
+                    background: "var(--bg-canvas)",
+                    border: "1px solid var(--border-hairline)",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all var(--ease-snappy)"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--accent-primary)";
+                    e.currentTarget.style.background = "var(--accent-tint)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-hairline)";
+                    e.currentTarget.style.background = "var(--bg-canvas)";
+                  }}
+                  title={`Insert ${t.token} (${t.desc})`}
+                >
+                  <div>
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.78rem", color: "var(--accent-primary)" }}>
+                      {t.token}
+                    </span>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-secondary)" }}>
+                      {t.desc}
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", color: "var(--text-muted)" }}>
+                    {t.ex}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 2: Resource Identity */}
+          <div>
+            <div style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
+              Resource Identity
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              {[
+                { token: "{abbreviation}", desc: "CAF Resource shortcode", ex: "vnet, st" },
+                { token: "{instance}", desc: "Sequence counter", ex: "01, 02" },
+                { token: "{workload}", desc: "Application / Workload", ex: "portal" },
+                { token: "{name}", desc: "Custom resource name", ex: "hub" }
+              ].map((t) => (
+                <button
+                  key={t.token}
+                  type="button"
+                  onClick={() => handleInsertToken(t.token)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "6px 10px",
+                    background: "var(--bg-canvas)",
+                    border: "1px solid var(--border-hairline)",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all var(--ease-snappy)"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--accent-primary)";
+                    e.currentTarget.style.background = "var(--accent-tint)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-hairline)";
+                    e.currentTarget.style.background = "var(--bg-canvas)";
+                  }}
+                  title={`Insert ${t.token} (${t.desc})`}
+                >
+                  <div>
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.78rem", color: "var(--accent-cyan)" }}>
+                      {t.token}
+                    </span>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-secondary)" }}>
+                      {t.desc}
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", color: "var(--text-muted)" }}>
+                    {t.ex}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 3: Full Name & Case Variants */}
+          <div>
+            <div style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
+              Full Names & Upper/Title Case
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px" }}>
+              {[
+                "{Org}", "{OrgName}",
+                "{SUB}", "{SubName}",
+                "{ENV}", "{EnvName}",
+                "{RG}", "{ResourceGroup}",
+                "{ORGNAME}", "{SUBNAME}",
+                "{ENVNAME}", "{RGNAME}"
+              ].map((tok) => (
+                <button
+                  key={tok}
+                  type="button"
+                  onClick={() => handleInsertToken(tok)}
+                  style={{
+                    padding: "6px 8px",
+                    background: "var(--bg-canvas)",
+                    border: "1px solid var(--border-hairline)",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    textAlign: "center",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.74rem",
+                    fontWeight: 600,
+                    color: "var(--text-primary)",
+                    transition: "all var(--ease-snappy)"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--accent-primary)";
+                    e.currentTarget.style.background = "var(--accent-tint)";
+                    e.currentTarget.style.color = "var(--accent-primary)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-hairline)";
+                    e.currentTarget.style.background = "var(--bg-canvas)";
+                    e.currentTarget.style.color = "var(--text-primary)";
+                  }}
+                  title={`Insert ${tok}`}
+                >
+                  {tok}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Brownfield Inferred Naming Patterns Review Banner */}
       {customer.namingRules?.inferredPatterns && Object.keys(customer.namingRules.inferredPatterns).length > 0 && (
         <div
@@ -777,26 +1077,6 @@ export function NamingStudio({
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
             <button
               type="button"
-              id="naming-inspect-violation-btn"
-              className="btn btn-sm btn-secondary"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 14px",
-                fontWeight: "600",
-                fontSize: "0.8rem",
-                color: "var(--status-danger-text)",
-                borderColor: "rgba(244, 63, 94, 0.4)"
-              }}
-              onClick={() => handleJumpToViolation()}
-              title="Jump to and highlight the first non-compliant resource card"
-            >
-              <ArrowDown size={14} /> Inspect Violation →
-            </button>
-
-            <button
-              type="button"
               id="naming-filter-violations-btn"
               className={`btn btn-sm ${filterOnlyViolations ? "btn-danger" : "btn-secondary"}`}
               style={{
@@ -834,50 +1114,41 @@ export function NamingStudio({
         </div>
       )}
 
-      {/* 1. Global Pattern Bar & Dynamic Token Chips */}
-      <div className="glass-panel" style={{ padding: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+      {/* 1. Global Pattern Bar & Action Controls */}
+      <div className="glass-panel" style={{ padding: "18px 22px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
           <div>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Layers size={20} color="var(--azure-cyan)" />
+            <h2 style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+              <Layers size={18} color="var(--accent-primary)" />
               Naming Convention Pattern Engine
             </h2>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginTop: "4px" }}>
-              Build dynamic naming rules with smart tokens. Abbreviation tokens: <code>{`{Org}`}</code>, <code>{`{org}`}</code>, <code>{`{SUB}`}</code>, <code>{`{ENV}`}</code>, <code>{`{RG}`}</code>. Full-name tokens: <code>{`{ORGNAME}`}</code>, <code>{`{SUBNAME}`}</code>, <code>{`{ENVNAME}`}</code>, <code>{`{ResourceGroup}`}</code> (wildcards evaluate to <code>*</code> in Azure Policy).
+            <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "3px", margin: 0 }}>
+              Build dynamic naming rules with smart tokens ({`{org}`}, {`{sub}`}, {`{env}`}, {`{rg}`}, {`{abbr}`}). Click any input to reveal token drawer.
             </p>
           </div>
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+            <AuButton
+              variant={tokenDrawerOpen ? "primary" : "secondary"}
+              size="sm"
+              onClick={() => setTokenDrawerOpen(!tokenDrawerOpen)}
+              icon={<Braces size={14} />}
+              title="Open or close the Smart Token Palette sidebar"
+            >
+              {tokenDrawerOpen ? "Close Tokens" : "{ } Smart Tokens"}
+            </AuButton>
+
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => setShowTemplateModal(true)}
               title="Load a curated naming baseline (AirGate Core, AI Workloads, Microservices) or save custom template"
             >
-              <LayoutTemplate size={16} />
+              <LayoutTemplate size={15} />
               <span>Baselines & Templates</span>
             </button>
             <button className="btn btn-primary btn-sm" onClick={() => setShowAddTypeModal(true)}>
-              <Plus size={16} />
+              <Plus size={15} />
               <span>Add Resource Type</span>
             </button>
-          </div>
-        </div>
-
-        {/* Token Chips */}
-        <div>
-          <span className="form-label" style={{ marginBottom: "8px" }}>Quick-Insert Tokens</span>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {AVAILABLE_TOKENS.map((t) => (
-              <AuTokenChip
-                key={t.token}
-                token={t.token}
-                example={t.example}
-                description={t.description}
-                onInsert={(tok) => {
-                  navigator.clipboard.writeText(tok);
-                  onShowToast(`Copied token ${tok} to clipboard!`);
-                }}
-              />
-            ))}
           </div>
         </div>
       </div>
@@ -1521,6 +1792,27 @@ export function NamingStudio({
                           {isCaf && <Check size={11} />}
                           Azure CAF
                         </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-secondary"
+                          style={{
+                            fontSize: "0.7rem",
+                            padding: "3px 8px",
+                            height: "22px",
+                            lineHeight: "1",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "3px"
+                          }}
+                          onClick={() => {
+                            setActivePatternTarget({ key: item.key, patternKey });
+                            setTokenDrawerOpen(true);
+                          }}
+                          title="Open Smart Token palette for this input"
+                        >
+                          <Braces size={11} />
+                          Tokens
+                        </button>
                       </div>
                     </div>
                     <input
@@ -1531,9 +1823,13 @@ export function NamingStudio({
                       className="form-input form-input-mono"
                       style={{
                         borderColor: hasError ? "var(--accent-rose)" : undefined,
-                        background: hasError ? "rgba(244, 63, 94, 0.04)" : undefined
+                        background: hasError ? "var(--accent-rose-tint)" : undefined
                       }}
                       value={pattern}
+                      onFocus={() => {
+                        setActivePatternTarget({ key: item.key, patternKey });
+                        setTokenDrawerOpen(true);
+                      }}
                       onChange={(e) => handlePatternChange(patternKey, e.target.value)}
                     />
 
@@ -2046,6 +2342,10 @@ export function NamingStudio({
                   className="form-input form-input-mono"
                   placeholder="{Org}-{SUB}-{ResourceGroup}-dbw"
                   value={newType.defaultPattern}
+                  onFocus={() => {
+                    setActivePatternTarget({ key: "newType", patternKey: "newType" });
+                    setTokenDrawerOpen(true);
+                  }}
                   onChange={(e) => setNewType({ ...newType, defaultPattern: e.target.value })}
                 />
               </div>

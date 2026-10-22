@@ -59,10 +59,15 @@ Aligned with the **Microsoft Cloud Adoption Framework (CAF)** and Azure Landing 
 
 ### 1. Launch the Web Portal
 ```bash
-# Start the local development server
+# Start the local development server (localhost)
 npm run dev
+
+# Or bind to 0.0.0.0 (LAN / remote workstation / container access)
+npm run dev:host
+# or
+HOST=0.0.0.0 npm run dev
 ```
-Open your browser at **`http://localhost:5173/`**.
+Open your browser at **`http://localhost:5174/`** (or your machine's LAN IP).
 
 ### 2. Build for Production
 ```bash

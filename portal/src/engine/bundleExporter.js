@@ -252,8 +252,11 @@ $errorCount = 0
       const tagEntries = Object.entries(rgTags);
 
       if (tagEntries.length > 0) {
+        const rgTargetId = (rg.id && rg.id.startsWith("/subscriptions/"))
+          ? rg.id.replace(/\/subscriptions\/[^\/]+/, "/subscriptions/$subId")
+          : `/subscriptions/$subId/resourceGroups/${evalRg.evaluatedName}`;
         script += `# Resource Group: ${evalRg.evaluatedName}\n`;
-        script += `$rgId = "/subscriptions/$subId/resourceGroups/${evalRg.evaluatedName}"\n`;
+        script += `$rgId = "${rgTargetId}"\n`;
         script += `$rgTags = @{\n`;
         tagEntries.forEach(([k, v]) => {
           script += `    '${k}' = '${v}'\n`;
@@ -279,9 +282,12 @@ $errorCount = 0
         const resTagEntries = Object.entries(resTags);
 
         if (resTagEntries.length > 0) {
-          const resType = evalRes.resourceMeta?.resourceType || "Microsoft.Resources/unknown";
+          const resType = res.resourceType || evalRes.resourceMeta?.resourceType || "Microsoft.Resources/unknown";
+          const resTargetId = (res.id && res.id.startsWith("/subscriptions/"))
+            ? res.id.replace(/\/subscriptions\/[^\/]+/, "/subscriptions/$subId")
+            : `/subscriptions/$subId/resourceGroups/${evalRg.evaluatedName}/providers/${resType}/${evalRes.evaluatedName}`;
           script += `# Resource: ${evalRes.evaluatedName} (${resType})\n`;
-          script += `$resId = "/subscriptions/$subId/resourceGroups/${evalRg.evaluatedName}/providers/${resType}/${evalRes.evaluatedName}"\n`;
+          script += `$resId = "${resTargetId}"\n`;
           script += `$resTags = @{\n`;
           resTagEntries.forEach(([k, v]) => {
             script += `    '${k}' = '${v}'\n`;
@@ -339,10 +345,13 @@ echo ">>> Active Subscription Context: $SUB_ID"
       const tagEntries = Object.entries(rgTags);
 
       if (tagEntries.length > 0) {
+        const rgTargetId = (rg.id && rg.id.startsWith("/subscriptions/"))
+          ? rg.id.replace(/\/subscriptions\/[^\/]+/, "/subscriptions/$SUB_ID")
+          : `/subscriptions/$SUB_ID/resourceGroups/${evalRg.evaluatedName}`;
         const tagArgs = tagEntries.map(([k, v]) => `"${k}=${v}"`).join(" ");
         script += `# Resource Group: ${evalRg.evaluatedName}\n`;
         script += `echo "Tagging Resource Group: ${evalRg.evaluatedName}..."\n`;
-        script += `az tag update --resource-id "/subscriptions/$SUB_ID/resourceGroups/${evalRg.evaluatedName}" --operation merge --tags ${tagArgs}\n\n`;
+        script += `az tag update --resource-id "${rgTargetId}" --operation merge --tags ${tagArgs}\n\n`;
       }
 
       (rg.resources || []).forEach((res) => {
@@ -351,11 +360,14 @@ echo ">>> Active Subscription Context: $SUB_ID"
         const resTagEntries = Object.entries(resTags);
 
         if (resTagEntries.length > 0) {
-          const resType = evalRes.resourceMeta?.resourceType || "Microsoft.Resources/unknown";
+          const resType = res.resourceType || evalRes.resourceMeta?.resourceType || "Microsoft.Resources/unknown";
+          const resTargetId = (res.id && res.id.startsWith("/subscriptions/"))
+            ? res.id.replace(/\/subscriptions\/[^\/]+/, "/subscriptions/$SUB_ID")
+            : `/subscriptions/$SUB_ID/resourceGroups/${evalRg.evaluatedName}/providers/${resType}/${evalRes.evaluatedName}`;
           const tagArgs = resTagEntries.map(([k, v]) => `"${k}=${v}"`).join(" ");
           script += `# Resource: ${evalRes.evaluatedName} (${resType})\n`;
           script += `echo "Tagging Resource: ${evalRes.evaluatedName}..."\n`;
-          script += `az tag update --resource-id "/subscriptions/$SUB_ID/resourceGroups/${evalRg.evaluatedName}/providers/${resType}/${evalRes.evaluatedName}" --operation merge --tags ${tagArgs}\n\n`;
+          script += `az tag update --resource-id "${resTargetId}" --operation merge --tags ${tagArgs}\n\n`;
         }
       });
     });

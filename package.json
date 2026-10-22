@@ -4,9 +4,12 @@
   "description": "Azure Landing Zone Policy Studio: Resource Naming Conventions and Granular Tag Governance",
   "scripts": {
     "dev": "npm run dev --prefix portal",
+    "dev:host": "npm run dev:host --prefix portal",
+    "dev:all": "npm run dev:host --prefix portal",
     "build": "npm run build --prefix portal",
     "build:theme": "node build-tactical-ui.mjs",
     "preview": "npm run preview --prefix portal",
+    "preview:host": "npm run preview:host --prefix portal",
     "test:offline": "python3 tools/generate.py && python3 tests/offline.py",
     "test:regression": "python3 tests/regression.py"
   },

@@ -74,6 +74,10 @@ export function findResourceInCatalog(catalog, keyOrType) {
   found = cat.find((r) => (r.resourceType || "").toLowerCase() === lower);
   if (found) return found;
 
+  // 2b. Match by provider suffix (e.g., 'virtualnetworks' matches 'Microsoft.Network/virtualNetworks')
+  found = cat.find((r) => (r.resourceType || "").toLowerCase().endsWith("/" + lower));
+  if (found) return found;
+
   // 3. Fallback matching
   if (lower === "storage" || lower === "sa" || lower === "st") {
     found = cat.find((r) => r.key === "storage" || r.abbreviation === "sa");
@@ -351,7 +355,8 @@ export function computeEffectiveResourceTags(customer, subscription, rg, resourc
  * Evaluates an individual Resource Node: calculates canonical name, validates constraints, and computes tags.
  */
 export function evaluateResourceNode(customer, catalog, subscription, rg, resource) {
-  const resourceMeta = findResourceInCatalog(catalog, resource.resourceTypeKey || resource.resourceType);
+  const resourceMeta = findResourceInCatalog(catalog, resource.resourceType) ||
+                       findResourceInCatalog(catalog, resource.resourceTypeKey);
   const enrichedMeta = getEnrichedResourceMeta(resourceMeta);
 
   // Pattern resolution

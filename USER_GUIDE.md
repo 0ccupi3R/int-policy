@@ -45,11 +45,16 @@ The web portal is fully self-contained and runs on any local machine or internal
 # 1. Clone or navigate to the repository
 cd /Users/mrkhan/Tools/int-policy
 
-# 2. Launch the Policy Studio Web Portal
+# 2. Launch the Policy Studio Web Portal (Default: localhost)
 npm run dev
+
+# 3. Or launch with 0.0.0.0 (LAN, remote access, or VM/container port forwarding)
+npm run dev:host
+# or
+HOST=0.0.0.0 npm run dev
 ```
 
-Open your browser at **`http://localhost:5173/`**.
+Open your browser at **`http://localhost:5174/`** (or your machine's LAN IP).
 
 ---
 
@@ -385,6 +390,9 @@ jobs:
 | Tag Policy flagged on Subnets or Locks | Policy evaluated untaggable child resources. | Ensure resource tag policies use `mode: Indexed` (Studio generates this automatically). |
 | Resource Group missing tags | Resource Group was created without mandatory tags. | Resource Groups are evaluated with `mode: All` and `type: Microsoft.Resources/subscriptions/resourceGroups`. Add required tags during RG creation. |
 | Region code mismatch (`-cc-` vs `-ce-`) | Name specifies Canada Central (`cc`) but resource was targeted at Canada East (`ce`). | Align resource deployment region with the name tokens. |
+| `ScopeLocked` / `CanNotDelete` error on teardown | A Resource Lock (e.g., `CanNotDelete` on `Sentinel` or production scopes) prevents resource group modification or deletion. | Query active locks via `az lock list -o table`. Always skip locked RGs and system infrastructure like `NetworkWatcherRG` during destructive test teardowns. |
+| `ResourceNotFound` during `apply-tags.sh` | Runbook script constructed an arbitrary resource provider URL instead of using the resource's actual Azure Resource ID. | The Studio automatically uses canonical resource IDs discovered during tenant ingestion (`/subscriptions/.../providers/Microsoft.Network/virtualNetworks/...`) ensuring exact targeting. |
+| Tag merge clobbering existing client metadata | Operator mistakenly executed tag overwrite instead of merge. | The Studio runbooks always employ `--operation merge` (Azure CLI) or `-Operation Merge` (PowerShell), guaranteeing existing tags are preserved. |
 
 ---
 
@@ -409,14 +417,31 @@ flowchart LR
 
 Run any of the following discovery methods against the client's Azure tenant:
 
+#### Pre-Flight: Inspect Subscription Resource Locks
+Before initiating discovery or teardown operations, inspect subscription locks to identify protected or immutable scopes:
+```bash
+az lock list --query "[].{LockName:name, Level:level, Scope:resourceGroup}" -o table
+```
+> [!NOTE]
+> Resource groups with `CanNotDelete` locks (e.g. `Sentinel`) or platform monitoring infrastructure (e.g. `NetworkWatcherRG`) should be protected and omitted from destructive operations.
+
 #### Method A: Azure CLI / Python (Cross-Platform Bash, macOS, Linux, Cloud Shell)
+You can discover the entire tenant, or selectively target specific active resource groups:
 ```bash
 python3 -c "
 import subprocess, json, datetime
 
+# Optional: define TARGET_RGS = ['RG-CoreApp-Prod', 'rg_marketing_legacy_dev', 'SANDBOX-SHARED-SVCS']
+# Or leave None to discover all unlocked resource groups.
+TARGET_RGS = None
+
 sub = json.loads(subprocess.check_output(['az', 'account', 'show', '-o', 'json']))
-rgs = json.loads(subprocess.check_output(['az', 'group', 'list', '-o', 'json']))
-res = json.loads(subprocess.check_output(['az', 'resource', 'list', '-o', 'json']))
+all_rgs = json.loads(subprocess.check_output(['az', 'group', 'list', '-o', 'json']))
+all_res = json.loads(subprocess.check_output(['az', 'resource', 'list', '-o', 'json']))
+
+# Filter target scopes if specified
+rgs = [g for g in all_rgs if TARGET_RGS is None or g['name'] in TARGET_RGS]
+res = [r for r in all_res if TARGET_RGS is None or r.get('resourceGroup') in TARGET_RGS]
 
 inventory = {
     'version': '1.0.0',
@@ -606,8 +631,16 @@ az policy state summarize --query "summaries[0].policyAssignments" -o table
 When running internal tabletop exercises with our $0.00-cost mock tenant (`tests/brownfield-mock-tenant.bicep`), clean up test resources with:
 
 ```bash
+# Asynchronously trigger deletion for targeted brownfield test groups
 az group delete --name "RG-CoreApp-Prod" --yes --no-wait
 az group delete --name "rg_marketing_legacy_dev" --yes --no-wait
 az group delete --name "SANDBOX-SHARED-SVCS" --yes --no-wait
+
+# Poll until deletion completes and verify subscription is clean for Greenfield testing:
+az group list --query "[].{name:name, state:properties.provisioningState}" -o table
 ```
+
+> [!TIP]
+> After deletion, only protected scopes (e.g., `Sentinel` and `NetworkWatcherRG`) will remain in the subscription. You are now ready to switch the portal workspace to **Greenfield Mode** and deploy freshly provisioned, compliant landing zones.
+
 

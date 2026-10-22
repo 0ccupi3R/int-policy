@@ -23,3 +23,6 @@ __pycache__/
 *.pyc
 azure_test_results.json
 azure_combined_test_results.json
+*inventory.json
+alz-brownfield-inventory.json
+

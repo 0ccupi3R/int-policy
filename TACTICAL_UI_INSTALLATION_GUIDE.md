@@ -239,6 +239,26 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
 
 ---
 
+## 🤖 Automated Agent Setup (`init-tactical-ui` Skill)
+
+Whenever starting a new project or onboarding a new workspace with Antigravity / AI agents, you can trigger the **Tactical UI Initializer Skill**:
+
+```markdown
+Prompt: "Initialize Tactical UI" or "Setup theme system"
+```
+
+### ⚡ Token-Saving Pre-Flight Verification
+The skill is designed to be **idempotent and token-efficient**:
+1. It immediately checks if `components.tsx`, `.agents/rules/theme_system.md`, and `theme.css` imports already exist.
+2. If already set up, it **exits immediately** with a single-line confirmation:
+   ```text
+   ✓ Tactical UI (@0ccupi3r/tactical-ui v2.0.0) is already fully initialized in this workspace.
+   ```
+   **Zero tokens wasted** on redundant file scanning, dependency reinstallation, or rule generation.
+3. If anything is missing in a fresh repo, it automatically unpacks `tactical-ui.zip`, installs peer dependencies (`lucide-react`), wires `theme.css`, and creates `.agents/rules/theme_system.md` so the agent strictly enforces Tactical UI standards for all subsequent tasks.
+
+---
+
 ## 🛠️ Rebuilding & Updating the Theme Archive
 
 Whenever you add new components or modify tokens in `portal/src/theme/`, run the packaging command from the repository root:

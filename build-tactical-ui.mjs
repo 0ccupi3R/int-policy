@@ -152,17 +152,30 @@ export function Dashboard() {
 `;
 
 fs.writeFileSync(path.join(PACK_DIR, 'README.md'), readmeContent, 'utf8');
-console.log(`   ✓ Generated README.md`);
+// 3.5 Copy agent skill & rule templates into tactical-ui/
+const agentSkillSrc = path.resolve(process.cwd(), '.agents/skills/init-tactical-ui/SKILL.md');
+const agentRuleSrc = path.resolve(process.cwd(), '.agents/rules/theme_system.md');
 
-// 4. Generate npm pack tarball inside PACK_DIR
+if (fs.existsSync(agentSkillSrc)) {
+  const skillDestDir = path.join(PACK_DIR, 'skills/init-tactical-ui');
+  fs.mkdirSync(skillDestDir, { recursive: true });
+  fs.copyFileSync(agentSkillSrc, path.join(skillDestDir, 'SKILL.md'));
+  console.log(`   ✓ Packaged agent skill (init-tactical-ui)`);
+}
+
+if (fs.existsSync(agentRuleSrc)) {
+  const ruleDestDir = path.join(PACK_DIR, 'rules');
+  fs.mkdirSync(ruleDestDir, { recursive: true });
+  fs.copyFileSync(agentRuleSrc, path.join(ruleDestDir, 'theme_system.md'));
+  console.log(`   ✓ Packaged agent rule (theme_system.md)`);
+}
+
+// 4. Generate npm pack tarball inside PACK_DIR (kept in tactical-ui/ without cluttering root)
 try {
   const packOutput = execSync('npm pack', { cwd: PACK_DIR, encoding: 'utf8' }).trim();
   const tarballName = packOutput.split('\n').pop().trim();
   if (tarballName && tarballName.endsWith('.tgz')) {
-    const srcTgz = path.join(PACK_DIR, tarballName);
-    const destTgz = path.join(process.cwd(), tarballName);
-    fs.copyFileSync(srcTgz, destTgz);
-    console.log(`   ✓ Built npm tarball: ${tarballName}`);
+    console.log(`   ✓ Built npm tarball: tactical-ui/${tarballName}`);
   }
 } catch (err) {
   console.warn(`   ⚠️ npm pack warning: ${err.message}`);

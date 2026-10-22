@@ -788,7 +788,7 @@ export function NamingStudio({
   };
 
   return (
-    <div className="naming-studio-root" style={{ display: "flex", gap: "20px", alignItems: "flex-start", position: "relative" }}>
+    <div className="naming-studio-root" style={{ display: "flex", gap: "0px", alignItems: "flex-start", position: "relative" }}>
       {/* 0. Contextual Token Palette Sticky Left Sidebar (Smoothly expands/collapses in-flow so inputs are NEVER occluded) */}
       <aside
         id="naming-token-palette-sidebar"
@@ -1445,10 +1445,10 @@ export function NamingStudio({
                     ? "var(--accent-mint-tint)"
                     : "var(--accent-rose-tint)",
                 border: `1px solid ${isTestItemUnrestricted
-                    ? "var(--border-hairline)"
-                    : testValidation.valid
-                      ? "var(--accent-mint)"
-                      : "var(--accent-rose)"
+                  ? "var(--border-hairline)"
+                  : testValidation.valid
+                    ? "var(--accent-mint)"
+                    : "var(--accent-rose)"
                   }`
               }}
             >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Header } from "./components/Header.jsx";
 import { NamingStudio } from "./components/NamingStudio.jsx";
 import { TagStudio } from "./components/TagStudio.jsx";
@@ -15,71 +15,43 @@ import {
 } from "./engine/topologyGenerator.js";
 import { DEFAULT_CUSTOMERS } from "./data/defaultCustomers.js";
 import { AZURE_RESOURCE_CATALOG } from "./data/azureResourceCatalog.js";
-import { DEFAULT_AIRGATE_OVERRIDES } from "./data/azureNamingCatalog.js";
+import { AZURE_NAMING_CATALOG, DEFAULT_AIRGATE_OVERRIDES } from "./data/azureNamingCatalog.js";
+import {
+  STORAGE_KEYS,
+  loadStoredCustomers,
+  saveStoredCustomers,
+  loadStoredActiveCustomerId,
+  bumpSemver
+} from "./utils/workspaceStorage.js";
+import {
+  calculateTopologyStats,
+  calculateGovernanceReadiness,
+  calculateTotalTagRules
+} from "./utils/governanceMetrics.js";
 import { Layers, Tag, FolderTree, BookOpen, Code2, CheckCircle2 } from "lucide-react";
 import { AuTabs, AuTelemetryStrip, AuBadge } from "./theme";
 
-export function App() {
-  // Load customers from localStorage or defaults
-  const [customers, setCustomers] = useState(() => {
-    try {
-      const saved = localStorage.getItem("alz_policy_customers");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const hasLegacy = Array.isArray(parsed) && parsed.some(
-          (c) => c.id === "cust01" || c.name === "CustomerName" || c.id === "nova-ai"
-        );
-        if (!hasLegacy && Array.isArray(parsed) && parsed.length > 0) {
-          const defaultWoodgrove = DEFAULT_CUSTOMERS.find((c) => c.id === "woodgrove");
-          const woodgroveIdx = parsed.findIndex((c) => c.id === "woodgrove");
-          if (defaultWoodgrove) {
-            if (woodgroveIdx === -1) {
-              return [...parsed, defaultWoodgrove];
-            } else if (
-              !parsed[woodgroveIdx].topology ||
-              parsed[woodgroveIdx].topology?.subscriptions?.[0]?.resourceGroups?.some(rg => rg.name === "rg-wg-prod-apps") ||
-              !parsed[woodgroveIdx].topology?.subscriptions?.[0]?.resourceGroups?.some(rg => rg.name === "RG-CoreApp-Prod")
-            ) {
-              const updated = [...parsed];
-              updated[woodgroveIdx] = {
-                ...parsed[woodgroveIdx],
-                topology: defaultWoodgrove.topology,
-                brownfieldMetadata: defaultWoodgrove.brownfieldMetadata
-              };
-              try {
-                localStorage.setItem("alz_policy_customers", JSON.stringify(updated));
-              } catch {
-                // ignore
-              }
-              return updated;
-            }
-          }
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.warn("Failed to load customers from storage", e);
-    }
-    return DEFAULT_CUSTOMERS;
-  });
+const TOAST_DURATION_MS = 3200;
+const DEFAULT_TAB = "topology";
+const DEFAULT_THEME_MODE = "dark";
 
-  const [activeCustomerId, setActiveCustomerId] = useState(() => {
-    try {
-      const saved = localStorage.getItem("alz_active_customer_id");
-      if (saved && saved !== "cust01" && saved !== "nova-ai" && customers.some((c) => c.id === saved)) {
-        return saved;
-      }
-    } catch (e) {
-      console.warn("Failed to load active customer from storage", e);
-    }
-    return customers[0]?.id || "contoso";
-  });
+export function App() {
+  // Load customer workspaces via clean storage manager
+  const [customers, setCustomers] = useState(() => loadStoredCustomers());
+
+  // Active customer workspace ID
+  const [activeCustomerId, setActiveCustomerId] = useState(() =>
+    loadStoredActiveCustomerId(customers)
+  );
 
   // Resource Catalog state
   const [catalog, setCatalog] = useState(() => {
     try {
-      const saved = localStorage.getItem("alz_policy_catalog");
-      if (saved) return JSON.parse(saved);
+      const saved = localStorage.getItem(STORAGE_KEYS.POLICY_CATALOG);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {
       console.warn("Failed to load catalog from storage", e);
     }
@@ -89,18 +61,18 @@ export function App() {
   // Navigation tab state (persisted across reloads)
   const [activeTab, setActiveTab] = useState(() => {
     try {
-      const saved = localStorage.getItem("alz_active_tab");
+      const saved = localStorage.getItem(STORAGE_KEYS.ACTIVE_TAB);
       if (saved) return saved;
     } catch (e) {
       console.warn("Failed to load active tab from storage", e);
     }
-    return "topology";
+    return DEFAULT_TAB;
   });
 
   // AirGate enterprise standard overrides state
   const [overrides, setOverrides] = useState(() => {
     try {
-      const saved = localStorage.getItem("alz_airgate_overrides");
+      const saved = localStorage.getItem(STORAGE_KEYS.AIRGATE_OVERRIDES);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn("Failed to load overrides from storage", e);
@@ -111,18 +83,18 @@ export function App() {
   // Dual Theme State (Dark / Light)
   const [themeMode, setThemeMode] = useState(() => {
     try {
-      const saved = localStorage.getItem("alz_theme_mode");
+      const saved = localStorage.getItem(STORAGE_KEYS.THEME_MODE);
       if (saved === "light" || saved === "dark") return saved;
     } catch (e) {
       console.warn("Failed to load theme mode from storage", e);
     }
-    return "dark";
+    return DEFAULT_THEME_MODE;
   });
 
   useEffect(() => {
     try {
       document.documentElement.setAttribute("data-theme", themeMode);
-      localStorage.setItem("alz_theme_mode", themeMode);
+      localStorage.setItem(STORAGE_KEYS.THEME_MODE, themeMode);
     } catch (e) {
       console.warn("Failed to sync theme attribute to DOM", e);
     }
@@ -138,16 +110,12 @@ export function App() {
 
   // Sync to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem("alz_policy_customers", JSON.stringify(customers));
-    } catch (e) {
-      console.warn("Failed to save customers to storage", e);
-    }
+    saveStoredCustomers(customers);
   }, [customers]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("alz_active_tab", activeTab);
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_TAB, activeTab);
     } catch (e) {
       console.warn("Failed to save active tab to storage", e);
     }
@@ -155,7 +123,7 @@ export function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem("alz_active_customer_id", activeCustomerId);
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_CUSTOMER_ID, activeCustomerId);
     } catch (e) {
       console.warn("Failed to save active customer to storage", e);
     }
@@ -163,7 +131,7 @@ export function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem("alz_policy_catalog", JSON.stringify(catalog));
+      localStorage.setItem(STORAGE_KEYS.POLICY_CATALOG, JSON.stringify(catalog));
     } catch (e) {
       console.warn("Failed to save catalog to storage", e);
     }
@@ -171,7 +139,7 @@ export function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem("alz_airgate_overrides", JSON.stringify(overrides));
+      localStorage.setItem(STORAGE_KEYS.AIRGATE_OVERRIDES, JSON.stringify(overrides));
     } catch (e) {
       console.warn("Failed to save overrides to storage", e);
     }
@@ -184,7 +152,7 @@ export function App() {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 3200);
+    }, TOAST_DURATION_MS);
   };
 
   const handleUpdateCustomer = (updated) => {
@@ -238,18 +206,7 @@ export function App() {
   };
 
   const handleBumpVersion = (type) => {
-    const current = activeCustomer.version || "1.0.0";
-    const parts = current.split(".").map((n) => parseInt(n, 10) || 0);
-    while (parts.length < 3) parts.push(0);
-
-    if (type === "patch") {
-      parts[2] += 1;
-    } else if (type === "minor") {
-      parts[1] += 1;
-      parts[2] = 0;
-    }
-
-    const newVersion = parts.join(".");
+    const newVersion = bumpSemver(activeCustomer.version, type);
     const updated = {
       ...activeCustomer,
       version: newVersion
@@ -262,23 +219,22 @@ export function App() {
     setCatalog((prev) => [...prev, newType]);
   };
 
-  // Telemetry Metrics calculation
-  const totalTagRules =
-    (activeCustomer.tags?.subscription?.length || 0) +
-    (activeCustomer.tags?.resourceGroup?.length || 0) +
-    (activeCustomer.tags?.resource?.length || 0);
+  // Dynamic Telemetry Metrics derived from active topology & governance state
+  const topoStats = useMemo(() => calculateTopologyStats(activeCustomer), [activeCustomer]);
+  const readiness = useMemo(() => calculateGovernanceReadiness(activeCustomer, catalog), [activeCustomer, catalog]);
+  const totalTagRules = useMemo(() => calculateTotalTagRules(activeCustomer), [activeCustomer]);
 
   const stats = [
     {
       label: "Active Workspace",
       value: activeCustomer.name,
-      meta: `${activeCustomer.subscriptionCode || "COR"} · v${activeCustomer.version || "1.0.0"}`,
+      meta: `${activeCustomer.subscriptionCode || "COR"} · v${activeCustomer.version || "1.0.0"} · ${(activeCustomer.environmentParadigm || "greenfield").toUpperCase()}`,
       accentValue: true
     },
     {
       label: "Management Scope",
-      value: "4 Levels",
-      meta: "Root → Platform → LZ → Sandbox"
+      value: topoStats.scopeLabel,
+      meta: topoStats.scopeMeta
     },
     {
       label: "Resource Types",
@@ -292,17 +248,17 @@ export function App() {
     },
     {
       label: "Readiness Index",
-      value: "96%",
-      meta: "ALZ v2.4 Compliant",
-      accentValue: true
+      value: readiness.score,
+      meta: readiness.meta,
+      accentValue: readiness.isOptimal
     }
   ];
 
   const studioTabs = [
-    { id: "topology", num: "01", label: "TOPOLOGY & SCOPES", badge: "Unified" },
+    { id: "topology", num: "01", label: "TOPOLOGY & SCOPES", badge: `${topoStats.subCount} Subs` },
     { id: "naming", num: "02", label: "NAMING STUDIO", badge: catalog.length },
     { id: "tagging", num: "03", label: "TAG GOVERNANCE", badge: totalTagRules },
-    { id: "catalogue", num: "04", label: "RESOURCE CATALOG", badge: "200 CAF" },
+    { id: "catalogue", num: "04", label: "RESOURCE CATALOG", badge: `${AZURE_NAMING_CATALOG.length} CAF` },
     { id: "code", num: "05", label: "IAC EXPORT", badge: `v${activeCustomer.version || "1.0"}` }
   ];
 

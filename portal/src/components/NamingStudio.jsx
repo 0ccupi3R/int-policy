@@ -11,6 +11,7 @@ import {
   DEFAULT_VM_LINUX_PATTERN
 } from "../engine/tokenParser.js";
 import { AZURE_NAMING_CATALOG } from "../data/azureNamingCatalog.js";
+import NAMING_TOKENS_CONFIG from "../data/naming-tokens.json";
 import {
   BUILTIN_NAMING_TEMPLATES,
   getCustomTemplates,
@@ -51,7 +52,9 @@ import {
   Filter,
   ArrowDown,
   Braces,
-  X
+  X,
+  Star,
+  ChevronLeft
 } from "lucide-react";
 
 const EMPTY_OBJ = {};
@@ -96,32 +99,115 @@ export function NamingStudio({
   const [tokenDrawerOpen, setTokenDrawerOpen] = useState(false);
   const [activePatternTarget, setActivePatternTarget] = useState(null); // { key, patternKey }
 
+  // Token Delimiter mode state: "hyphen" | "underscore" | "none"
+  const [tokenDelimiter, setTokenDelimiter] = useState(() => {
+    try {
+      return localStorage.getItem("alz_token_delimiter_mode") || "hyphen";
+    } catch {
+      return "hyphen";
+    }
+  });
+
+  // Token Favorites state: array of token IDs
+  const [tokenFavorites, setTokenFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem("alz_naming_token_favorites");
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return NAMING_TOKENS_CONFIG.filter((t) => t.isDefaultFavorite).map((t) => t.id);
+  });
+
+  // Token palette search query
+  const [tokenSearchQuery, setTokenSearchQuery] = useState("");
+
+  const handleToggleFavorite = (tokenId, e) => {
+    if (e) e.stopPropagation();
+    setTokenFavorites((prev) => {
+      const next = prev.includes(tokenId) ? prev.filter((id) => id !== tokenId) : [...prev, tokenId];
+      try {
+        localStorage.setItem("alz_naming_token_favorites", JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  const handleChangeDelimiter = (mode) => {
+    setTokenDelimiter(mode);
+    try {
+      localStorage.setItem("alz_token_delimiter_mode", mode);
+    } catch {
+      // ignore
+    }
+  };
+
   const handleInsertToken = (tokenStr) => {
     if (activePatternTarget) {
       if (activePatternTarget.key === "newType") {
-        setNewType((prev) => ({
-          ...prev,
-          defaultPattern: (prev.defaultPattern || "") + (prev.defaultPattern ? `-${tokenStr}` : tokenStr)
-        }));
+        setNewType((prev) => {
+          const prevPat = prev.defaultPattern || "";
+          let toAdd = tokenStr;
+          if (tokenDelimiter === "hyphen") toAdd = `${tokenStr}-`;
+          else if (tokenDelimiter === "underscore") toAdd = `${tokenStr}_`;
+          return {
+            ...prev,
+            defaultPattern: prevPat ? `${prevPat}${tokenDelimiter === "none" ? "-" : ""}${toAdd}` : toAdd
+          };
+        });
         onShowToast(`Inserted ${tokenStr} into custom type pattern`);
         return;
       }
 
-      const inputEl = document.getElementById(`pattern-input-${activePatternTarget.key}`) || document.getElementById(`pattern-input-${activePatternTarget.patternKey}`);
-      const currentPattern = customPatterns[activePatternTarget.patternKey] || "";
+      const inputEl =
+        document.getElementById(`pattern-input-${activePatternTarget.key}`) ||
+        document.getElementById(`pattern-input-${activePatternTarget.patternKey}`);
+
+      // 1. Primary ground truth: live DOM value from the focused input
+      // 2. Secondary: customPatterns entry
+      // 3. Fallback: item.defaultPattern or standard airgatePattern
+      let currentPattern = "";
+      if (inputEl && typeof inputEl.value === "string") {
+        currentPattern = inputEl.value;
+      } else if (customPatterns[activePatternTarget.patternKey]) {
+        currentPattern = customPatterns[activePatternTarget.patternKey];
+      } else {
+        const foundItem = catalog.find((c) => c.key === activePatternTarget.key || c.key === activePatternTarget.patternKey);
+        currentPattern = foundItem?.defaultPattern || (foundItem?.abbreviation ? `{Org}-{SUB}-{ResourceGroup}-${foundItem.abbreviation}` : `{Org}-{SUB}-{ResourceGroup}`);
+      }
+
       let nextPattern = currentPattern;
 
       if (inputEl) {
         const start = inputEl.selectionStart ?? currentPattern.length;
         const end = inputEl.selectionEnd ?? currentPattern.length;
-        nextPattern = currentPattern.slice(0, start) + tokenStr + currentPattern.slice(end);
+
+        // Apply delimiter setting, avoiding duplicate delimiters if adjacent character is already the same delimiter
+        let formattedToken = tokenStr;
+        if (tokenDelimiter === "hyphen") {
+          const nextChar = currentPattern.charAt(end);
+          formattedToken = nextChar === "-" ? tokenStr : `${tokenStr}-`;
+        } else if (tokenDelimiter === "underscore") {
+          const nextChar = currentPattern.charAt(end);
+          formattedToken = nextChar === "_" ? tokenStr : `${tokenStr}_`;
+        }
+
+        nextPattern = currentPattern.slice(0, start) + formattedToken + currentPattern.slice(end);
         handlePatternChange(activePatternTarget.patternKey, nextPattern);
+
         setTimeout(() => {
           inputEl.focus();
-          inputEl.setSelectionRange(start + tokenStr.length, start + tokenStr.length);
-        }, 20);
+          const newPos = start + formattedToken.length;
+          inputEl.setSelectionRange(newPos, newPos);
+        }, 15);
       } else {
-        nextPattern = currentPattern ? `${currentPattern}-${tokenStr}` : tokenStr;
+        let formattedToken = tokenStr;
+        if (tokenDelimiter === "hyphen") formattedToken = `${tokenStr}-`;
+        else if (tokenDelimiter === "underscore") formattedToken = `${tokenStr}_`;
+
+        nextPattern = currentPattern ? `${currentPattern}-${formattedToken}` : formattedToken;
         handlePatternChange(activePatternTarget.patternKey, nextPattern);
       }
       onShowToast(`Inserted ${tokenStr} into pattern`);
@@ -153,6 +239,48 @@ export function NamingStudio({
       return () => window.removeEventListener("keydown", handleKeyDown);
     }
   }, [showAddTypeModal, showTemplateModal, tokenDrawerOpen]);
+
+  const activeTargetItem = activePatternTarget
+    ? catalog.find((c) => c.key === activePatternTarget.key || c.key === activePatternTarget.patternKey)
+    : null;
+  const activeTargetLabel =
+    activePatternTarget?.key === "newType"
+      ? "Custom Type"
+      : activeTargetItem?.name || activePatternTarget?.key || "Select Input";
+
+  const filteredTokens = useMemo(() => {
+    if (!tokenSearchQuery.trim()) return NAMING_TOKENS_CONFIG;
+    const q = tokenSearchQuery.toLowerCase();
+    return NAMING_TOKENS_CONFIG.filter(
+      (t) =>
+        t.token.toLowerCase().includes(q) ||
+        t.label.toLowerCase().includes(q) ||
+        t.desc.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q)
+    );
+  }, [tokenSearchQuery]);
+
+  const favoriteTokensList = useMemo(() => {
+    return NAMING_TOKENS_CONFIG.filter((t) => tokenFavorites.includes(t.id));
+  }, [tokenFavorites]);
+
+  const tokenCategories = useMemo(() => {
+    const cats = [];
+    filteredTokens.forEach((t) => {
+      if (!cats.includes(t.category)) cats.push(t.category);
+    });
+    return cats;
+  }, [filteredTokens]);
+
+  const catTokens = useMemo(() => {
+    const map = {};
+    filteredTokens.forEach((t) => {
+      if (!map[t.category]) map[t.category] = [];
+      map[t.category].push(t);
+    });
+    return map;
+  }, [filteredTokens]);
+
   const [newType, setNewType] = useState({
     key: "",
     name: "",
@@ -402,8 +530,8 @@ export function NamingStudio({
   const isTestVm = testTypeKey === "vm" || (currentTestItem?.resourceType || "").toLowerCase().includes("virtualmachines");
   const effectiveTestPattern = isTestVm
     ? (testOsType === "Windows"
-        ? (customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN)
-        : (customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN))
+      ? (customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN)
+      : (customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN))
     : (customPatterns[testTypeKey] || namingRules.globalPattern || currentTestItem?.defaultPattern);
   const currentTestPattern = effectiveTestPattern;
   const isTestItemUnrestricted = unrestrictedTypes.includes(testTypeKey);
@@ -660,31 +788,36 @@ export function NamingStudio({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-      {/* 0. Contextual Token Palette Drawer (Hidden by default, slides in from left on focus/click) */}
-      <div
-        id="naming-token-palette-drawer"
+    <div className="naming-studio-root" style={{ display: "flex", gap: "20px", alignItems: "flex-start", position: "relative" }}>
+      {/* 0. Contextual Token Palette Sticky Left Sidebar (Smoothly expands/collapses in-flow so inputs are NEVER occluded) */}
+      <aside
+        id="naming-token-palette-sidebar"
+        aria-label="Smart Token Palette"
         style={{
-          position: "fixed",
-          top: "64px",
-          left: 0,
-          bottom: 0,
-          width: "310px",
-          zIndex: 1050,
+          width: tokenDrawerOpen ? "320px" : "0px",
+          minWidth: tokenDrawerOpen ? "320px" : "0px",
+          opacity: tokenDrawerOpen ? 1 : 0,
+          pointerEvents: tokenDrawerOpen ? "auto" : "none",
+          overflow: "hidden",
+          transition: "width 0.22s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.22s, opacity 0.18s",
+          position: "sticky",
+          top: "80px",
+          height: "calc(100vh - 100px)",
+          maxHeight: "calc(100vh - 100px)",
           background: "var(--bg-surface)",
-          borderRight: "1px solid var(--border-hairline)",
-          boxShadow: tokenDrawerOpen ? "8px 0 32px rgba(0, 0, 0, 0.55)" : "none",
-          transform: tokenDrawerOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)",
+          border: tokenDrawerOpen ? "1px solid var(--border-hairline)" : "none",
+          borderRadius: "var(--radius-sm)",
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden"
+          flexShrink: 0,
+          boxShadow: tokenDrawerOpen ? "0 8px 24px rgba(0, 0, 0, 0.35)" : "none",
+          zIndex: 40
         }}
       >
-        {/* Drawer Header */}
+        {/* Sidebar Header */}
         <div
           style={{
-            padding: "12px 16px",
+            padding: "10px 14px",
             borderBottom: "1px solid var(--border-hairline)",
             display: "flex",
             alignItems: "center",
@@ -699,7 +832,7 @@ export function NamingStudio({
                 SMART TOKENS
               </div>
               <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
-                Click to insert into active input
+                1-click insert at cursor
               </div>
             </div>
           </div>
@@ -711,21 +844,24 @@ export function NamingStudio({
               border: "none",
               color: "var(--text-muted)",
               cursor: "pointer",
-              padding: "4px",
+              padding: "4px 8px",
               display: "flex",
               alignItems: "center",
+              gap: "4px",
+              fontSize: "0.74rem",
               borderRadius: "4px"
             }}
-            title="Close Token Palette (Esc)"
+            title="Collapse Token Palette (Esc)"
           >
-            <X size={16} />
+            <ChevronLeft size={14} />
+            <span>Collapse</span>
           </button>
         </div>
 
         {/* Active Target Banner */}
         <div
           style={{
-            padding: "8px 16px",
+            padding: "8px 14px",
             background: "var(--bg-surface-elevated)",
             borderBottom: "1px solid var(--border-hairline)",
             fontSize: "0.72rem",
@@ -735,1267 +871,1312 @@ export function NamingStudio({
             justifyContent: "space-between"
           }}
         >
-          {activePatternTarget ? (
-            <span>
-              Target: <strong style={{ color: "var(--accent-primary)" }}>{activePatternTarget.key}</strong>
-            </span>
-          ) : (
-            <span style={{ color: "var(--text-muted)" }}>Click an input to target</span>
-          )}
-          <span style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Auto-Inserts</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "220px" }}>
+            Target: <strong style={{ color: "var(--accent-primary)" }}>{activeTargetLabel}</strong>
+          </span>
+          <span className="au-badge au-badge-subtle" style={{ fontSize: "0.64rem", padding: "1px 5px" }}>
+            Auto-Inserts
+          </span>
         </div>
 
-        {/* Scrollable Token Categories */}
+        {/* Delimiter Auto-Append Segmented Control */}
+        <div
+          style={{
+            padding: "8px 14px",
+            borderBottom: "1px solid var(--border-hairline)",
+            background: "var(--bg-canvas)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "5px"
+          }}
+        >
+          <div style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Auto-Append Separator:
+          </div>
+          <div style={{ display: "flex", gap: "4px" }}>
+            {[
+              { id: "hyphen", label: "- Hyphen", preview: "{tok}-" },
+              { id: "underscore", label: "_ Underscore", preview: "{tok}_" },
+              { id: "none", label: "None", preview: "{tok}" }
+            ].map((d) => {
+              const isSelected = tokenDelimiter === d.id;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => handleChangeDelimiter(d.id)}
+                  style={{
+                    flex: 1,
+                    padding: "4px 6px",
+                    fontSize: "0.7rem",
+                    fontFamily: "var(--font-mono)",
+                    background: isSelected ? "var(--accent-tint)" : "var(--bg-surface)",
+                    color: isSelected ? "var(--accent-primary)" : "var(--text-secondary)",
+                    border: `1px solid ${isSelected ? "var(--accent-primary)" : "var(--border-hairline)"}`,
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    textAlign: "center",
+                    fontWeight: isSelected ? 600 : 400,
+                    transition: "all var(--ease-snappy)"
+                  }}
+                  title={`Append ${d.preview} when inserting tokens`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Token Search Filter */}
+        <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--border-hairline)", position: "relative" }}>
+          <Search size={13} style={{ position: "absolute", left: "22px", top: "16px", color: "var(--text-muted)" }} />
+          <input
+            type="text"
+            className="form-input form-input-mono"
+            placeholder="Search tokens..."
+            value={tokenSearchQuery}
+            onChange={(e) => setTokenSearchQuery(e.target.value)}
+            style={{ width: "100%", paddingLeft: "28px", fontSize: "0.75rem", height: "30px" }}
+          />
+        </div>
+
+        {/* Scrollable Tokens & Favorites List */}
         <div
           style={{
             flex: 1,
             overflowY: "auto",
-            padding: "12px",
+            padding: "12px 14px",
             display: "flex",
             flexDirection: "column",
             gap: "14px"
           }}
         >
-          {/* Section 1: Core Context */}
+          {/* Favorites Section */}
           <div>
-            <div style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
-              Core Context
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <div style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--accent-amber)", textTransform: "uppercase", letterSpacing: "0.08em", display: "flex", alignItems: "center", gap: "4px" }}>
+                <Star size={11} fill="var(--accent-amber)" color="var(--accent-amber)" />
+                Favorites ({favoriteTokensList.length})
+              </div>
+              <span style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>★ toggle</span>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              {[
-                { token: "{org}", desc: "Organization code", ex: "air" },
-                { token: "{sub}", desc: "Subscription code", ex: "prod" },
-                { token: "{env}", desc: "Environment code", ex: "prd" },
-                { token: "{rg}", desc: "Resource group token", ex: "core" },
-                { token: "{region}", desc: "Azure region code", ex: "cc" },
-                { token: "{purpose}", desc: "Workload purpose", ex: "app" }
-              ].map((t) => (
-                <button
-                  key={t.token}
-                  type="button"
-                  onClick={() => handleInsertToken(t.token)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "6px 10px",
-                    background: "var(--bg-canvas)",
-                    border: "1px solid var(--border-hairline)",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all var(--ease-snappy)"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "var(--accent-primary)";
-                    e.currentTarget.style.background = "var(--accent-tint)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "var(--border-hairline)";
-                    e.currentTarget.style.background = "var(--bg-canvas)";
-                  }}
-                  title={`Insert ${t.token} (${t.desc})`}
-                >
-                  <div>
-                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.78rem", color: "var(--accent-primary)" }}>
+            {favoriteTokensList.length === 0 ? (
+              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontStyle: "italic", padding: "6px" }}>
+                Star any token below to pin here for quick access.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                {favoriteTokensList.map((t) => (
+                  <div
+                    key={`fav-${t.id}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      background: "var(--bg-canvas)",
+                      border: "1px solid var(--border-hairline)",
+                      borderRadius: "4px",
+                      overflow: "hidden"
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleInsertToken(t.token)}
+                      style={{
+                        padding: "4px 8px",
+                        background: "transparent",
+                        border: "none",
+                        color: "var(--accent-primary)",
+                        fontFamily: "var(--font-mono)",
+                        fontWeight: 700,
+                        fontSize: "0.74rem",
+                        cursor: "pointer"
+                      }}
+                      title={`Insert ${t.token} (${t.desc})`}
+                    >
                       {t.token}
-                    </span>
-                    <div style={{ fontSize: "0.68rem", color: "var(--text-secondary)" }}>
-                      {t.desc}
-                    </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleFavorite(t.id, e)}
+                      style={{
+                        padding: "4px 5px",
+                        background: "transparent",
+                        border: "none",
+                        color: "var(--accent-amber)",
+                        cursor: "pointer"
+                      }}
+                      title="Remove from favorites"
+                    >
+                      <Star size={10} fill="var(--accent-amber)" />
+                    </button>
                   </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", color: "var(--text-muted)" }}>
-                    {t.ex}
-                  </span>
-                </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Section 2: Resource Identity */}
-          <div>
-            <div style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
-              Resource Identity
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              {[
-                { token: "{abbreviation}", desc: "CAF Resource shortcode", ex: "vnet, st" },
-                { token: "{instance}", desc: "Sequence counter", ex: "01, 02" },
-                { token: "{workload}", desc: "Application / Workload", ex: "portal" },
-                { token: "{name}", desc: "Custom resource name", ex: "hub" }
-              ].map((t) => (
-                <button
-                  key={t.token}
-                  type="button"
-                  onClick={() => handleInsertToken(t.token)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "6px 10px",
-                    background: "var(--bg-canvas)",
-                    border: "1px solid var(--border-hairline)",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all var(--ease-snappy)"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "var(--accent-primary)";
-                    e.currentTarget.style.background = "var(--accent-tint)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "var(--border-hairline)";
-                    e.currentTarget.style.background = "var(--bg-canvas)";
-                  }}
-                  title={`Insert ${t.token} (${t.desc})`}
-                >
-                  <div>
-                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.78rem", color: "var(--accent-cyan)" }}>
-                      {t.token}
-                    </span>
-                    <div style={{ fontSize: "0.68rem", color: "var(--text-secondary)" }}>
-                      {t.desc}
-                    </div>
-                  </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", color: "var(--text-muted)" }}>
-                    {t.ex}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Categorized Groups */}
+          {tokenCategories.map((cat) => {
+            const items = catTokens[cat] || [];
+            if (items.length === 0) return null;
 
-          {/* Section 3: Full Name & Case Variants */}
-          <div>
-            <div style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
-              Full Names & Upper/Title Case
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px" }}>
-              {[
-                "{Org}", "{OrgName}",
-                "{SUB}", "{SubName}",
-                "{ENV}", "{EnvName}",
-                "{RG}", "{ResourceGroup}",
-                "{ORGNAME}", "{SUBNAME}",
-                "{ENVNAME}", "{RGNAME}"
-              ].map((tok) => (
-                <button
-                  key={tok}
-                  type="button"
-                  onClick={() => handleInsertToken(tok)}
-                  style={{
-                    padding: "6px 8px",
-                    background: "var(--bg-canvas)",
-                    border: "1px solid var(--border-hairline)",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    textAlign: "center",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.74rem",
-                    fontWeight: 600,
-                    color: "var(--text-primary)",
-                    transition: "all var(--ease-snappy)"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "var(--accent-primary)";
-                    e.currentTarget.style.background = "var(--accent-tint)";
-                    e.currentTarget.style.color = "var(--accent-primary)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "var(--border-hairline)";
-                    e.currentTarget.style.background = "var(--bg-canvas)";
-                    e.currentTarget.style.color = "var(--text-primary)";
-                  }}
-                  title={`Insert ${tok}`}
-                >
-                  {tok}
-                </button>
-              ))}
-            </div>
-          </div>
+            return (
+              <div key={cat}>
+                <div style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
+                  {cat} ({items.length})
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {items.map((t) => {
+                    const isFav = tokenFavorites.includes(t.id);
+                    return (
+                      <div
+                        key={t.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "6px 8px",
+                          background: "var(--bg-canvas)",
+                          border: "1px solid var(--border-hairline)",
+                          borderRadius: "4px",
+                          transition: "all var(--ease-snappy)"
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleInsertToken(t.token)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            flex: 1,
+                            minWidth: 0,
+                            padding: 0
+                          }}
+                          title={`Insert ${t.token} (${t.desc})`}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.78rem", color: "var(--accent-primary)" }}>
+                              {t.token}
+                            </span>
+                            <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", color: "var(--text-muted)" }}>
+                              → {t.sample}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: "0.68rem", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {t.desc}
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleToggleFavorite(t.id, e)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: isFav ? "var(--accent-amber)" : "var(--text-muted)",
+                            cursor: "pointer",
+                            padding: "4px",
+                            display: "flex",
+                            alignItems: "center"
+                          }}
+                          title={isFav ? "Remove from favorites" : "Add to favorites"}
+                        >
+                          <Star size={12} fill={isFav ? "var(--accent-amber)" : "none"} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
+      </aside>
 
-      {/* Brownfield Inferred Naming Patterns Review Banner */}
-      {customer.namingRules?.inferredPatterns && Object.keys(customer.namingRules.inferredPatterns).length > 0 && (
-        <div
-          className="glass-panel"
-          style={{
-            padding: "16px 20px",
-            background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%)",
-            border: "1px solid var(--accent-gold)",
-            borderRadius: "var(--radius-lg)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "14px"
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+      {/* Main Studio Content Area (Fluidly shifts beside sidebar with zero occlusion) */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "28px" }}>
+
+        {/* Brownfield Inferred Naming Patterns Review Banner */}
+        {customer.namingRules?.inferredPatterns && Object.keys(customer.namingRules.inferredPatterns).length > 0 && (
+          <div
+            className="glass-panel"
+            style={{
+              padding: "16px 20px",
+              background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%)",
+              border: "1px solid var(--accent-gold)",
+              borderRadius: "var(--radius-lg)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "8px",
+                    background: "rgba(245, 158, 11, 0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--accent-gold)"
+                  }}
+                >
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                      Brownfield Discovered Naming Patterns
+                    </span>
+                    <AuBadge variant="gold">
+                      {Object.keys(customer.namingRules.inferredPatterns).length} Resource Types Inferred
+                    </AuBadge>
+                    <AuBadge variant="teal">LIVE TENANT REVERSE-ENGINEERED</AuBadge>
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    The Inference Engine deconstructed resource names from your live tenant discovery scan and mapped them to tokens ({'{Org}'}, {'{SUB}'}, {'{ENV}'}, {'{Instance}'}). Review and approve them to formalize your naming conventions.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px" }}>
+                <AuButton
+                  variant="primary"
+                  size="sm"
+                  icon={<Check size={14} />}
+                  onClick={() => handleApproveAllInferred()}
+                >
+                  Approve All Inferred ({Object.keys(customer.namingRules.inferredPatterns).length})
+                </AuButton>
+                <AuButton
+                  variant="secondary"
+                  size="sm"
+                  icon={<XCircle size={14} />}
+                  onClick={() => handleDismissInferred()}
+                >
+                  Dismiss
+                </AuButton>
+              </div>
+            </div>
+
+            {/* Grid of inferred pattern cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "10px" }}>
+              {Object.entries(customer.namingRules.inferredPatterns).map(([typeKey, inf]) => {
+                const catalogItem = catalog.find((c) => c.key === typeKey);
+                const displayName = catalogItem ? catalogItem.name : typeKey.toUpperCase();
+                return (
+                  <div
+                    key={typeKey}
+                    style={{
+                      padding: "10px 14px",
+                      background: "var(--surface-bg)",
+                      border: "1px solid var(--border-subtle)",
+                      borderRadius: "var(--radius-md)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "6px"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontWeight: "600", fontSize: "0.82rem", color: "var(--text-primary)" }}>
+                        {displayName} ({typeKey})
+                      </span>
+                      <span
+                        className={`au-badge ${inf.confidence === "HIGH" ? "au-badge-mint" : inf.confidence === "MEDIUM" ? "au-badge-gold" : ""}`}
+                        style={{ fontSize: "0.68rem" }}
+                      >
+                        {inf.confidence} CONFIDENCE
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
+                      Sample: <code style={{ color: "var(--text-secondary)" }}>{inf.sampleDiscovered}</code>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "4px" }}>
+                      <code style={{ fontSize: "0.78rem", color: "var(--accent-mint)", fontWeight: "600" }}>
+                        {inf.pattern}
+                      </code>
+                      <button
+                        type="button"
+                        className="au-btn au-btn-sm au-btn-secondary"
+                        style={{ fontSize: "0.72rem", padding: "0.2rem 0.5rem" }}
+                        onClick={() => handleApproveSingleInferred(typeKey, inf.pattern)}
+                      >
+                        Adopt
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Azure Platform Constraints Global Warning Banner */}
+        {platformViolations.length > 0 && (
+          <div
+            className="glass-panel"
+            style={{
+              padding: "16px 20px",
+              background: "var(--status-danger-bg)",
+              border: "1px solid var(--status-danger-border)",
+              borderRadius: "var(--radius-lg)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px"
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div
                 style={{
                   width: "36px",
                   height: "36px",
                   borderRadius: "8px",
-                  background: "rgba(245, 158, 11, 0.2)",
+                  background: "var(--status-danger-border)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--accent-gold)"
+                  color: "var(--status-danger-text)"
                 }}
               >
-                <Sparkles size={20} />
+                <AlertTriangle size={20} />
               </div>
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                  <span style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--text-primary)" }}>
-                    Brownfield Discovered Naming Patterns
-                  </span>
-                  <AuBadge variant="gold">
-                    {Object.keys(customer.namingRules.inferredPatterns).length} Resource Types Inferred
-                  </AuBadge>
-                  <AuBadge variant="teal">LIVE TENANT REVERSE-ENGINEERED</AuBadge>
+                <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--status-danger-text)" }}>
+                  {platformViolations.length} Resource Naming Pattern{platformViolations.length > 1 ? "s" : ""} Violate Azure Platform Constraints
                 </div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-                  The Inference Engine deconstructed resource names from your live tenant discovery scan and mapped them to tokens ({'{Org}'}, {'{SUB}'}, {'{ENV}'}, {'{Instance}'}). Review and approve them to formalize your naming conventions.
+                  Azure ARM will fail resource creation if names exceed length bounds or contain forbidden characters (e.g., Storage Accounts reject hyphens & uppercase).
                 </div>
               </div>
             </div>
-
-            <div style={{ display: "flex", gap: "8px" }}>
-              <AuButton
-                variant="primary"
-                size="sm"
-                icon={<Check size={14} />}
-                onClick={() => handleApproveAllInferred()}
-              >
-                Approve All Inferred ({Object.keys(customer.namingRules.inferredPatterns).length})
-              </AuButton>
-              <AuButton
-                variant="secondary"
-                size="sm"
-                icon={<XCircle size={14} />}
-                onClick={() => handleDismissInferred()}
-              >
-                Dismiss
-              </AuButton>
-            </div>
-          </div>
-
-          {/* Grid of inferred pattern cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "10px" }}>
-            {Object.entries(customer.namingRules.inferredPatterns).map(([typeKey, inf]) => {
-              const catalogItem = catalog.find((c) => c.key === typeKey);
-              const displayName = catalogItem ? catalogItem.name : typeKey.toUpperCase();
-              return (
-                <div
-                  key={typeKey}
-                  style={{
-                    padding: "10px 14px",
-                    background: "var(--surface-bg)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: "var(--radius-md)",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px"
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: "600", fontSize: "0.82rem", color: "var(--text-primary)" }}>
-                      {displayName} ({typeKey})
-                    </span>
-                    <span
-                      className={`au-badge ${inf.confidence === "HIGH" ? "au-badge-mint" : inf.confidence === "MEDIUM" ? "au-badge-gold" : ""}`}
-                      style={{ fontSize: "0.68rem" }}
-                    >
-                      {inf.confidence} CONFIDENCE
-                    </span>
-                  </div>
-                  <div style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
-                    Sample: <code style={{ color: "var(--text-secondary)" }}>{inf.sampleDiscovered}</code>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "4px" }}>
-                    <code style={{ fontSize: "0.78rem", color: "var(--accent-mint)", fontWeight: "600" }}>
-                      {inf.pattern}
-                    </code>
-                    <button
-                      type="button"
-                      className="au-btn au-btn-sm au-btn-secondary"
-                      style={{ fontSize: "0.72rem", padding: "0.2rem 0.5rem" }}
-                      onClick={() => handleApproveSingleInferred(typeKey, inf.pattern)}
-                    >
-                      Adopt
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Azure Platform Constraints Global Warning Banner */}
-      {platformViolations.length > 0 && (
-        <div
-          className="glass-panel"
-          style={{
-            padding: "16px 20px",
-            background: "var(--status-danger-bg)",
-            border: "1px solid var(--status-danger-border)",
-            borderRadius: "var(--radius-lg)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px"
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "8px",
-                background: "var(--status-danger-border)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--status-danger-text)"
-              }}
-            >
-              <AlertTriangle size={20} />
-            </div>
-            <div>
-              <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--status-danger-text)" }}>
-                {platformViolations.length} Resource Naming Pattern{platformViolations.length > 1 ? "s" : ""} Violate Azure Platform Constraints
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-                Azure ARM will fail resource creation if names exceed length bounds or contain forbidden characters (e.g., Storage Accounts reject hyphens & uppercase).
-              </div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-            <button
-              type="button"
-              id="naming-filter-violations-btn"
-              className={`btn btn-sm ${filterOnlyViolations ? "btn-danger" : "btn-secondary"}`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 14px",
-                fontWeight: "600",
-                fontSize: "0.8rem",
-                borderColor: "rgba(244, 63, 94, 0.4)"
-              }}
-              onClick={() => setFilterOnlyViolations((prev) => !prev)}
-              title="Show only resource types that have naming violations"
-            >
-              <Filter size={14} /> {filterOnlyViolations ? "Show All Types" : `Filter to Non-Compliant (${platformViolations.length})`}
-            </button>
-
-            <button
-              type="button"
-              id="naming-autofix-all-btn"
-              className="btn btn-sm btn-outline-danger"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 16px",
-                fontWeight: "600",
-                fontSize: "0.8rem"
-              }}
-              onClick={handleAutoFixAll}
-            >
-              <Zap size={15} /> Auto-Fix All Violations ({platformViolations.length})
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 1. Global Pattern Bar & Action Controls */}
-      <div className="glass-panel" style={{ padding: "18px 22px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-          <div>
-            <h2 style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
-              <Layers size={18} color="var(--accent-primary)" />
-              Naming Convention Pattern Engine
-            </h2>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "3px", margin: 0 }}>
-              Build dynamic naming rules with smart tokens ({`{org}`}, {`{sub}`}, {`{env}`}, {`{rg}`}, {`{abbr}`}). Click any input to reveal token drawer.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-            <AuButton
-              variant={tokenDrawerOpen ? "primary" : "secondary"}
-              size="sm"
-              onClick={() => setTokenDrawerOpen(!tokenDrawerOpen)}
-              icon={<Braces size={14} />}
-              title="Open or close the Smart Token Palette sidebar"
-            >
-              {tokenDrawerOpen ? "Close Tokens" : "{ } Smart Tokens"}
-            </AuButton>
-
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() => setShowTemplateModal(true)}
-              title="Load a curated naming baseline (AirGate Core, AI Workloads, Microservices) or save custom template"
-            >
-              <LayoutTemplate size={15} />
-              <span>Baselines & Templates</span>
-            </button>
-            <button className="btn btn-primary btn-sm" onClick={() => setShowAddTypeModal(true)}>
-              <Plus size={15} />
-              <span>Add Resource Type</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Interactive Live Sandbox Validator */}
-      <AuHudCard
-        kicker="INTERACTIVE TEST BENCH"
-        title="Live Azure Resource Name Compliance Sandbox"
-        meta="Real-time Cloud Adoption Framework (CAF) regex & ARM platform constraint evaluator"
-        action={
-          <AuButton
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              const sample = toSampleName(currentTestPattern, customer, currentTestItem, { region: testRegion, purpose: effectivePurpose });
-              setTestName(sample);
-              onShowToast(`Populated sample: ${sample}`);
-            }}
-            icon={<Sparkles size={13} style={{ color: "var(--accent-mint)" }} />}
-          >
-            Auto-Generate Sample
-          </AuButton>
-        }
-      >
-        <div style={{ display: "grid", gridTemplateColumns: isTestVm ? "220px 170px 170px 150px 1fr" : "220px 170px 150px 1fr", gap: "12px", alignItems: "flex-end" }}>
-          <div>
-            <AuSelect
-              id="sandbox-resource-type"
-              label="Resource Type"
-              searchable={true}
-              value={testTypeKey}
-              onChange={setTestTypeKey}
-              options={catalog.map((c) => ({
-                value: c.key,
-                label: c.name,
-                badge: c.abbreviation
-              }))}
-            />
-          </div>
-
-          {isTestVm && (
-            <div>
-              <AuSelect
-                id="sandbox-os-type"
-                label="OS Platform"
-                value={testOsType}
-                onChange={setTestOsType}
-                options={[
-                  { value: "Windows", label: "Windows (15 max)", badge: "🪟 Win" },
-                  { value: "Linux", label: "Linux (64 max)", badge: "🐧 Lnx" }
-                ]}
-              />
-            </div>
-          )}
-
-          <div>
-            <AuSelect
-              id="sandbox-region"
-              label="Region"
-              value={testRegion}
-              onChange={setTestRegion}
-              options={Object.entries(customer.regions || {}).map(([loc, code]) => ({
-                value: code,
-                label: loc,
-                badge: code
-              }))}
-            />
-          </div>
-
-          <div>
-            <AuSelect
-              id="sandbox-purpose"
-              label="Purpose"
-              value={testPurpose}
-              onChange={setTestPurpose}
-              options={(customer.purposes && customer.purposes.length > 0
-                ? customer.purposes
-                : ["hub", "core", "monitoring", "infrafw", "apps"]
-              ).map((p) => ({ value: p, label: p }))}
-            />
-          </div>
-
-
-          <div>
-            <label className="form-label" htmlFor="sandbox-test-name">Test Candidate Name</label>
-            <input
-              id="sandbox-test-name"
-              name="sandbox_test_name"
-              aria-label="Enter candidate name to evaluate compliance"
-              type="text"
-              className="form-input form-input-mono"
-              placeholder={`e.g. ${toSampleName(currentTestPattern, customer, currentTestItem, { region: testRegion, purpose: effectivePurpose })}`}
-              value={testName}
-              onChange={(e) => setTestName(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Validation Result Box */}
-        {testName.trim() && (
-          <div
-            style={{
-              marginTop: "14px",
-              padding: "12px 16px",
-              borderRadius: "var(--radius-sm)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "12px",
-              background: isTestItemUnrestricted
-                ? "var(--bg-canvas)"
-                : testValidation.valid
-                ? "var(--accent-mint-tint)"
-                : "var(--accent-rose-tint)",
-              border: `1px solid ${
-                isTestItemUnrestricted
-                  ? "var(--border-hairline)"
-                  : testValidation.valid
-                  ? "var(--accent-mint)"
-                  : "var(--accent-rose)"
-              }`
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", flex: 1 }}>
-              {isTestItemUnrestricted ? (
-                <HelpCircle size={20} color="var(--text-muted)" style={{ marginTop: "2px", flexShrink: 0 }} />
-              ) : testValidation.valid ? (
-                <CheckCircle size={20} color="var(--accent-mint)" style={{ marginTop: "2px", flexShrink: 0 }} />
-              ) : (
-                <XCircle size={20} color="var(--accent-rose)" style={{ marginTop: "2px", flexShrink: 0 }} />
-              )}
-
-              <div>
-                <div style={{ fontWeight: "700", fontSize: "0.9rem" }}>
-                  {isTestItemUnrestricted
-                    ? "UNRESTRICTED: Direct creation allowed without naming restrictions."
-                    : testValidation.valid
-                    ? "COMPLIANT: Allowed by Azure Policy & Valid Azure ARM Name"
-                    : !testValidation.platformValid
-                    ? "ARM PLATFORM REJECTION: Fails Azure Physical Constraints"
-                    : "NON-COMPLIANT: Would be blocked or audited by Azure Policy"}
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-                  {testValidation.reason}
-                </div>
-                {testValidation.errors && testValidation.errors.length > 1 && (
-                  <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: "0.75rem", color: "var(--accent-rose)" }}>
-                    {testValidation.errors.map((e, idx) => (
-                      <li key={idx}>{e}</li>
-                    ))}
-                  </ul>
-                )}
-                {testValidation.warnings && testValidation.warnings.length > 0 && (
-                  <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "var(--accent-amber)" }}>
-                    ⚠️ {testValidation.warnings.join("; ")}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {testValidation.length !== undefined && !isTestItemUnrestricted && (
-              <span
-                className="au-badge"
-                style={{
-                  fontSize: "0.75rem",
-                  fontFamily: "var(--font-mono)",
-                  borderColor:
-                    testValidation.length > testValidation.maxLength ||
-                    testValidation.length < testValidation.minLength
-                      ? "var(--accent-rose)"
-                      : "var(--accent-mint)",
-                  color:
-                    testValidation.length > testValidation.maxLength ||
-                    testValidation.length < testValidation.minLength
-                      ? "var(--accent-rose)"
-                      : "var(--accent-mint)"
-                }}
-              >
-                {testValidation.length} / {testValidation.maxLength} chars
-              </span>
-            )}
-          </div>
-        )}
-      </AuHudCard>
-
-      {/* 3. Subnet Allowlist Special Module */}
-      <div className="glass-panel" style={{ padding: "20px 24px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-          <Network size={18} color="var(--azure-cyan)" />
-          <h3 style={{ fontSize: "1.05rem", fontWeight: "700" }}>Subnet Naming Allowlist</h3>
-          <span className="chip chip-purple" style={{ marginLeft: "auto" }}>Standalone & Inline Array Rules</span>
-        </div>
-
-        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "14px" }}>
-          In Azure Landing Zones, subnets require approved naming allowlists rather than open regex patterns to avoid breaking Azure reserved subnets (e.g., GatewaySubnet, AzureFirewallSubnet).
-        </p>
-
-        {/* Subnet Chips */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
-          {subnetAllowed.map((name) => (
-            <span key={name} className="chip chip-emerald" style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
-              <span>{name}</span>
-              <button
-                onClick={() => handleRemoveSubnetName(name)}
-                style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", marginLeft: "4px" }}
-              >
-                ✕
-              </button>
-            </span>
-          ))}
-        </div>
-
-        {/* Add Subnet Input & Quick Presets */}
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <input
-            id="naming-new-subnet-input"
-            name="new_subnet_name"
-            aria-label="Add new allowed subnet name"
-            type="text"
-            className="form-input form-input-mono"
-            style={{ maxWidth: "300px" }}
-            placeholder="Add subnet (e.g. snet-database)"
-            value={newSubnetName}
-            onChange={(e) => setNewSubnetName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddSubnetName(newSubnetName);
-            }}
-          />
-          <button className="btn btn-secondary btn-sm" onClick={() => handleAddSubnetName(newSubnetName)}>
-            Add Subnet
-          </button>
-
-          <span style={{ color: "var(--text-dim)", fontSize: "0.8rem", margin: "0 6px" }}>| Quick Add:</span>
-          {["GatewaySubnet", "AzureBastionSubnet", "AzureFirewallSubnet"].map((preset) => (
-            <button
-              key={preset}
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: "0.75rem", padding: "4px 8px" }}
-              disabled={subnetAllowed.includes(preset)}
-              onClick={() => handleAddSubnetName(preset)}
-            >
-              + {preset}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 4. Resource Types Catalogue & Pattern Rules */}
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
-          <div>
-            <h3 style={{ fontSize: "1.15rem", fontWeight: "700" }}>
-              Resource Type Naming Rules ({filteredCatalog.length} Types)
-            </h3>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
-              Customize pattern per resource type, switch to CAF default, or exempt for direct creation.
-            </span>
-          </div>
-
-          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
-            {/* Bulk Apply Buttons */}
-            <div style={{ display: "flex", gap: "6px" }}>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
               <button
                 type="button"
-                className="btn btn-sm btn-secondary"
-                style={{ fontSize: "0.75rem", padding: "6px 12px", display: "flex", alignItems: "center", gap: "5px" }}
-                onClick={handleApplyAirGateToAll}
-                title="Reset all resource types to AirGate Standard pattern: {Org}-{SUB}-{ResourceGroup}-{abbr}"
-              >
-                <Sliders size={13} color="var(--azure-cyan)" />
-                Apply AirGate to All
-              </button>
-              <button
-                type="button"
-                className="btn btn-sm btn-secondary"
-                style={{ fontSize: "0.75rem", padding: "6px 12px", display: "flex", alignItems: "center", gap: "5px" }}
-                onClick={handleApplyCafToAll}
-                title="Switch all resource types to Microsoft CAF pattern: {abbr}-{workload}-{env}-{region}"
-              >
-                <RotateCcw size={13} color="var(--accent-purple)" />
-                Apply Azure CAF to All
-              </button>
-            </div>
-
-            {/* Search */}
-            <div style={{ position: "relative" }}>
-              <Search size={15} style={{ position: "absolute", left: "10px", top: "12px", color: "var(--text-dim)" }} />
-              <input
-                id="naming-search-types"
-                name="search_types"
-                aria-label="Search resource types by name, key or provider"
-                type="text"
-                className="form-input"
-                style={{ paddingLeft: "32px", width: "200px", fontSize: "0.85rem" }}
-                placeholder="Search types..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            {/* Quick Non-Compliant Filter Pill if violations exist */}
-            {platformViolations.length > 0 && (
-              <button
-                type="button"
-                id="naming-toolbar-filter-violations"
+                id="naming-filter-violations-btn"
                 className={`btn btn-sm ${filterOnlyViolations ? "btn-danger" : "btn-secondary"}`}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
+                  padding: "8px 14px",
+                  fontWeight: "600",
                   fontSize: "0.8rem",
-                  borderColor: filterOnlyViolations ? "var(--status-danger-border)" : "var(--border-subtle)",
-                  background: filterOnlyViolations ? "rgba(244, 63, 94, 0.2)" : undefined,
-                  color: filterOnlyViolations ? "var(--status-danger-text)" : undefined
+                  borderColor: "rgba(244, 63, 94, 0.4)"
                 }}
                 onClick={() => setFilterOnlyViolations((prev) => !prev)}
-                title="Filter catalog to show only non-compliant types"
+                title="Show only resource types that have naming violations"
               >
-                <Filter size={13} />
-                <span>Violations ({platformViolations.length})</span>
+                <Filter size={14} /> {filterOnlyViolations ? "Show All Types" : `Filter to Non-Compliant (${platformViolations.length})`}
               </button>
-            )}
 
-            {/* Category Filter */}
-            <div style={{ minWidth: "220px" }}>
-              <AuSelect
-                id="naming-category-filter"
-                aria-label="Filter resource types by category"
-                value={selectedCategory}
-                onChange={setSelectedCategory}
-                options={categoryOptions}
-              />
+              <button
+                type="button"
+                id="naming-autofix-all-btn"
+                className="btn btn-sm btn-outline-danger"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 16px",
+                  fontWeight: "600",
+                  fontSize: "0.8rem"
+                }}
+                onClick={handleAutoFixAll}
+              >
+                <Zap size={15} /> Auto-Fix All Violations ({platformViolations.length})
+              </button>
             </div>
+          </div>
+        )}
 
-            <AuExpandCollapseButton
-              allExpanded={allCategoriesExpanded}
-              onToggle={handleToggleAllCategories}
-            />
+        {/* 1. Global Pattern Bar & Action Controls */}
+        <div className="glass-panel" style={{ padding: "18px 22px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+            <div>
+              <h2 style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                <Layers size={18} color="var(--accent-primary)" />
+                Naming Convention Pattern Engine
+              </h2>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "3px", margin: 0 }}>
+                Build dynamic naming rules with smart tokens ({`{org}`}, {`{sub}`}, {`{env}`}, {`{rg}`}, {`{abbr}`}). Click any input to reveal token drawer.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+              <AuButton
+                variant={tokenDrawerOpen ? "primary" : "secondary"}
+                size="sm"
+                onClick={() => setTokenDrawerOpen(!tokenDrawerOpen)}
+                icon={<Braces size={14} />}
+                title="Open or close the Smart Token Palette sidebar"
+              >
+                {tokenDrawerOpen ? "Close Tokens" : "Smart Tokens"}
+              </AuButton>
+
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowTemplateModal(true)}
+                title="Load a curated naming baseline (AirGate Core, AI Workloads, Microservices) or save custom template"
+              >
+                <LayoutTemplate size={15} />
+                <span>Baselines & Templates</span>
+              </button>
+              <button className="btn btn-primary btn-sm" onClick={() => setShowAddTypeModal(true)}>
+                <Plus size={15} />
+                <span>Add Resource Type</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Resource Cards Grouped by Category */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {categoryNames.length === 0 ? (
-            <div className="glass-panel" style={{ padding: "30px", textAlign: "center", color: "var(--text-dim)" }}>
-              No resource types matched your filter criteria.
+        {/* 2. Interactive Live Sandbox Validator */}
+        <AuHudCard
+          kicker="INTERACTIVE TEST BENCH"
+          title="Live Azure Resource Name Compliance Sandbox"
+          meta="Real-time Cloud Adoption Framework (CAF) regex & ARM platform constraint evaluator"
+          action={
+            <AuButton
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                const sample = toSampleName(currentTestPattern, customer, currentTestItem, { region: testRegion, purpose: effectivePurpose });
+                setTestName(sample);
+                onShowToast(`Populated sample: ${sample}`);
+              }}
+              icon={<Sparkles size={13} style={{ color: "var(--accent-mint)" }} />}
+            >
+              Auto-Generate Sample
+            </AuButton>
+          }
+        >
+          <div style={{ display: "grid", gridTemplateColumns: isTestVm ? "220px 170px 170px 150px 1fr" : "220px 170px 150px 1fr", gap: "12px", alignItems: "flex-end" }}>
+            <div>
+              <AuSelect
+                id="sandbox-resource-type"
+                label="Resource Type"
+                searchable={true}
+                value={testTypeKey}
+                onChange={setTestTypeKey}
+                options={catalog.map((c) => ({
+                  value: c.key,
+                  label: c.name,
+                  badge: c.abbreviation
+                }))}
+              />
             </div>
-          ) : (
-            categoryNames.map((cat) => {
-              const items = groupedCatalog[cat];
-              const isExpanded = !!expandedCategories[cat];
-              const catViolations = items.filter((it) => platformViolations.some((v) => v.item.key === it.key));
-              const hasCatViolations = catViolations.length > 0;
-              return (
-                <div
-                  key={cat}
-                  className="au-hud-card"
-                  style={{
-                    border: hasCatViolations ? "1px solid rgba(244, 63, 94, 0.35)" : "1px solid var(--border-hairline)",
-                    borderRadius: "var(--radius-sm)",
-                    overflow: "hidden"
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: "12px 18px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      cursor: "pointer",
-                      background: hasCatViolations ? "rgba(244, 63, 94, 0.04)" : "rgba(255, 255, 255, 0.02)",
-                      borderBottom: isExpanded ? "1px solid var(--border-subtle)" : "none",
-                      transition: "background 0.2s ease"
-                    }}
-                    onClick={() => toggleCategory(cat)}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div style={{ color: "var(--text-muted)" }}>
-                        {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                      </div>
-                      <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text-primary)" }}>
-                        {cat}
-                      </span>
-                      {hasCatViolations ? (
-                        <span
-                          className="au-badge au-badge-rose"
-                          style={{
-                            fontSize: "0.72rem",
-                            padding: "0.15rem 0.55rem",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px"
-                          }}
-                          title={`${catViolations.length} resource types in this category fail Azure ARM platform rules`}
-                        >
-                          <AlertTriangle size={11} />
-                          {items.length} types ({catViolations.length} failed)
-                        </span>
-                      ) : (
-                        <span className="au-badge au-badge-mint" style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem" }}>
-                          {items.length} types
-                        </span>
-                      )}
-                    </div>
-                    <span className="au-mono-meta" style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
-                      {isExpanded ? "Click to collapse" : "Click to expand"}
-                    </span>
-                  </div>
 
-                  {isExpanded && (
-                    <div style={{ padding: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: "16px" }}>
-                      {items.map((item) => {
-            const meta = getEnrichedResourceMeta(item);
-            const isUnrestricted = unrestrictedTypes.includes(item.key);
-            const isVm = item.key === "vm" || (item.resourceType || "").toLowerCase().includes("virtualmachines");
-            const vmOs = vmOsMode; // "windows" | "linux"
+            {isTestVm && (
+              <div>
+                <AuSelect
+                  id="sandbox-os-type"
+                  label="OS Platform"
+                  value={testOsType}
+                  onChange={setTestOsType}
+                  options={[
+                    { value: "Windows", label: "Windows (15 max)", badge: "🪟 Win" },
+                    { value: "Linux", label: "Linux (64 max)", badge: "🐧 Lnx" }
+                  ]}
+                />
+              </div>
+            )}
 
-            let patternKey = item.key;
-            let airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
-            let cafPattern = item.cafPattern || `${item.abbreviation}-{workload}-{env}-{region}`;
-            let pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
+            <div>
+              <AuSelect
+                id="sandbox-region"
+                label="Region"
+                value={testRegion}
+                onChange={setTestRegion}
+                options={Object.entries(customer.regions || {}).map(([loc, code]) => ({
+                  value: code,
+                  label: loc,
+                  badge: code
+                }))}
+              />
+            </div>
 
-            if (isVm) {
-              if (vmOs === "windows") {
-                patternKey = "vm_windows";
-                airgatePattern = DEFAULT_VM_WINDOWS_PATTERN;
-                pattern = customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN;
-              } else {
-                patternKey = "vm_linux";
-                airgatePattern = DEFAULT_VM_LINUX_PATTERN;
-                pattern = customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN;
-              }
-            }
+            <div>
+              <AuSelect
+                id="sandbox-purpose"
+                label="Purpose"
+                value={testPurpose}
+                onChange={setTestPurpose}
+                options={(customer.purposes && customer.purposes.length > 0
+                  ? customer.purposes
+                  : ["hub", "core", "monitoring", "infrafw", "apps"]
+                ).map((p) => ({ value: p, label: p }))}
+              />
+            </div>
 
-            const isAirGate = pattern === airgatePattern;
-            const isCaf = pattern === cafPattern;
-            const effectiveOsType = isVm ? (vmOs === "windows" ? "Windows" : "Linux") : undefined;
-            const sampleName = toSampleName(pattern, customer, item, { purpose: effectivePurpose });
 
-            const sampleVal = validateAzurePlatformConstraints(sampleName, meta, { osType: effectiveOsType });
-            const structVal = validatePatternStructure(pattern, meta, { osType: effectiveOsType });
-            const tokenSyntaxVal = validateNamingPattern(pattern);
-            const hasError = !isUnrestricted && (!sampleVal.valid || !structVal.valid);
-            const autoFixSuggestion = hasError && !isVm ? autoFixPatternForResource(pattern, meta) : null;
-            const charCount = sampleName ? sampleName.length : 0;
-            const effectiveMax = isVm && vmOs === "windows" ? 15 : (meta.maxLength || 64);
-            const isLengthExceeded = charCount > effectiveMax;
-            const isLengthTooShort = meta.minLength && charCount < meta.minLength;
+            <div>
+              <label className="form-label" htmlFor="sandbox-test-name">Test Candidate Name</label>
+              <input
+                id="sandbox-test-name"
+                name="sandbox_test_name"
+                aria-label="Enter candidate name to evaluate compliance"
+                type="text"
+                className="form-input form-input-mono"
+                placeholder={`e.g. ${toSampleName(currentTestPattern, customer, currentTestItem, { region: testRegion, purpose: effectivePurpose })}`}
+                value={testName}
+                onChange={(e) => setTestName(e.target.value)}
+              />
+            </div>
+          </div>
 
-            return (
-              <div
-                key={item.key}
-                id={`naming-card-${item.key}`}
-                className="glass-panel"
-                style={{
-                  padding: "18px 20px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                  opacity: isUnrestricted ? 0.65 : 1,
-                  border: isUnrestricted
-                    ? "1px dashed var(--border-subtle)"
-                    : hasError
-                    ? "1px solid rgba(244, 63, 94, 0.5)"
-                    : "1px solid var(--border-subtle)",
-                  boxShadow: hasError ? "0 0 16px rgba(244, 63, 94, 0.12)" : undefined
-                }}
-              >
-                {/* Header */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                      <span style={{ fontWeight: "700", fontSize: "1rem" }}>{item.name}</span>
-                      <span className="chip chip-azure" style={{ padding: "2px 8px", fontSize: "0.7rem" }}>
-                        {item.abbreviation}
-                      </span>
-                      <span className="chip" style={{ padding: "2px 8px", fontSize: "0.7rem" }}>
-                        {item.category}
-                      </span>
-
-                      {/* OS Mode Toggle for VM */}
-                      {isVm && (
-                        <div
-                          style={{
-                            display: "inline-flex",
-                            background: "rgba(0,0,0,0.35)",
-                            borderRadius: "6px",
-                            padding: "2px",
-                            border: "1px solid var(--border-subtle)"
-                          }}
-                        >
-                          <button
-                            type="button"
-                            id="vm-os-windows-toggle"
-                            className={`btn btn-sm ${vmOs === "windows" ? "btn-outline-azure" : "btn-secondary"}`}
-                            style={{
-                              fontSize: "0.68rem",
-                              padding: "2px 8px",
-                              height: "22px",
-                              lineHeight: 1,
-                              borderColor: vmOs === "windows" ? "var(--azure-cyan)" : "transparent",
-                              fontWeight: vmOs === "windows" ? "700" : "normal"
-                            }}
-                            onClick={() => setVmOsMode("windows")}
-                            title="Windows Virtual Machine (Strict 15-character NetBIOS limit)"
-                          >
-                            🪟 Windows (15 max)
-                          </button>
-                          <button
-                            type="button"
-                            id="vm-os-linux-toggle"
-                            className={`btn btn-sm ${vmOs === "linux" ? "btn-outline-azure" : "btn-secondary"}`}
-                            style={{
-                              fontSize: "0.68rem",
-                              padding: "2px 8px",
-                              height: "22px",
-                              lineHeight: 1,
-                              borderColor: vmOs === "linux" ? "var(--accent-purple)" : "transparent",
-                              fontWeight: vmOs === "linux" ? "700" : "normal"
-                            }}
-                            onClick={() => setVmOsMode("linux")}
-                            title="Linux Virtual Machine (Standard 64-character limit)"
-                          >
-                            🐧 Linux (64 max)
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: "2px" }}
-                      title={`Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters} | Length: ${meta.minLength}–${effectiveMax} chars`}
-                    >
-                      {item.resourceType}
-                    </div>
-
-                    {/* Constraints Pill (Only shown when error / violation occurs to keep compliant cards clean) */}
-                    {hasError && (
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
-                        <span
-                          className="chip"
-                          style={{
-                            fontSize: "0.68rem",
-                            padding: "2px 8px",
-                            background: "rgba(244, 63, 94, 0.15)",
-                            color: "var(--accent-rose)",
-                            border: "1px solid rgba(244, 63, 94, 0.3)",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px"
-                          }}
-                          title={
-                            isVm && vmOs === "windows"
-                              ? "Windows NetBIOS / Active Directory limitation: strict max 15 characters"
-                              : `Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters}`
-                          }
-                        >
-                          <span style={{ fontWeight: "700" }}>
-                            📏 Allowed: {meta.minLength}–{effectiveMax} chars
-                          </span>
-                          <span style={{ opacity: 0.5 }}>•</span>
-                          <span>
-                            {isVm && vmOs === "windows"
-                              ? "Alphanumerics, hyphens (NetBIOS / AD limit)"
-                              : meta.allowedCharacters}
-                          </span>
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Mode Selector */}
-                  <button
-                    className={`btn btn-sm ${isUnrestricted ? "btn-secondary" : "btn-outline-azure"}`}
-                    style={{ fontSize: "0.75rem", padding: "4px 10px" }}
-                    onClick={() => handleToggleUnrestricted(item.key)}
-                  >
-                    {isUnrestricted ? "⚪ Direct Creation" : "🟢 Enforced"}
-                  </button>
-                </div>
-
-                {/* Pattern Input */}
-                {!isUnrestricted && (
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <span className="form-label" style={{ margin: 0 }}>Pattern Syntax</span>
-                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                        <span
-                          className={`chip ${isAirGate ? "chip-azure" : isCaf ? "chip-purple" : "chip"}`}
-                          style={{
-                            fontSize: "0.65rem",
-                            padding: "2px 7px",
-                            background: isAirGate
-                              ? "rgba(6, 182, 212, 0.15)"
-                              : isCaf
-                              ? "rgba(168, 85, 247, 0.15)"
-                              : "rgba(255, 255, 255, 0.08)",
-                            color: isAirGate
-                              ? "var(--azure-cyan)"
-                              : isCaf
-                              ? "#c084fc"
-                              : "var(--text-muted)"
-                          }}
-                        >
-                          {isAirGate ? "AirGate Standard" : isCaf ? "Azure CAF" : "Custom Pattern"}
-                        </span>
-                        <button
-                          type="button"
-                          className={`btn btn-sm ${isAirGate ? "btn-outline-azure" : "btn-secondary"}`}
-                          style={{
-                            fontSize: "0.7rem",
-                            padding: "3px 8px",
-                            height: "22px",
-                            lineHeight: "1",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "3px",
-                            borderColor: isAirGate ? "var(--azure-cyan)" : undefined
-                          }}
-                          onClick={() => handlePatternChange(patternKey, airgatePattern)}
-                          title={`Apply AirGate standard pattern: ${airgatePattern}`}
-                        >
-                          {isAirGate && <Check size={11} />}
-                          AirGate
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn btn-sm ${isCaf ? "btn-outline-azure" : "btn-secondary"}`}
-                          style={{
-                            fontSize: "0.7rem",
-                            padding: "3px 8px",
-                            height: "22px",
-                            lineHeight: "1",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "3px",
-                            borderColor: isCaf ? "var(--accent-purple)" : undefined
-                          }}
-                          onClick={() => handlePatternChange(patternKey, cafPattern)}
-                          title="Apply Microsoft CAF pattern: {abbr}-{workload}-{env}-{region}"
-                        >
-                          {isCaf && <Check size={11} />}
-                          Azure CAF
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-secondary"
-                          style={{
-                            fontSize: "0.7rem",
-                            padding: "3px 8px",
-                            height: "22px",
-                            lineHeight: "1",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "3px"
-                          }}
-                          onClick={() => {
-                            setActivePatternTarget({ key: item.key, patternKey });
-                            setTokenDrawerOpen(true);
-                          }}
-                          title="Open Smart Token palette for this input"
-                        >
-                          <Braces size={11} />
-                          Tokens
-                        </button>
-                      </div>
-                    </div>
-                    <input
-                      id={`pattern-input-${item.key}`}
-                      name={`pattern_${item.key}`}
-                      aria-label={`Naming pattern for ${item.name}${isVm ? ` (${vmOs})` : ""}`}
-                      type="text"
-                      className="form-input form-input-mono"
-                      style={{
-                        borderColor: hasError ? "var(--accent-rose)" : undefined,
-                        background: hasError ? "var(--accent-rose-tint)" : undefined
-                      }}
-                      value={pattern}
-                      onFocus={() => {
-                        setActivePatternTarget({ key: item.key, patternKey });
-                        setTokenDrawerOpen(true);
-                      }}
-                      onChange={(e) => handlePatternChange(patternKey, e.target.value)}
-                    />
-
-                    {tokenSyntaxVal && tokenSyntaxVal.warnings.length > 0 && (
-                      <div className="au-input-pill au-input-pill-warning" style={{ marginTop: "6px" }}>
-                        <span>⚠</span>
-                        <span>{tokenSyntaxVal.warnings[0]}</span>
-                      </div>
-                    )}
-
-                    {/* Constraint Error Callout */}
-                    {hasError && (
-                      <div
-                        style={{
-                          marginTop: "8px",
-                          padding: "8px 10px",
-                          borderRadius: "6px",
-                          background: "var(--status-danger-bg)",
-                          border: "1px solid var(--status-danger-border)",
-                          fontSize: "0.75rem",
-                          color: "var(--status-danger-text)"
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                          <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: "2px", color: "var(--status-danger-text)" }} />
-                          <div style={{ flex: 1 }}>
-                            <strong style={{ color: "var(--status-danger-text)" }}>Azure Constraint Violation:</strong>
-                            <ul style={{ margin: "3px 0 0 14px", padding: 0 }}>
-                              {[...structVal.errors, ...sampleVal.errors].slice(0, 2).map((err, idx) => (
-                                <li key={idx}>{err}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-
-                        {autoFixSuggestion && autoFixSuggestion !== pattern && (
-                          <div
-                            style={{
-                              marginTop: "8px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              paddingTop: "6px",
-                              borderTop: "1px solid rgba(244, 63, 94, 0.2)"
-                            }}
-                          >
-                            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
-                              Recommended pattern: <code style={{ color: "var(--azure-cyan)" }}>{autoFixSuggestion}</code>
-                            </span>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-danger"
-                              style={{
-                                fontSize: "0.7rem",
-                                padding: "3px 8px",
-                                height: "22px",
-                                lineHeight: 1,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px"
-                              }}
-                              onClick={() => handlePatternChange(item.key, autoFixSuggestion)}
-                            >
-                              <Zap size={11} /> Auto-Fix
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+          {/* Validation Result Box */}
+          {testName.trim() && (
+            <div
+              style={{
+                marginTop: "14px",
+                padding: "12px 16px",
+                borderRadius: "var(--radius-sm)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+                background: isTestItemUnrestricted
+                  ? "var(--bg-canvas)"
+                  : testValidation.valid
+                    ? "var(--accent-mint-tint)"
+                    : "var(--accent-rose-tint)",
+                border: `1px solid ${isTestItemUnrestricted
+                    ? "var(--border-hairline)"
+                    : testValidation.valid
+                      ? "var(--accent-mint)"
+                      : "var(--accent-rose)"
+                  }`
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", flex: 1 }}>
+                {isTestItemUnrestricted ? (
+                  <HelpCircle size={20} color="var(--text-muted)" style={{ marginTop: "2px", flexShrink: 0 }} />
+                ) : testValidation.valid ? (
+                  <CheckCircle size={20} color="var(--accent-mint)" style={{ marginTop: "2px", flexShrink: 0 }} />
+                ) : (
+                  <XCircle size={20} color="var(--accent-rose)" style={{ marginTop: "2px", flexShrink: 0 }} />
                 )}
 
-                {/* Sample Preview */}
-                <div
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: "8px",
-                    background: hasError ? "rgba(244, 63, 94, 0.08)" : "rgba(0,0,0,0.32)",
-                    border: hasError ? "1px solid rgba(244, 63, 94, 0.3)" : "1px solid rgba(255,255,255,0.06)",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px"
-                  }}
-                >
-                  {/* Top Row: Full-width Sample Candidate Name */}
-                  <div style={{ display: "flex", alignItems: "baseline", gap: "8px", minWidth: 0 }}>
-                    <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.05em", flexShrink: 0 }}>
-                      Example:
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "0.88rem",
-                        color: isUnrestricted
-                          ? "var(--text-dim)"
-                          : hasError
-                          ? "var(--accent-rose)"
-                          : "var(--azure-cyan)",
-                        fontWeight: "600",
-                        textDecoration: hasError ? "line-through" : "none",
-                        wordBreak: "break-all"
-                      }}
-                      title={sampleName}
-                    >
-                      {isUnrestricted ? "(Unrestricted / Any Name Allowed)" : sampleName}
-                    </span>
+                <div>
+                  <div style={{ fontWeight: "700", fontSize: "0.9rem" }}>
+                    {isTestItemUnrestricted
+                      ? "UNRESTRICTED: Direct creation allowed without naming restrictions."
+                      : testValidation.valid
+                        ? "COMPLIANT: Allowed by Azure Policy & Valid Azure ARM Name"
+                        : !testValidation.platformValid
+                          ? "ARM PLATFORM REJECTION: Fails Azure Physical Constraints"
+                          : "NON-COMPLIANT: Would be blocked or audited by Azure Policy"}
                   </div>
-
-                  {/* Bottom Row: Metrics & Minimalist Status Icon */}
-                  {!isUnrestricted && (
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        paddingTop: "6px",
-                        borderTop: "1px solid rgba(255, 255, 255, 0.05)"
-                      }}
-                    >
-                      <span
-                        className="chip"
-                        style={{
-                          fontSize: "0.68rem",
-                          padding: "2px 8px",
-                          fontFamily: "var(--font-mono)",
-                          background:
-                            isLengthExceeded || isLengthTooShort
-                              ? "rgba(244, 63, 94, 0.2)"
-                              : "rgba(16, 185, 129, 0.12)",
-                          color:
-                            isLengthExceeded || isLengthTooShort
-                              ? "var(--accent-rose)"
-                              : "var(--accent-emerald)",
-                          borderRadius: "4px"
-                        }}
-                        title={`Current length: ${charCount} chars (Min: ${meta.minLength}, Max: ${effectiveMax})`}
-                      >
-                        {charCount} / {effectiveMax} chars
-                      </span>
-
-                      <span
-                        style={{
-                          fontSize: "0.72rem",
-                          fontWeight: "600",
-                          color: hasError ? "var(--accent-rose)" : "var(--accent-emerald)",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px"
-                        }}
-                        title={hasError ? "Non-Compliant with Azure constraints" : "Compliant with Azure constraints"}
-                      >
-                        {hasError ? <XCircle size={14} /> : <CheckCircle size={14} />}
-                        <span>{hasError ? "Non-Compliant" : "Compliant"}</span>
-                      </span>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    {testValidation.reason}
+                  </div>
+                  {testValidation.errors && testValidation.errors.length > 1 && (
+                    <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: "0.75rem", color: "var(--accent-rose)" }}>
+                      {testValidation.errors.map((e, idx) => (
+                        <li key={idx}>{e}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {testValidation.warnings && testValidation.warnings.length > 0 && (
+                    <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "var(--accent-amber)" }}>
+                      ⚠️ {testValidation.warnings.join("; ")}
                     </div>
                   )}
                 </div>
               </div>
-            );
-          })}
-                    </div>
-                  )}
-                </div>
-              );
-            })
+
+              {testValidation.length !== undefined && !isTestItemUnrestricted && (
+                <span
+                  className="au-badge"
+                  style={{
+                    fontSize: "0.75rem",
+                    fontFamily: "var(--font-mono)",
+                    borderColor:
+                      testValidation.length > testValidation.maxLength ||
+                        testValidation.length < testValidation.minLength
+                        ? "var(--accent-rose)"
+                        : "var(--accent-mint)",
+                    color:
+                      testValidation.length > testValidation.maxLength ||
+                        testValidation.length < testValidation.minLength
+                        ? "var(--accent-rose)"
+                        : "var(--accent-mint)"
+                  }}
+                >
+                  {testValidation.length} / {testValidation.maxLength} chars
+                </span>
+              )}
+            </div>
           )}
+        </AuHudCard>
+
+        {/* 3. Subnet Allowlist Special Module */}
+        <div className="glass-panel" style={{ padding: "20px 24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <Network size={18} color="var(--azure-cyan)" />
+            <h3 style={{ fontSize: "1.05rem", fontWeight: "700" }}>Subnet Naming Allowlist</h3>
+            <span className="chip chip-purple" style={{ marginLeft: "auto" }}>Standalone & Inline Array Rules</span>
+          </div>
+
+          <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "14px" }}>
+            In Azure Landing Zones, subnets require approved naming allowlists rather than open regex patterns to avoid breaking Azure reserved subnets (e.g., GatewaySubnet, AzureFirewallSubnet).
+          </p>
+
+          {/* Subnet Chips */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
+            {subnetAllowed.map((name) => (
+              <span key={name} className="chip chip-emerald" style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
+                <span>{name}</span>
+                <button
+                  onClick={() => handleRemoveSubnetName(name)}
+                  style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", marginLeft: "4px" }}
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {/* Add Subnet Input & Quick Presets */}
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <input
+              id="naming-new-subnet-input"
+              name="new_subnet_name"
+              aria-label="Add new allowed subnet name"
+              type="text"
+              className="form-input form-input-mono"
+              style={{ maxWidth: "300px" }}
+              placeholder="Add subnet (e.g. snet-database)"
+              value={newSubnetName}
+              onChange={(e) => setNewSubnetName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddSubnetName(newSubnetName);
+              }}
+            />
+            <button className="btn btn-secondary btn-sm" onClick={() => handleAddSubnetName(newSubnetName)}>
+              Add Subnet
+            </button>
+
+            <span style={{ color: "var(--text-dim)", fontSize: "0.8rem", margin: "0 6px" }}>| Quick Add:</span>
+            {["GatewaySubnet", "AzureBastionSubnet", "AzureFirewallSubnet"].map((preset) => (
+              <button
+                key={preset}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: "0.75rem", padding: "4px 8px" }}
+                disabled={subnetAllowed.includes(preset)}
+                onClick={() => handleAddSubnetName(preset)}
+              >
+                + {preset}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. Resource Types Catalogue & Pattern Rules */}
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+            <div>
+              <h3 style={{ fontSize: "1.15rem", fontWeight: "700" }}>
+                Resource Type Naming Rules ({filteredCatalog.length} Types)
+              </h3>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
+                Customize pattern per resource type, switch to CAF default, or exempt for direct creation.
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+              {/* Bulk Apply Buttons */}
+              <div style={{ display: "flex", gap: "6px" }}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary"
+                  style={{ fontSize: "0.75rem", padding: "6px 12px", display: "flex", alignItems: "center", gap: "5px" }}
+                  onClick={handleApplyAirGateToAll}
+                  title="Reset all resource types to AirGate Standard pattern: {Org}-{SUB}-{ResourceGroup}-{abbr}"
+                >
+                  <Sliders size={13} color="var(--azure-cyan)" />
+                  Apply AirGate to All
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary"
+                  style={{ fontSize: "0.75rem", padding: "6px 12px", display: "flex", alignItems: "center", gap: "5px" }}
+                  onClick={handleApplyCafToAll}
+                  title="Switch all resource types to Microsoft CAF pattern: {abbr}-{workload}-{env}-{region}"
+                >
+                  <RotateCcw size={13} color="var(--accent-purple)" />
+                  Apply Azure CAF to All
+                </button>
+              </div>
+
+              {/* Search */}
+              <div style={{ position: "relative" }}>
+                <Search size={15} style={{ position: "absolute", left: "10px", top: "12px", color: "var(--text-dim)" }} />
+                <input
+                  id="naming-search-types"
+                  name="search_types"
+                  aria-label="Search resource types by name, key or provider"
+                  type="text"
+                  className="form-input"
+                  style={{ paddingLeft: "32px", width: "200px", fontSize: "0.85rem" }}
+                  placeholder="Search types..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Quick Non-Compliant Filter Pill if violations exist */}
+              {platformViolations.length > 0 && (
+                <button
+                  type="button"
+                  id="naming-toolbar-filter-violations"
+                  className={`btn btn-sm ${filterOnlyViolations ? "btn-danger" : "btn-secondary"}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "0.8rem",
+                    borderColor: filterOnlyViolations ? "var(--status-danger-border)" : "var(--border-subtle)",
+                    background: filterOnlyViolations ? "rgba(244, 63, 94, 0.2)" : undefined,
+                    color: filterOnlyViolations ? "var(--status-danger-text)" : undefined
+                  }}
+                  onClick={() => setFilterOnlyViolations((prev) => !prev)}
+                  title="Filter catalog to show only non-compliant types"
+                >
+                  <Filter size={13} />
+                  <span>Violations ({platformViolations.length})</span>
+                </button>
+              )}
+
+              {/* Category Filter */}
+              <div style={{ minWidth: "220px" }}>
+                <AuSelect
+                  id="naming-category-filter"
+                  aria-label="Filter resource types by category"
+                  value={selectedCategory}
+                  onChange={setSelectedCategory}
+                  options={categoryOptions}
+                />
+              </div>
+
+              <AuExpandCollapseButton
+                allExpanded={allCategoriesExpanded}
+                onToggle={handleToggleAllCategories}
+              />
+            </div>
+          </div>
+
+          {/* Resource Cards Grouped by Category */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {categoryNames.length === 0 ? (
+              <div className="glass-panel" style={{ padding: "30px", textAlign: "center", color: "var(--text-dim)" }}>
+                No resource types matched your filter criteria.
+              </div>
+            ) : (
+              categoryNames.map((cat) => {
+                const items = groupedCatalog[cat];
+                const isExpanded = !!expandedCategories[cat];
+                const catViolations = items.filter((it) => platformViolations.some((v) => v.item.key === it.key));
+                const hasCatViolations = catViolations.length > 0;
+                return (
+                  <div
+                    key={cat}
+                    className="au-hud-card"
+                    style={{
+                      border: hasCatViolations ? "1px solid rgba(244, 63, 94, 0.35)" : "1px solid var(--border-hairline)",
+                      borderRadius: "var(--radius-sm)",
+                      overflow: "hidden"
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "12px 18px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        background: hasCatViolations ? "rgba(244, 63, 94, 0.04)" : "rgba(255, 255, 255, 0.02)",
+                        borderBottom: isExpanded ? "1px solid var(--border-subtle)" : "none",
+                        transition: "background 0.2s ease"
+                      }}
+                      onClick={() => toggleCategory(cat)}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{ color: "var(--text-muted)" }}>
+                          {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                        </div>
+                        <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                          {cat}
+                        </span>
+                        {hasCatViolations ? (
+                          <span
+                            className="au-badge au-badge-rose"
+                            style={{
+                              fontSize: "0.72rem",
+                              padding: "0.15rem 0.55rem",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px"
+                            }}
+                            title={`${catViolations.length} resource types in this category fail Azure ARM platform rules`}
+                          >
+                            <AlertTriangle size={11} />
+                            {items.length} types ({catViolations.length} failed)
+                          </span>
+                        ) : (
+                          <span className="au-badge au-badge-mint" style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem" }}>
+                            {items.length} types
+                          </span>
+                        )}
+                      </div>
+                      <span className="au-mono-meta" style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
+                        {isExpanded ? "Click to collapse" : "Click to expand"}
+                      </span>
+                    </div>
+
+                    {isExpanded && (
+                      <div style={{ padding: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: "16px" }}>
+                        {items.map((item) => {
+                          const meta = getEnrichedResourceMeta(item);
+                          const isUnrestricted = unrestrictedTypes.includes(item.key);
+                          const isVm = item.key === "vm" || (item.resourceType || "").toLowerCase().includes("virtualmachines");
+                          const vmOs = vmOsMode; // "windows" | "linux"
+
+                          let patternKey = item.key;
+                          let airgatePattern = item.defaultPattern || `{Org}-{SUB}-{ResourceGroup}-${item.abbreviation}`;
+                          let cafPattern = item.cafPattern || `${item.abbreviation}-{workload}-{env}-{region}`;
+                          let pattern = customPatterns[item.key] || item.defaultPattern || airgatePattern;
+
+                          if (isVm) {
+                            if (vmOs === "windows") {
+                              patternKey = "vm_windows";
+                              airgatePattern = DEFAULT_VM_WINDOWS_PATTERN;
+                              pattern = customPatterns.vm_windows || DEFAULT_VM_WINDOWS_PATTERN;
+                            } else {
+                              patternKey = "vm_linux";
+                              airgatePattern = DEFAULT_VM_LINUX_PATTERN;
+                              pattern = customPatterns.vm_linux || customPatterns.vm || DEFAULT_VM_LINUX_PATTERN;
+                            }
+                          }
+
+                          const isAirGate = pattern === airgatePattern;
+                          const isCaf = pattern === cafPattern;
+                          const effectiveOsType = isVm ? (vmOs === "windows" ? "Windows" : "Linux") : undefined;
+                          const sampleName = toSampleName(pattern, customer, item, { purpose: effectivePurpose });
+
+                          const sampleVal = validateAzurePlatformConstraints(sampleName, meta, { osType: effectiveOsType });
+                          const structVal = validatePatternStructure(pattern, meta, { osType: effectiveOsType });
+                          const tokenSyntaxVal = validateNamingPattern(pattern);
+                          const hasError = !isUnrestricted && (!sampleVal.valid || !structVal.valid);
+                          const autoFixSuggestion = hasError && !isVm ? autoFixPatternForResource(pattern, meta) : null;
+                          const charCount = sampleName ? sampleName.length : 0;
+                          const effectiveMax = isVm && vmOs === "windows" ? 15 : (meta.maxLength || 64);
+                          const isLengthExceeded = charCount > effectiveMax;
+                          const isLengthTooShort = meta.minLength && charCount < meta.minLength;
+
+                          return (
+                            <div
+                              key={item.key}
+                              id={`naming-card-${item.key}`}
+                              className="glass-panel"
+                              style={{
+                                padding: "18px 20px",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "12px",
+                                opacity: isUnrestricted ? 0.65 : 1,
+                                border: isUnrestricted
+                                  ? "1px dashed var(--border-subtle)"
+                                  : hasError
+                                    ? "1px solid rgba(244, 63, 94, 0.5)"
+                                    : "1px solid var(--border-subtle)",
+                                boxShadow: hasError ? "0 0 16px rgba(244, 63, 94, 0.12)" : undefined
+                              }}
+                            >
+                              {/* Header */}
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                <div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                                    <span style={{ fontWeight: "700", fontSize: "1rem" }}>{item.name}</span>
+                                    <span className="chip chip-azure" style={{ padding: "2px 8px", fontSize: "0.7rem" }}>
+                                      {item.abbreviation}
+                                    </span>
+                                    <span className="chip" style={{ padding: "2px 8px", fontSize: "0.7rem" }}>
+                                      {item.category}
+                                    </span>
+
+                                    {/* OS Mode Toggle for VM */}
+                                    {isVm && (
+                                      <div
+                                        style={{
+                                          display: "inline-flex",
+                                          background: "rgba(0,0,0,0.35)",
+                                          borderRadius: "6px",
+                                          padding: "2px",
+                                          border: "1px solid var(--border-subtle)"
+                                        }}
+                                      >
+                                        <button
+                                          type="button"
+                                          id="vm-os-windows-toggle"
+                                          className={`btn btn-sm ${vmOs === "windows" ? "btn-outline-azure" : "btn-secondary"}`}
+                                          style={{
+                                            fontSize: "0.68rem",
+                                            padding: "2px 8px",
+                                            height: "22px",
+                                            lineHeight: 1,
+                                            borderColor: vmOs === "windows" ? "var(--azure-cyan)" : "transparent",
+                                            fontWeight: vmOs === "windows" ? "700" : "normal"
+                                          }}
+                                          onClick={() => setVmOsMode("windows")}
+                                          title="Windows Virtual Machine (Strict 15-character NetBIOS limit)"
+                                        >
+                                          🪟 Windows (15 max)
+                                        </button>
+                                        <button
+                                          type="button"
+                                          id="vm-os-linux-toggle"
+                                          className={`btn btn-sm ${vmOs === "linux" ? "btn-outline-azure" : "btn-secondary"}`}
+                                          style={{
+                                            fontSize: "0.68rem",
+                                            padding: "2px 8px",
+                                            height: "22px",
+                                            lineHeight: 1,
+                                            borderColor: vmOs === "linux" ? "var(--accent-purple)" : "transparent",
+                                            fontWeight: vmOs === "linux" ? "700" : "normal"
+                                          }}
+                                          onClick={() => setVmOsMode("linux")}
+                                          title="Linux Virtual Machine (Standard 64-character limit)"
+                                        >
+                                          🐧 Linux (64 max)
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div
+                                    style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: "2px" }}
+                                    title={`Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters} | Length: ${meta.minLength}–${effectiveMax} chars`}
+                                  >
+                                    {item.resourceType}
+                                  </div>
+
+                                  {/* Constraints Pill (Only shown when error / violation occurs to keep compliant cards clean) */}
+                                  {hasError && (
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+                                      <span
+                                        className="chip"
+                                        style={{
+                                          fontSize: "0.68rem",
+                                          padding: "2px 8px",
+                                          background: "rgba(244, 63, 94, 0.15)",
+                                          color: "var(--accent-rose)",
+                                          border: "1px solid rgba(244, 63, 94, 0.3)",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: "4px"
+                                        }}
+                                        title={
+                                          isVm && vmOs === "windows"
+                                            ? "Windows NetBIOS / Active Directory limitation: strict max 15 characters"
+                                            : `Scope: ${meta.scope} | Allowed: ${meta.allowedCharacters}`
+                                        }
+                                      >
+                                        <span style={{ fontWeight: "700" }}>
+                                          📏 Allowed: {meta.minLength}–{effectiveMax} chars
+                                        </span>
+                                        <span style={{ opacity: 0.5 }}>•</span>
+                                        <span>
+                                          {isVm && vmOs === "windows"
+                                            ? "Alphanumerics, hyphens (NetBIOS / AD limit)"
+                                            : meta.allowedCharacters}
+                                        </span>
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Mode Selector */}
+                                <button
+                                  className={`btn btn-sm ${isUnrestricted ? "btn-secondary" : "btn-outline-azure"}`}
+                                  style={{ fontSize: "0.75rem", padding: "4px 10px" }}
+                                  onClick={() => handleToggleUnrestricted(item.key)}
+                                >
+                                  {isUnrestricted ? "⚪ Direct Creation" : "🟢 Enforced"}
+                                </button>
+                              </div>
+
+                              {/* Pattern Input */}
+                              {!isUnrestricted && (
+                                <div>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                                    <span className="form-label" style={{ margin: 0 }}>Pattern Syntax</span>
+                                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                                      <span
+                                        className={`chip ${isAirGate ? "chip-azure" : isCaf ? "chip-purple" : "chip"}`}
+                                        style={{
+                                          fontSize: "0.65rem",
+                                          padding: "2px 7px",
+                                          background: isAirGate
+                                            ? "rgba(6, 182, 212, 0.15)"
+                                            : isCaf
+                                              ? "rgba(168, 85, 247, 0.15)"
+                                              : "rgba(255, 255, 255, 0.08)",
+                                          color: isAirGate
+                                            ? "var(--azure-cyan)"
+                                            : isCaf
+                                              ? "#c084fc"
+                                              : "var(--text-muted)"
+                                        }}
+                                      >
+                                        {isAirGate ? "AirGate Standard" : isCaf ? "Azure CAF" : "Custom Pattern"}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        className={`btn btn-sm ${isAirGate ? "btn-outline-azure" : "btn-secondary"}`}
+                                        style={{
+                                          fontSize: "0.7rem",
+                                          padding: "3px 8px",
+                                          height: "22px",
+                                          lineHeight: "1",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: "3px",
+                                          borderColor: isAirGate ? "var(--azure-cyan)" : undefined
+                                        }}
+                                        onClick={() => handlePatternChange(patternKey, airgatePattern)}
+                                        title={`Apply AirGate standard pattern: ${airgatePattern}`}
+                                      >
+                                        {isAirGate && <Check size={11} />}
+                                        AirGate
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className={`btn btn-sm ${isCaf ? "btn-outline-azure" : "btn-secondary"}`}
+                                        style={{
+                                          fontSize: "0.7rem",
+                                          padding: "3px 8px",
+                                          height: "22px",
+                                          lineHeight: "1",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: "3px",
+                                          borderColor: isCaf ? "var(--accent-purple)" : undefined
+                                        }}
+                                        onClick={() => handlePatternChange(patternKey, cafPattern)}
+                                        title="Apply Microsoft CAF pattern: {abbr}-{workload}-{env}-{region}"
+                                      >
+                                        {isCaf && <Check size={11} />}
+                                        Azure CAF
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-secondary"
+                                        style={{
+                                          fontSize: "0.7rem",
+                                          padding: "3px 8px",
+                                          height: "22px",
+                                          lineHeight: "1",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: "3px"
+                                        }}
+                                        onClick={() => {
+                                          setActivePatternTarget({ key: item.key, patternKey });
+                                          setTokenDrawerOpen(true);
+                                        }}
+                                        title="Open Smart Token palette for this input"
+                                      >
+                                        <Braces size={11} />
+                                        Tokens
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <input
+                                    id={`pattern-input-${item.key}`}
+                                    name={`pattern_${item.key}`}
+                                    aria-label={`Naming pattern for ${item.name}${isVm ? ` (${vmOs})` : ""}`}
+                                    type="text"
+                                    className="form-input form-input-mono"
+                                    style={{
+                                      borderColor: hasError ? "var(--accent-rose)" : undefined,
+                                      background: hasError ? "var(--accent-rose-tint)" : undefined
+                                    }}
+                                    value={pattern}
+                                    onFocus={() => {
+                                      setActivePatternTarget({ key: item.key, patternKey });
+                                      setTokenDrawerOpen(true);
+                                    }}
+                                    onChange={(e) => handlePatternChange(patternKey, e.target.value)}
+                                  />
+
+                                  {tokenSyntaxVal && tokenSyntaxVal.warnings.length > 0 && (
+                                    <div className="au-input-pill au-input-pill-warning" style={{ marginTop: "6px" }}>
+                                      <span>⚠</span>
+                                      <span>{tokenSyntaxVal.warnings[0]}</span>
+                                    </div>
+                                  )}
+
+                                  {/* Constraint Error Callout */}
+                                  {hasError && (
+                                    <div
+                                      style={{
+                                        marginTop: "8px",
+                                        padding: "8px 10px",
+                                        borderRadius: "6px",
+                                        background: "var(--status-danger-bg)",
+                                        border: "1px solid var(--status-danger-border)",
+                                        fontSize: "0.75rem",
+                                        color: "var(--status-danger-text)"
+                                      }}
+                                    >
+                                      <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                                        <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: "2px", color: "var(--status-danger-text)" }} />
+                                        <div style={{ flex: 1 }}>
+                                          <strong style={{ color: "var(--status-danger-text)" }}>Azure Constraint Violation:</strong>
+                                          <ul style={{ margin: "3px 0 0 14px", padding: 0 }}>
+                                            {[...structVal.errors, ...sampleVal.errors].slice(0, 2).map((err, idx) => (
+                                              <li key={idx}>{err}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      </div>
+
+                                      {autoFixSuggestion && autoFixSuggestion !== pattern && (
+                                        <div
+                                          style={{
+                                            marginTop: "8px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            paddingTop: "6px",
+                                            borderTop: "1px solid rgba(244, 63, 94, 0.2)"
+                                          }}
+                                        >
+                                          <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                                            Recommended pattern: <code style={{ color: "var(--azure-cyan)" }}>{autoFixSuggestion}</code>
+                                          </span>
+                                          <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-danger"
+                                            style={{
+                                              fontSize: "0.7rem",
+                                              padding: "3px 8px",
+                                              height: "22px",
+                                              lineHeight: 1,
+                                              display: "inline-flex",
+                                              alignItems: "center",
+                                              gap: "4px"
+                                            }}
+                                            onClick={() => handlePatternChange(item.key, autoFixSuggestion)}
+                                          >
+                                            <Zap size={11} /> Auto-Fix
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Sample Preview */}
+                              <div
+                                style={{
+                                  padding: "10px 14px",
+                                  borderRadius: "8px",
+                                  background: hasError ? "rgba(244, 63, 94, 0.08)" : "rgba(0,0,0,0.32)",
+                                  border: hasError ? "1px solid rgba(244, 63, 94, 0.3)" : "1px solid rgba(255,255,255,0.06)",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "8px"
+                                }}
+                              >
+                                {/* Top Row: Full-width Sample Candidate Name */}
+                                <div style={{ display: "flex", alignItems: "baseline", gap: "8px", minWidth: 0 }}>
+                                  <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.05em", flexShrink: 0 }}>
+                                    Example:
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontFamily: "var(--font-mono)",
+                                      fontSize: "0.88rem",
+                                      color: isUnrestricted
+                                        ? "var(--text-dim)"
+                                        : hasError
+                                          ? "var(--accent-rose)"
+                                          : "var(--azure-cyan)",
+                                      fontWeight: "600",
+                                      textDecoration: hasError ? "line-through" : "none",
+                                      wordBreak: "break-all"
+                                    }}
+                                    title={sampleName}
+                                  >
+                                    {isUnrestricted ? "(Unrestricted / Any Name Allowed)" : sampleName}
+                                  </span>
+                                </div>
+
+                                {/* Bottom Row: Metrics & Minimalist Status Icon */}
+                                {!isUnrestricted && (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                      paddingTop: "6px",
+                                      borderTop: "1px solid rgba(255, 255, 255, 0.05)"
+                                    }}
+                                  >
+                                    <span
+                                      className="chip"
+                                      style={{
+                                        fontSize: "0.68rem",
+                                        padding: "2px 8px",
+                                        fontFamily: "var(--font-mono)",
+                                        background:
+                                          isLengthExceeded || isLengthTooShort
+                                            ? "rgba(244, 63, 94, 0.2)"
+                                            : "rgba(16, 185, 129, 0.12)",
+                                        color:
+                                          isLengthExceeded || isLengthTooShort
+                                            ? "var(--accent-rose)"
+                                            : "var(--accent-emerald)",
+                                        borderRadius: "4px"
+                                      }}
+                                      title={`Current length: ${charCount} chars (Min: ${meta.minLength}, Max: ${effectiveMax})`}
+                                    >
+                                      {charCount} / {effectiveMax} chars
+                                    </span>
+
+                                    <span
+                                      style={{
+                                        fontSize: "0.72rem",
+                                        fontWeight: "600",
+                                        color: hasError ? "var(--accent-rose)" : "var(--accent-emerald)",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "4px"
+                                      }}
+                                      title={hasError ? "Non-Compliant with Azure constraints" : "Compliant with Azure constraints"}
+                                    >
+                                      {hasError ? <XCircle size={14} /> : <CheckCircle size={14} />}
+                                      <span>{hasError ? "Non-Compliant" : "Compliant"}</span>
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 
@@ -2060,74 +2241,79 @@ export function NamingStudio({
                 </div>
 
                 {/* Autocomplete Dropdown List */}
-                {cafSearchQuery.trim().length > 0 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      marginTop: "4px",
-                      background: "var(--bg-card)",
-                      border: "1px solid var(--border-glow)",
-                      borderRadius: "8px",
-                      boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
-                      zIndex: 100,
-                      maxHeight: "240px",
-                      overflowY: "auto"
-                    }}
-                  >
-                    {AZURE_NAMING_CATALOG.filter((item) => {
-                      const q = cafSearchQuery.toLowerCase();
-                      return (
-                        item.name.toLowerCase().includes(q) ||
-                        item.caf_abbreviation.toLowerCase().includes(q) ||
-                        item.airgate_abbreviation.toLowerCase().includes(q) ||
-                        item.provider.toLowerCase().includes(q) ||
-                        item.category.toLowerCase().includes(q)
-                      );
-                    }).slice(0, 10).map((cafItem) => (
-                      <div
-                        key={cafItem.id}
-                        onClick={() => handleSelectCafItem(cafItem)}
-                        style={{
-                          padding: "10px 14px",
-                          borderBottom: "1px solid rgba(255,255,255,0.05)",
-                          cursor: "pointer",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          transition: "background 0.15s ease"
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0, 120, 212, 0.2)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      >
-                        <div>
-                          <div style={{ fontWeight: "600", fontSize: "0.85rem", color: "var(--text-main)" }}>
-                            {cafItem.name}
-                          </div>
-                          <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>
-                            {cafItem.provider}
-                          </div>
+                {cafSearchQuery.trim().length > 0 && (() => {
+                  const filtered = AZURE_NAMING_CATALOG.filter((item) => {
+                    const q = cafSearchQuery.toLowerCase();
+                    return (
+                      item.name.toLowerCase().includes(q) ||
+                      item.caf_abbreviation.toLowerCase().includes(q) ||
+                      item.airgate_abbreviation.toLowerCase().includes(q) ||
+                      item.provider.toLowerCase().includes(q) ||
+                      item.category.toLowerCase().includes(q)
+                    );
+                  }).slice(0, 10);
+
+                  return (
+                    <div
+                      className="au-autocomplete-menu"
+                      role="listbox"
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        right: 0,
+                        marginTop: "4px",
+                        maxHeight: "260px",
+                        overflowY: "auto",
+                        zIndex: 1060
+                      }}
+                    >
+                      {filtered.length === 0 ? (
+                        <div style={{ padding: "12px 14px", color: "var(--text-muted)", fontSize: "0.8rem", textAlign: "center" }}>
+                          No matching resources found for "{cafSearchQuery}"
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          {cafItem.is_override ? (
-                            <span className="chip" style={{ background: "rgba(245, 158, 11, 0.2)", color: "#fbbf24", fontSize: "0.7rem", padding: "2px 6px" }}>
-                              AirGate: {cafItem.airgate_abbreviation}
-                            </span>
-                          ) : (
-                            <span className="chip chip-azure" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
-                              CAF: {cafItem.caf_abbreviation}
-                            </span>
-                          )}
-                          <span className="chip" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
-                            {cafItem.scope}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ) : (
+                        filtered.map((cafItem) => (
+                          <div
+                            key={cafItem.id}
+                            role="option"
+                            className="au-autocomplete-item"
+                            onClick={() => handleSelectCafItem(cafItem)}
+                            style={{
+                              padding: "9px 12px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center"
+                            }}
+                          >
+                            <div style={{ minWidth: 0, paddingRight: "8px" }}>
+                              <div style={{ fontWeight: 600, fontSize: "0.84rem", color: "var(--text-primary)" }}>
+                                {cafItem.name}
+                              </div>
+                              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+                                {cafItem.provider}
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                              {cafItem.is_override ? (
+                                <span className="au-badge au-badge-amber" style={{ fontSize: "0.68rem", padding: "1px 6px" }}>
+                                  AirGate: {cafItem.airgate_abbreviation}
+                                </span>
+                              ) : (
+                                <span className="au-badge au-badge-azure" style={{ fontSize: "0.68rem", padding: "1px 6px" }}>
+                                  CAF: {cafItem.caf_abbreviation}
+                                </span>
+                              )}
+                              <span className="au-badge au-badge-subtle" style={{ fontSize: "0.68rem", padding: "1px 6px" }}>
+                                {cafItem.scope}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* 2. Platform Constraints & Governance Card */}

@@ -1,0 +1,272 @@
+[
+  {
+    "id": "org",
+    "token": "{org}",
+    "label": "Organization (lowercase)",
+    "desc": "Lowercase Customer / Tenant abbreviation",
+    "category": "Core Context",
+    "sample": "air",
+    "patternSample": "{org}-{sub}-{rg}-{abbreviation}-{instance}",
+    "isDefaultFavorite": true
+  },
+  {
+    "id": "sub",
+    "token": "{sub}",
+    "label": "Subscription Code (lowercase)",
+    "desc": "Subscription segment shortcode",
+    "category": "Core Context",
+    "sample": "prod",
+    "patternSample": "{org}-{sub}-{rg}-{abbreviation}",
+    "isDefaultFavorite": true
+  },
+  {
+    "id": "SUB",
+    "token": "{SUB}",
+    "label": "Subscription Code (UPPERCASE)",
+    "desc": "UPPERCASE subscription segment code",
+    "category": "Core Context",
+    "sample": "PRD",
+    "patternSample": "{Org}-{SUB}-{ResourceGroup}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "env",
+    "token": "{env}",
+    "label": "Environment Code (lowercase)",
+    "desc": "Lifecycle stage code (prd, dev, stg, tst)",
+    "category": "Core Context",
+    "sample": "prd",
+    "patternSample": "{org}-{env}-{rg}-{abbreviation}",
+    "isDefaultFavorite": true
+  },
+  {
+    "id": "ENV",
+    "token": "{ENV}",
+    "label": "Environment Code (UPPERCASE)",
+    "desc": "UPPERCASE lifecycle stage code (PRD, DEV)",
+    "category": "Core Context",
+    "sample": "PRD",
+    "patternSample": "{ORG}-{ENV}-{RG}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "rg",
+    "token": "{rg}",
+    "label": "Resource Group (short)",
+    "desc": "Short resource group token",
+    "category": "Core Context",
+    "sample": "core",
+    "patternSample": "{org}-{sub}-{rg}-{abbreviation}",
+    "isDefaultFavorite": true
+  },
+  {
+    "id": "ResourceGroup",
+    "token": "{ResourceGroup}",
+    "label": "Resource Group (full name)",
+    "desc": "Full resource group name with casing",
+    "category": "Core Context",
+    "sample": "CoreRG",
+    "patternSample": "{Org}-{SUB}-{ResourceGroup}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "region",
+    "token": "{region}",
+    "label": "Region Code (lowercase)",
+    "desc": "Azure region abbreviation (cc, eus, wus)",
+    "category": "Core Context",
+    "sample": "cc",
+    "patternSample": "{org}-{rg}-{abbreviation}-{region}-{instance}",
+    "isDefaultFavorite": true
+  },
+  {
+    "id": "Region",
+    "token": "{Region}",
+    "label": "Region Code (TitleCase)",
+    "desc": "TitleCase Azure region code (Cc, Eus)",
+    "category": "Core Context",
+    "sample": "Cc",
+    "patternSample": "{Org}-{RG}-{abbreviation}-{Region}-{instance}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "abbreviation",
+    "token": "{abbreviation}",
+    "label": "Resource Abbreviation",
+    "desc": "Standard Microsoft CAF shortcode (vnet, st, kv)",
+    "category": "Resource Identity",
+    "sample": "vnet",
+    "patternSample": "{rg}-{abbreviation}-{instance}",
+    "isDefaultFavorite": true
+  },
+  {
+    "id": "instance",
+    "token": "{instance}",
+    "label": "Instance Sequence Number",
+    "desc": "Two-digit sequential counter (01, 02)",
+    "category": "Resource Identity",
+    "sample": "01",
+    "patternSample": "{rg}-{abbreviation}-{instance}",
+    "isDefaultFavorite": true
+  },
+  {
+    "id": "wildcard_instance",
+    "token": "##",
+    "label": "Instance Wildcard (##)",
+    "desc": "Wildcard two-digit counter matching 01-99",
+    "category": "Resource Identity",
+    "sample": "01",
+    "patternSample": "{rg}-{abbreviation}-##",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "purpose",
+    "token": "{purpose}",
+    "label": "Workload Purpose (lowercase)",
+    "desc": "Workload or subnet purpose keyword",
+    "category": "Workload & Purpose",
+    "sample": "app",
+    "patternSample": "{rg}-{abbreviation}-{purpose}-{instance}",
+    "isDefaultFavorite": true
+  },
+  {
+    "id": "Purpose",
+    "token": "{Purpose}",
+    "label": "Workload Purpose (TitleCase)",
+    "desc": "TitleCase workload or subnet purpose",
+    "category": "Workload & Purpose",
+    "sample": "App",
+    "patternSample": "{RG}-{abbreviation}-{Purpose}-{instance}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "role",
+    "token": "{role}",
+    "label": "Component Role",
+    "desc": "Tier or component function (web, db, api)",
+    "category": "Workload & Purpose",
+    "sample": "web",
+    "patternSample": "{rg}-{role}-{abbreviation}-{instance}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "workload",
+    "token": "{workload}",
+    "label": "Workload Identifier",
+    "desc": "Application or service workload name",
+    "category": "Workload & Purpose",
+    "sample": "portal",
+    "patternSample": "{org}-{workload}-{abbreviation}-{instance}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "name",
+    "token": "{name}",
+    "label": "Custom Resource Name",
+    "desc": "Specific named component or hub name",
+    "category": "Workload & Purpose",
+    "sample": "hub",
+    "patternSample": "{org}-{name}-{abbreviation}-{instance}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "Org",
+    "token": "{Org}",
+    "label": "Organization (TitleCase)",
+    "desc": "TitleCase customer abbreviation",
+    "category": "Full Names & Case Variants",
+    "sample": "Air",
+    "patternSample": "{Org}-{SUB}-{ResourceGroup}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "ORG",
+    "token": "{ORG}",
+    "label": "Organization (UPPERCASE)",
+    "desc": "UPPERCASE customer abbreviation",
+    "category": "Full Names & Case Variants",
+    "sample": "AIR",
+    "patternSample": "{ORG}-{SUB}-{RG}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "OrgName",
+    "token": "{OrgName}",
+    "label": "Organization Full Name",
+    "desc": "Full customer name (TitleCase)",
+    "category": "Full Names & Case Variants",
+    "sample": "AirGateEnterprise",
+    "patternSample": "{OrgName}-{sub}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "orgname",
+    "token": "{orgname}",
+    "label": "Organization Full Name (lowercase)",
+    "desc": "Full customer name in kebab-case",
+    "category": "Full Names & Case Variants",
+    "sample": "airgate-enterprise",
+    "patternSample": "{orgname}-{sub}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "subname",
+    "token": "{subname}",
+    "label": "Subscription Full Name (lowercase)",
+    "desc": "Full lowercase subscription name",
+    "category": "Full Names & Case Variants",
+    "sample": "connectivity",
+    "patternSample": "{org}-{subname}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "SUBNAME",
+    "token": "{SUBNAME}",
+    "label": "Subscription Full Name (UPPERCASE)",
+    "desc": "Full UPPERCASE subscription name",
+    "category": "Full Names & Case Variants",
+    "sample": "CONNECTIVITY",
+    "patternSample": "{ORG}-{SUBNAME}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "envname",
+    "token": "{envname}",
+    "label": "Environment Full Name (lowercase)",
+    "desc": "Full lowercase environment name",
+    "category": "Full Names & Case Variants",
+    "sample": "production",
+    "patternSample": "{org}-{envname}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "ENVNAME",
+    "token": "{ENVNAME}",
+    "label": "Environment Full Name (UPPERCASE)",
+    "desc": "Full UPPERCASE environment name",
+    "category": "Full Names & Case Variants",
+    "sample": "PRODUCTION",
+    "patternSample": "{ORG}-{ENVNAME}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "rgname",
+    "token": "{rgname}",
+    "label": "Resource Group Full Name (lowercase)",
+    "desc": "Full lowercase resource group name",
+    "category": "Full Names & Case Variants",
+    "sample": "corerg",
+    "patternSample": "{org}-{rgname}-{abbreviation}",
+    "isDefaultFavorite": false
+  },
+  {
+    "id": "RGNAME",
+    "token": "{RGNAME}",
+    "label": "Resource Group Full Name (UPPERCASE)",
+    "desc": "Full UPPERCASE resource group name",
+    "category": "Full Names & Case Variants",
+    "sample": "CORERG",
+    "patternSample": "{ORG}-{RGNAME}-{abbreviation}",
+    "isDefaultFavorite": false
+  }
+]

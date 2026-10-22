@@ -1002,7 +1002,9 @@ select option {
   color: var(--accent-primary);
 }
 
-.au-select-dropdown {
+.au-select-dropdown,
+.au-dropdown-menu,
+.au-autocomplete-menu {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -1012,14 +1014,14 @@ select option {
   background-color: var(--bg-surface-elevated);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   z-index: 1060;
   display: flex;
   flex-direction: column;
   animation: auFadeIn 0.12s ease-out;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .au-select-search-box {
@@ -1052,25 +1054,40 @@ select option {
   list-style: none;
 }
 
-.au-select-option {
+.au-select-option,
+.au-dropdown-item,
+.au-autocomplete-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.45rem 0.85rem;
+  padding: 0.55rem 0.85rem;
   font-family: var(--font-sans);
   font-size: 0.8125rem;
   color: var(--text-secondary);
   cursor: pointer;
+  border-bottom: 1px solid var(--border-hairline);
   transition: background-color var(--ease-snappy), color var(--ease-snappy);
 }
 
-.au-select-option:hover,
-.au-select-option.is-focused {
-  background-color: var(--accent-tint);
-  color: var(--text-primary);
+.au-select-option:last-child,
+.au-dropdown-item:last-child,
+.au-autocomplete-item:last-child {
+  border-bottom: none;
 }
 
-.au-select-option.is-selected {
+.au-select-option:hover,
+.au-select-option.is-focused,
+.au-dropdown-item:hover,
+.au-dropdown-item.is-focused,
+.au-autocomplete-item:hover,
+.au-autocomplete-item.is-focused {
+  background-color: var(--accent-tint);
+  color: var(--accent-primary);
+}
+
+.au-select-option.is-selected,
+.au-dropdown-item.is-selected,
+.au-autocomplete-item.is-selected {
   background-color: var(--accent-tint);
   color: var(--accent-primary);
   font-weight: 600;

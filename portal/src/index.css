@@ -24,6 +24,9 @@
   --text-main: var(--text-primary);
   --text-dim: var(--text-muted);
 
+  --bg-card: var(--bg-surface-elevated);
+  --border-glow: var(--border-strong);
+
   --glass-bg: var(--bg-surface);
   --glass-border: var(--border-hairline);
   --glass-shadow: none;

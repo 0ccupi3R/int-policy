@@ -218,4 +218,14 @@ export interface AuExpandCollapseButtonProps {
   className?: string;
 }
 
+export interface AuWarningBannerProps {
+  id?: string;
+  icon?: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  actions?: ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
 

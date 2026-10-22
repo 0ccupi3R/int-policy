@@ -12,7 +12,7 @@ import {
   validateResourceInput,
   getNextAvailableInstance
 } from "../engine/topologyGenerator.js";
-import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton, AuCodeViewer, AuSelect } from "../theme";
+import { AuHudCard, AuButton, AuBadge, AuExpandCollapseButton, AuCodeViewer, AuSelect, AuWarningBanner } from "../theme";
 import {
   Layers,
   Plus,
@@ -35,7 +35,9 @@ import {
   Check,
   Edit3,
   Search,
-  Sparkles
+  Sparkles,
+  Filter,
+  ArrowDownRight
 } from "lucide-react";
 
 export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowToast }) {
@@ -83,6 +85,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   const [codeTab, setCodeTab] = useState("bicepparam"); // "bicepparam" | "armparam" | "bicepmodule"
   const [copied, setCopied] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterOnlyViolations, setFilterOnlyViolations] = useState(false);
 
   // Deletion Confirmation Modal state: { type: "sub"|"rg", id, name, subIndex, rgCount, resCount }
   const [deleteModal, setDeleteModal] = useState(null);
@@ -595,55 +598,136 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   };
 
   // ----------------------------------------------------------------------------
-  // Metric Calculations
+  // Metric & Violation Calculations
   // ----------------------------------------------------------------------------
   let totalResourcesCount = 0;
-  let validationErrorCount = 0;
-  let firstFailingItem = null;
+
+  const topologyViolations = useMemo(() => {
+    const list = [];
+    (topology.subscriptions || []).forEach((sub, subIdx) => {
+      (sub.resourceGroups || []).forEach((rg) => {
+        const evalRg = evaluateRgNode(customer, catalog, sub, rg);
+        const isDuplicateRg = (sub.resourceGroups || []).some(
+          (other) => other.id !== rg.id && evaluateRgNode(customer, catalog, sub, other).evaluatedName.toLowerCase() === evalRg.evaluatedName.toLowerCase()
+        );
+        if (!evalRg.validation.valid || isDuplicateRg) {
+          list.push({
+            type: "rg",
+            subId: sub.id,
+            subIndex: subIdx,
+            rgId: rg.id,
+            resId: null,
+            name: evalRg.evaluatedName,
+            errors: evalRg.validation.errors || ["Duplicate Resource Group name in subscription"]
+          });
+        }
+        (rg.resources || []).forEach((res) => {
+          const evalNode = evaluateResourceNode(customer, catalog, sub, rg, res);
+          const isDuplicateRes = (rg.resources || []).some(
+            (other) => other.id !== res.id && evaluateResourceNode(customer, catalog, sub, rg, other).evaluatedName.toLowerCase() === evalNode.evaluatedName.toLowerCase()
+          );
+          if (!evalNode.validation.valid || isDuplicateRes) {
+            list.push({
+              type: "resource",
+              subId: sub.id,
+              subIndex: subIdx,
+              rgId: rg.id,
+              resId: res.id,
+              name: evalNode.evaluatedName,
+              errors: evalNode.validation.errors || ["Duplicate resource name in Resource Group"]
+            });
+          }
+        });
+      });
+    });
+    return list;
+  }, [topology, customer, catalog]);
 
   (topology.subscriptions || []).forEach((sub) => {
     (sub.resourceGroups || []).forEach((rg) => {
-      const evalRg = evaluateRgNode(customer, catalog, sub, rg);
-      if (!evalRg.validation.valid && !firstFailingItem) {
-        firstFailingItem = { subId: sub.id, rgId: rg.id, resId: null };
-      }
-      (rg.resources || []).forEach((res) => {
-        totalResourcesCount++;
-        const evalNode = evaluateResourceNode(customer, catalog, sub, rg, res);
-        if (!evalNode.validation.valid) {
-          validationErrorCount++;
-          if (!firstFailingItem) {
-            firstFailingItem = { subId: sub.id, rgId: rg.id, resId: res.id };
-          }
-        }
-      });
+      totalResourcesCount += (rg.resources || []).length;
     });
   });
 
-  const handleJumpToTopologyViolation = () => {
-    if (!firstFailingItem) return;
-    const { subId, rgId, resId } = firstFailingItem;
-    if (subId && subId !== activeSubId) {
-      setActiveSubId(subId);
+  const validationErrorCount = topologyViolations.length;
+  const firstFailingItem = topologyViolations[0] || null;
+
+  const handleJumpToTopologyViolation = (targetItem) => {
+    const target = targetItem || firstFailingItem;
+    if (!target) return;
+
+    // Enable violation filter so user is focused on the failing scope
+    setFilterOnlyViolations(true);
+
+    // Switch subscription if target is in a different subscription
+    if (target.subIndex !== undefined && target.subIndex !== safeSubIndex) {
+      setActiveSubIndex(target.subIndex);
     }
-    if (rgId) {
-      setExpandedRgs((prev) => ({ ...prev, [rgId]: true }));
+
+    // Auto-expand the target RG
+    if (target.rgId) {
+      setExpandedRgs((prev) => ({ ...prev, [target.rgId]: true }));
     }
+
     setTimeout(() => {
-      const targetId = resId ? `topology-resource-${resId}` : `topology-rg-${rgId}`;
-      const elem = document.getElementById(targetId);
+      const targetDomId = target.resId ? `topology-resource-${target.resId}` : `topology-rg-${target.rgId}`;
+      const elem = document.getElementById(targetDomId);
       if (elem) {
         elem.scrollIntoView({ behavior: "smooth", block: "center" });
         elem.style.outline = "2px solid var(--accent-rose)";
-        elem.style.boxShadow = "0 0 20px rgba(244, 63, 94, 0.55)";
+        elem.style.boxShadow = "0 0 24px rgba(255, 82, 82, 0.65)";
         elem.style.transition = "all 0.3s ease";
         setTimeout(() => {
           elem.style.outline = "";
           elem.style.boxShadow = "";
-        }, 3000);
+        }, 3200);
       }
-    }, 150);
+    }, 200);
   };
+
+  // Filter RGs based on search and violation filter
+  const displayedRgs = useMemo(() => {
+    let list = resourceGroups;
+
+    if (filterOnlyViolations) {
+      list = list.filter((rg) => {
+        const evalRg = evaluateRgNode(customer, catalog, activeSub, rg);
+        const isDuplicateRg = resourceGroups.some(
+          (other) => other.id !== rg.id && evaluateRgNode(customer, catalog, activeSub, other).evaluatedName.toLowerCase() === evalRg.evaluatedName.toLowerCase()
+        );
+        if (!evalRg.validation.valid || isDuplicateRg) return true;
+        return (rg.resources || []).some((res) => {
+          const evalNode = evaluateResourceNode(customer, catalog, activeSub, rg, res);
+          const isDuplicateRes = (rg.resources || []).some(
+            (other) => other.id !== res.id && evaluateResourceNode(customer, catalog, activeSub, rg, other).evaluatedName.toLowerCase() === evalNode.evaluatedName.toLowerCase()
+          );
+          return !evalNode.validation.valid || isDuplicateRes;
+        });
+      });
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((rg) => {
+        const evalName = evaluateRgNode(customer, catalog, activeSub, rg).evaluatedName.toLowerCase();
+        const matchRes = (rg.resources || []).some((res) => (res.purpose || res.resourceTypeKey || "").toLowerCase().includes(q));
+        return (rg.purpose || "").toLowerCase().includes(q) || evalName.includes(q) || matchRes;
+      });
+    }
+
+    return list;
+  }, [resourceGroups, filterOnlyViolations, searchQuery, customer, catalog, activeSub]);
+
+  // Auto-expand all failing RGs when filter is enabled
+  useEffect(() => {
+    if (filterOnlyViolations && displayedRgs.length > 0) {
+      const toExpand = {};
+      displayedRgs.forEach((rg) => {
+        toExpand[rg.id] = true;
+      });
+      setExpandedRgs((prev) => ({ ...prev, ...toExpand }));
+    }
+  }, [filterOnlyViolations, displayedRgs]);
 
   // Collect all known governance tag definitions for dropdown population
   const allTagDefinitions = useMemo(() => {
@@ -690,6 +774,63 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* 0. Azure Platform & Governance Constraints Standardized Warning Banner */}
+      {validationErrorCount > 0 && (
+        <AuWarningBanner
+          id="topology-platform-violations-banner"
+          icon={<AlertTriangle size={20} />}
+          title={`${validationErrorCount} Resource Topology Configuration${validationErrorCount > 1 ? "s" : ""} Violate Governance Limits`}
+          description="Resources or Resource Groups exceed Azure platform length bounds, contain invalid naming characters, or have duplicate evaluated names."
+          actions={
+            <>
+              <button
+                type="button"
+                id="topology-filter-violations-btn"
+                className={`btn btn-sm ${filterOnlyViolations ? "btn-danger" : "btn-secondary"}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 14px",
+                  fontWeight: "600",
+                  fontSize: "0.8rem",
+                  borderColor: filterOnlyViolations ? "var(--accent-rose)" : "rgba(244, 63, 94, 0.4)"
+                }}
+                onClick={() => setFilterOnlyViolations((prev) => !prev)}
+                title={filterOnlyViolations ? "Show all topology scopes" : "Filter view to non-compliant scopes only"}
+              >
+                {filterOnlyViolations ? (
+                  <>
+                    <X size={14} /> Clear Filter (Show All)
+                  </>
+                ) : (
+                  <>
+                    <Filter size={14} /> Filter to Non-Compliant ({validationErrorCount})
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                id="topology-jump-to-violation-btn"
+                className="btn btn-sm btn-outline-danger"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 16px",
+                  fontWeight: "600",
+                  fontSize: "0.8rem"
+                }}
+                onClick={() => handleJumpToTopologyViolation()}
+              >
+                <ArrowDownRight size={15} /> Jump to First Violation →
+              </button>
+            </>
+          }
+        />
+      )}
+
       {/* Top Banner & KPI Ribbon */}
       <AuHudCard
         kicker="TOPOLOGY & CANONICAL GOVERNANCE"
@@ -701,8 +842,8 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
             {validationErrorCount > 0 ? (
               <button
                 type="button"
-                id="topology-jump-to-violation-btn"
-                className="au-badge au-badge-rose"
+                id="topology-meta-violation-chip"
+                className={`au-badge ${filterOnlyViolations ? "au-badge-rose" : "au-badge-amber"}`}
                 style={{
                   cursor: "pointer",
                   display: "inline-flex",
@@ -713,10 +854,10 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                   fontWeight: 700,
                   transition: "all 0.15s ease"
                 }}
-                onClick={handleJumpToTopologyViolation}
+                onClick={() => handleJumpToTopologyViolation()}
                 title="Click to expand RG and jump to the first non-compliant resource"
               >
-                ⚠ {validationErrorCount} Non-Compliant · Jump →
+                ⚠ {validationErrorCount} Non-Compliant · {filterOnlyViolations ? "Filtered" : "Jump →"}
               </button>
             ) : (
               <span className="au-badge au-badge-mint">✔ All Compliant</span>
@@ -769,22 +910,34 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
             <span style={{ fontSize: "0.8rem", fontWeight: "600", textTransform: "uppercase", color: "var(--text-muted)" }}>
               Subscriptions:
             </span>
-            {(topology.subscriptions || []).map((sub, idx) => (
-              <button
-                key={sub.id}
-                onClick={() => setActiveSubIndex(idx)}
-                className={`btn btn-sm ${safeSubIndex === idx ? "btn-primary" : "btn-secondary"}`}
-                style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "6px" }}
-              >
-                <Globe size={13} />
-                <span>
-                  {sub.name} ({sub.code})
-                </span>
-                <span className="chip" style={{ fontSize: "0.65rem", padding: "1px 6px" }}>
-                  {sub.environment}
-                </span>
-              </button>
-            ))}
+            {(topology.subscriptions || []).map((sub, idx) => {
+              const subViolationsCount = topologyViolations.filter((v) => v.subIndex === idx).length;
+              return (
+                <button
+                  key={sub.id}
+                  onClick={() => setActiveSubIndex(idx)}
+                  className={`btn btn-sm ${safeSubIndex === idx ? "btn-primary" : "btn-secondary"}`}
+                  style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  <Globe size={13} />
+                  <span>
+                    {sub.name} ({sub.code})
+                  </span>
+                  <span className="chip" style={{ fontSize: "0.65rem", padding: "1px 6px" }}>
+                    {sub.environment}
+                  </span>
+                  {subViolationsCount > 0 && (
+                    <span
+                      className="au-badge au-badge-rose"
+                      style={{ fontSize: "0.65rem", padding: "1px 5px", marginLeft: "2px" }}
+                      title={`${subViolationsCount} violations in this subscription`}
+                    >
+                      {subViolationsCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
 
             <button
               className="btn btn-secondary btn-sm"
@@ -892,15 +1045,38 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
           </div>
 
           {/* Resource Groups Cards */}
-          {(searchQuery.trim()
-            ? resourceGroups.filter((rg) => {
-                const q = searchQuery.toLowerCase().trim();
-                const evalName = evaluateRgNode(customer, catalog, activeSub, rg).evaluatedName.toLowerCase();
-                const matchRes = (rg.resources || []).some((res) => (res.purpose || res.resourceTypeKey || "").toLowerCase().includes(q));
-                return (rg.purpose || "").toLowerCase().includes(q) || evalName.includes(q) || matchRes;
-              })
-            : resourceGroups
-          ).map((rg) => {
+          {displayedRgs.length === 0 ? (
+            <div className="glass-panel" style={{ padding: "36px 20px", textAlign: "center", color: "var(--text-muted)", borderRadius: "var(--radius-sm)" }}>
+              {filterOnlyViolations ? (
+                <div>
+                  <CheckCircle2 size={28} style={{ color: "var(--accent-mint)", marginBottom: "8px" }} />
+                  <div style={{ fontWeight: 600, fontSize: "1rem", color: "var(--text-primary)" }}>
+                    All Resource Groups & Resources in {activeSub.name} are Compliant!
+                  </div>
+                  {topologyViolations.length > 0 ? (
+                    <div style={{ marginTop: "10px" }}>
+                      <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                        {topologyViolations.length} violation{topologyViolations.length > 1 ? "s exist" : " exists"} in other subscriptions.
+                      </span>
+                      <div style={{ marginTop: "12px" }}>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleJumpToTopologyViolation()}
+                          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        >
+                          <ArrowDownRight size={14} /> Jump to Failing Subscription
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div>No Resource Groups found matching your search query.</div>
+              )}
+            </div>
+          ) : (
+            displayedRgs.map((rg) => {
             const evalRg = evaluateRgNode(customer, catalog, activeSub, rg);
             const isExpanded = !!expandedRgs[rg.id];
 
@@ -1236,22 +1412,40 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                     )}
 
                     {/* Resources List Inside RG */}
-                    {(rg.resources || []).length === 0 ? (
-                      <div
-                        style={{
-                          padding: "24px",
-                          textAlign: "center",
-                          color: "var(--text-dim)",
-                          background: "rgba(0, 0, 0, 0.1)",
-                          borderRadius: "var(--radius-sm)"
-                        }}
-                      >
-                        No resources configured in this Resource Group. Click "+ Add Resource" above.
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        {(rg.resources || []).map((resource) => {
-                          const evalRes = evaluateResourceNode(customer, catalog, activeSub, rg, resource);
+                    {(() => {
+                      const displayedResources = (rg.resources || []).filter((resource) => {
+                        if (!filterOnlyViolations) return true;
+                        const evalRes = evaluateResourceNode(customer, catalog, activeSub, rg, resource);
+                        const isDuplicateRes = (rg.resources || []).some(
+                          (other) => other.id !== resource.id && evaluateResourceNode(customer, catalog, activeSub, rg, other).evaluatedName.toLowerCase() === evalRes.evaluatedName.toLowerCase()
+                        );
+                        if (!evalRes.validation.valid || isDuplicateRes) return true;
+                        const evalRg = evaluateRgNode(customer, catalog, activeSub, rg);
+                        return !evalRg.validation.valid;
+                      });
+
+                      if (displayedResources.length === 0) {
+                        return (
+                          <div
+                            style={{
+                              padding: "24px",
+                              textAlign: "center",
+                              color: "var(--text-dim)",
+                              background: "rgba(0, 0, 0, 0.1)",
+                              borderRadius: "var(--radius-sm)"
+                            }}
+                          >
+                            {filterOnlyViolations
+                              ? "No non-compliant resources in this Resource Group."
+                              : "No resources configured in this Resource Group. Click \"+ Add Resource\" above."}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          {displayedResources.map((resource) => {
+                            const evalRes = evaluateResourceNode(customer, catalog, activeSub, rg, resource);
                           const isDuplicateRes = (rg.resources || []).some(
                             (other) => other.id !== resource.id && evaluateResourceNode(customer, catalog, activeSub, rg, other).evaluatedName.toLowerCase() === evalRes.evaluatedName.toLowerCase()
                           );
@@ -1634,12 +1828,13 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                           );
                         })}
                       </div>
-                    )}
+                    );
+                  })()}
                   </div>
                 )}
               </div>
             );
-          })}
+          }))}
         </div>
 
         {/* Live Code Drawer / Split-Pane Preview */}

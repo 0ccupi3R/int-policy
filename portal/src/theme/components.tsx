@@ -22,6 +22,7 @@ import {
   AuTokenChipProps,
   AuIconButtonProps,
   AuExpandCollapseButtonProps,
+  AuWarningBannerProps,
 } from './types';
 import { useClickOutside } from './useClickOutside';
 import { highlightLine } from './syntaxHighlighter';
@@ -1080,5 +1081,39 @@ export const AuStatStrip: React.FC<{ stats: StatMetricItem[] }> = ({ stats }) =>
         </div>
       </div>
     ))}
+  </div>
+);
+
+/* ==========================================================================
+   26. STANDARDIZED WARNING BANNER (.au-warning-banner)
+   ========================================================================== */
+const DefaultWarningIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/>
+    <line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+
+export const AuWarningBanner: React.FC<AuWarningBannerProps> = ({
+  id,
+  icon,
+  title,
+  description,
+  actions,
+  className = '',
+  style
+}) => (
+  <div id={id} className={`au-warning-banner ${className}`} style={style}>
+    <div className="au-warning-banner-left">
+      <div className="au-warning-banner-icon">
+        {icon || <DefaultWarningIcon />}
+      </div>
+      <div>
+        <div className="au-warning-banner-title">{title}</div>
+        {description && <div className="au-warning-banner-desc">{description}</div>}
+      </div>
+    </div>
+    {actions && <div className="au-warning-banner-actions">{actions}</div>}
   </div>
 );

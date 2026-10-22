@@ -26,6 +26,7 @@ import {
   AuSelect,
   AuTokenChip,
   validateNamingPattern,
+  AuWarningBanner,
 } from "../theme";
 
 import {
@@ -563,6 +564,7 @@ export function NamingStudio({
           if (!winSampleVal.valid || !winStructVal.valid) {
             list.push({
               item: { ...item, name: `${item.name} (Windows - 15 char limit)`, key: "vm_windows" },
+              catalogKey: item.key,
               pattern: winPattern,
               meta: winMeta,
               sampleName: winSample,
@@ -582,6 +584,7 @@ export function NamingStudio({
           if (!linuxSampleVal.valid || !linuxStructVal.valid) {
             list.push({
               item: { ...item, name: `${item.name} (Linux - 64 char limit)`, key: "vm_linux" },
+              catalogKey: item.key,
               pattern: linuxPattern,
               meta: linuxMeta,
               sampleName: linuxSample,
@@ -602,6 +605,7 @@ export function NamingStudio({
           if (!isValid) {
             list.push({
               item,
+              catalogKey: item.key,
               pattern,
               meta,
               sampleName,
@@ -622,8 +626,11 @@ export function NamingStudio({
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.resourceType.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
-      const matchesViolationFilter = !filterOnlyViolations || platformViolations.some((v) => v.item.key === item.key);
+      const matchesCategory =
+        filterOnlyViolations || selectedCategory === "All" || item.category === selectedCategory;
+      const matchesViolationFilter =
+        !filterOnlyViolations ||
+        platformViolations.some((v) => (v.catalogKey || v.item.key) === item.key);
       return matchesSearch && matchesCategory && matchesViolationFilter;
     });
   }, [catalog, searchQuery, selectedCategory, filterOnlyViolations, platformViolations]);
@@ -643,6 +650,17 @@ export function NamingStudio({
 
   const categoryNames = useMemo(() => Object.keys(groupedCatalog), [groupedCatalog]);
   const allCategoriesExpanded = categoryNames.length > 0 && categoryNames.every((c) => !!expandedCategories[c]);
+
+  // Auto-expand categories when filterOnlyViolations is enabled
+  useEffect(() => {
+    if (filterOnlyViolations && categoryNames.length > 0) {
+      const next = {};
+      categoryNames.forEach((c) => {
+        next[c] = true;
+      });
+      setExpandedCategories((prev) => ({ ...prev, ...next }));
+    }
+  }, [filterOnlyViolations, categoryNames]);
 
   const handleToggleAllCategories = () => {
     if (allCategoriesExpanded) {
@@ -675,7 +693,7 @@ export function NamingStudio({
         };
       }
       const catItems = catalog.filter((c) => (c.category || "General") === cat);
-      const catFailed = catItems.filter((it) => platformViolations.some((v) => v.item.key === it.key)).length;
+      const catFailed = catItems.filter((it) => platformViolations.some((v) => (v.catalogKey || v.item.key) === it.key)).length;
       return {
         value: cat,
         label:
@@ -687,7 +705,8 @@ export function NamingStudio({
   }, [categories, catalog, platformViolations]);
 
   const handleJumpToViolation = (targetKey) => {
-    const keyToJump = targetKey || platformViolations[0]?.item?.key;
+    const targetViolation = platformViolations.find((v) => v.item.key === targetKey || v.catalogKey === targetKey) || platformViolations[0];
+    const keyToJump = targetKey || targetViolation?.catalogKey || targetViolation?.item?.key;
     if (!keyToJump) return;
 
     const targetItem = catalog.find((c) => c.key === keyToJump);
@@ -788,7 +807,16 @@ export function NamingStudio({
   };
 
   return (
-    <div className="naming-studio-root" style={{ display: "flex", gap: "0px", alignItems: "flex-start", position: "relative" }}>
+    <div
+      className="naming-studio-root"
+      style={{
+        display: "flex",
+        gap: tokenDrawerOpen ? "20px" : "0px",
+        alignItems: "flex-start",
+        position: "relative",
+        transition: "gap 0.22s cubic-bezier(0.16, 1, 0.3, 1)"
+      }}
+    >
       {/* 0. Contextual Token Palette Sticky Left Sidebar (Smoothly expands/collapses in-flow so inputs are NEVER occluded) */}
       <aside
         id="naming-token-palette-sidebar"
@@ -1216,83 +1244,67 @@ export function NamingStudio({
           </div>
         )}
 
-        {/* Azure Platform Constraints Global Warning Banner */}
+        {/* Azure Platform Constraints Standardized Warning Banner */}
         {platformViolations.length > 0 && (
-          <div
-            className="glass-panel"
-            style={{
-              padding: "16px 20px",
-              background: "var(--status-danger-bg)",
-              border: "1px solid var(--status-danger-border)",
-              borderRadius: "var(--radius-lg)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "16px"
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "8px",
-                  background: "var(--status-danger-border)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--status-danger-text)"
-                }}
-              >
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--status-danger-text)" }}>
-                  {platformViolations.length} Resource Naming Pattern{platformViolations.length > 1 ? "s" : ""} Violate Azure Platform Constraints
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-                  Azure ARM will fail resource creation if names exceed length bounds or contain forbidden characters (e.g., Storage Accounts reject hyphens & uppercase).
-                </div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-              <button
-                type="button"
-                id="naming-filter-violations-btn"
-                className={`btn btn-sm ${filterOnlyViolations ? "btn-danger" : "btn-secondary"}`}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 14px",
-                  fontWeight: "600",
-                  fontSize: "0.8rem",
-                  borderColor: "rgba(244, 63, 94, 0.4)"
-                }}
-                onClick={() => setFilterOnlyViolations((prev) => !prev)}
-                title="Show only resource types that have naming violations"
-              >
-                <Filter size={14} /> {filterOnlyViolations ? "Show All Types" : `Filter to Non-Compliant (${platformViolations.length})`}
-              </button>
+          <AuWarningBanner
+            id="naming-platform-violations-banner"
+            icon={<AlertTriangle size={20} />}
+            title={`${platformViolations.length} Resource Naming Pattern${platformViolations.length > 1 ? "s" : ""} Violate Azure Platform Constraints`}
+            description="Azure ARM will fail resource creation if names exceed length bounds or contain forbidden characters (e.g., Storage Accounts reject hyphens & uppercase)."
+            actions={
+              <>
+                <button
+                  type="button"
+                  id="naming-filter-violations-btn"
+                  className={`btn btn-sm ${filterOnlyViolations ? "btn-danger" : "btn-secondary"}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "8px 14px",
+                    fontWeight: "600",
+                    fontSize: "0.8rem",
+                    borderColor: filterOnlyViolations ? "var(--accent-rose)" : "rgba(244, 63, 94, 0.4)"
+                  }}
+                  onClick={() => {
+                    setFilterOnlyViolations((prev) => {
+                      const next = !prev;
+                      if (next) setSelectedCategory("All");
+                      return next;
+                    });
+                  }}
+                  title={filterOnlyViolations ? "Show all resource types" : "Show only resource types that have naming violations"}
+                >
+                  {filterOnlyViolations ? (
+                    <>
+                      <X size={14} /> Clear Filter (Show All)
+                    </>
+                  ) : (
+                    <>
+                      <Filter size={14} /> Filter to Non-Compliant ({platformViolations.length})
+                    </>
+                  )}
+                </button>
 
-              <button
-                type="button"
-                id="naming-autofix-all-btn"
-                className="btn btn-sm btn-outline-danger"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 16px",
-                  fontWeight: "600",
-                  fontSize: "0.8rem"
-                }}
-                onClick={handleAutoFixAll}
-              >
-                <Zap size={15} /> Auto-Fix All Violations ({platformViolations.length})
-              </button>
-            </div>
-          </div>
+                <button
+                  type="button"
+                  id="naming-autofix-all-btn"
+                  className="btn btn-sm btn-outline-danger"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "8px 16px",
+                    fontWeight: "600",
+                    fontSize: "0.8rem"
+                  }}
+                  onClick={handleAutoFixAll}
+                >
+                  <Zap size={15} /> Auto-Fix All Violations ({platformViolations.length})
+                </button>
+              </>
+            }
+          />
         )}
 
         {/* 1. Global Pattern Bar & Action Controls */}
@@ -1680,7 +1692,7 @@ export function NamingStudio({
               categoryNames.map((cat) => {
                 const items = groupedCatalog[cat];
                 const isExpanded = !!expandedCategories[cat];
-                const catViolations = items.filter((it) => platformViolations.some((v) => v.item.key === it.key));
+                const catViolations = items.filter((it) => platformViolations.some((v) => (v.catalogKey || v.item.key) === it.key));
                 const hasCatViolations = catViolations.length > 0;
                 return (
                   <div

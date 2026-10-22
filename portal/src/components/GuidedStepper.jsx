@@ -135,8 +135,12 @@ export function GuidedStepper({ activeTab, onSelectTab, customer }) {
                       : (isCompleted ? themeTint : "var(--bg-surface-elevated)"),
                     border: isActive
                       ? `1px solid ${themeColor}`
-                      : (isCompleted ? `1px solid ${themeColor}` : "1px solid var(--border-hairline)"),
-                    color: isActive ? "#061A1D" : (isCompleted ? themeColor : "var(--text-muted)"),
+                      : (isCompleted
+                          ? `1px solid ${themeColor}`
+                          : (isBrownfield ? "1px solid rgba(255, 255, 255, 0.25)" : "1px solid var(--border-hairline)")),
+                    color: isBrownfield
+                      ? "#ffffff"
+                      : (isActive ? "#061A1D" : (isCompleted ? themeColor : "var(--text-muted)")),
                     boxShadow: isActive ? (isBrownfield ? "0 0 8px rgba(230, 154, 56, 0.35)" : "0 0 8px rgba(100, 186, 109, 0.35)") : "none"
                   }}
                 >

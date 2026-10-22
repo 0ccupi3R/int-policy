@@ -689,7 +689,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
   const displayedRgs = useMemo(() => {
     let list = resourceGroups;
 
-    if (filterOnlyViolations) {
+    if (filterOnlyViolations && topologyViolations.length > 0) {
       list = list.filter((rg) => {
         const evalRg = evaluateRgNode(customer, catalog, activeSub, rg);
         const isDuplicateRg = resourceGroups.some(
@@ -716,7 +716,17 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
     }
 
     return list;
-  }, [resourceGroups, filterOnlyViolations, searchQuery, customer, catalog, activeSub]);
+  }, [resourceGroups, filterOnlyViolations, topologyViolations.length, searchQuery, customer, catalog, activeSub]);
+
+  // Auto-reset filterOnlyViolations when violations drop to 0
+  useEffect(() => {
+    if (filterOnlyViolations && topologyViolations.length === 0) {
+      setFilterOnlyViolations(false);
+      if (onShowToast) {
+        onShowToast("All topology violations resolved! Restored full topology view.");
+      }
+    }
+  }, [filterOnlyViolations, topologyViolations.length, onShowToast]);
 
   // Auto-expand all failing RGs when filter is enabled
   useEffect(() => {
@@ -1053,23 +1063,33 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                   <div style={{ fontWeight: 600, fontSize: "1rem", color: "var(--text-primary)" }}>
                     All Resource Groups & Resources in {activeSub.name} are Compliant!
                   </div>
-                  {topologyViolations.length > 0 ? (
+                  {topologyViolations.length > 0 && (
                     <div style={{ marginTop: "10px" }}>
                       <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                         {topologyViolations.length} violation{topologyViolations.length > 1 ? "s exist" : " exists"} in other subscriptions.
                       </span>
-                      <div style={{ marginTop: "12px" }}>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleJumpToTopologyViolation()}
-                          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-                        >
-                          <ArrowDownRight size={14} /> Jump to Failing Subscription
-                        </button>
-                      </div>
                     </div>
-                  ) : null}
+                  )}
+                  <div style={{ marginTop: "14px", display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => setFilterOnlyViolations(false)}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <X size={14} /> Clear Filter (Show All Scopes)
+                    </button>
+                    {topologyViolations.length > 0 && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleJumpToTopologyViolation()}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                      >
+                        <ArrowDownRight size={14} /> Jump to Failing Subscription ({topologyViolations.length})
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div>No Resource Groups found matching your search query.</div>
@@ -1414,7 +1434,7 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                     {/* Resources List Inside RG */}
                     {(() => {
                       const displayedResources = (rg.resources || []).filter((resource) => {
-                        if (!filterOnlyViolations) return true;
+                        if (!filterOnlyViolations || topologyViolations.length === 0) return true;
                         const evalRes = evaluateResourceNode(customer, catalog, activeSub, rg, resource);
                         const isDuplicateRes = (rg.resources || []).some(
                           (other) => other.id !== resource.id && evaluateResourceNode(customer, catalog, activeSub, rg, other).evaluatedName.toLowerCase() === evalRes.evaluatedName.toLowerCase()
@@ -1435,9 +1455,21 @@ export function TopologyGenerator({ customer, catalog, onUpdateCustomer, onShowT
                               borderRadius: "var(--radius-sm)"
                             }}
                           >
-                            {filterOnlyViolations
-                              ? "No non-compliant resources in this Resource Group."
-                              : "No resources configured in this Resource Group. Click \"+ Add Resource\" above."}
+                            {filterOnlyViolations ? (
+                              <div>
+                                <div>No non-compliant resources in this Resource Group.</div>
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-secondary"
+                                  onClick={() => setFilterOnlyViolations(false)}
+                                  style={{ marginTop: "8px", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                                >
+                                  <X size={12} /> Show All Resources
+                                </button>
+                              </div>
+                            ) : (
+                              "No resources configured in this Resource Group. Click \"+ Add Resource\" above."
+                            )}
                           </div>
                         );
                       }

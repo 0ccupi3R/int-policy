@@ -630,10 +630,21 @@ export function NamingStudio({
         filterOnlyViolations || selectedCategory === "All" || item.category === selectedCategory;
       const matchesViolationFilter =
         !filterOnlyViolations ||
+        platformViolations.length === 0 ||
         platformViolations.some((v) => (v.catalogKey || v.item.key) === item.key);
       return matchesSearch && matchesCategory && matchesViolationFilter;
     });
   }, [catalog, searchQuery, selectedCategory, filterOnlyViolations, platformViolations]);
+
+  // Auto-reset filterOnlyViolations when violations drop to 0
+  useEffect(() => {
+    if (filterOnlyViolations && platformViolations.length === 0) {
+      setFilterOnlyViolations(false);
+      if (onShowToast) {
+        onShowToast("All naming violations resolved! Restored full catalog view.");
+      }
+    }
+  }, [filterOnlyViolations, platformViolations.length, onShowToast]);
 
   const [expandedCategories, setExpandedCategories] = useState({});
 
@@ -1308,17 +1319,16 @@ export function NamingStudio({
         )}
 
         {/* 1. Global Pattern Bar & Action Controls */}
-        <div className="glass-panel" style={{ padding: "18px 22px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-            <div>
-              <h2 style={{ fontSize: "1.15rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
-                <Layers size={18} color="var(--accent-primary)" />
-                Naming Convention Pattern Engine
-              </h2>
-              <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "3px", margin: 0 }}>
-                Build dynamic naming rules with smart tokens ({`{org}`}, {`{sub}`}, {`{env}`}, {`{rg}`}, {`{abbr}`}). Click any input to reveal token drawer.
-              </p>
-            </div>
+        <AuHudCard
+          kicker="DYNAMIC GOVERNANCE ENGINE"
+          title={
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <Layers size={18} color="var(--accent-primary)" />
+              Naming Convention Pattern Engine
+            </span>
+          }
+          meta="Build dynamic naming rules with smart tokens ({org}, {sub}, {env}, {rg}, {abbr}). Click any input to reveal token drawer."
+          action={
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
               <AuButton
                 variant={tokenDrawerOpen ? "primary" : "secondary"}
@@ -1343,29 +1353,37 @@ export function NamingStudio({
                 <span>Add Resource Type</span>
               </button>
             </div>
-          </div>
-        </div>
+          }
+          style={{ marginBottom: "20px" }}
+        />
 
         {/* 2. Interactive Live Sandbox Validator */}
-        <AuHudCard
-          kicker="INTERACTIVE TEST BENCH"
-          title="Live Azure Resource Name Compliance Sandbox"
-          meta="Real-time Cloud Adoption Framework (CAF) regex & ARM platform constraint evaluator"
-          action={
-            <AuButton
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                const sample = toSampleName(currentTestPattern, customer, currentTestItem, { region: testRegion, purpose: effectivePurpose });
-                setTestName(sample);
-                onShowToast(`Populated sample: ${sample}`);
-              }}
-              icon={<Sparkles size={13} style={{ color: "var(--accent-mint)" }} />}
-            >
-              Auto-Generate Sample
-            </AuButton>
-          }
-        >
+        <div className="glass-panel" style={{ padding: "20px 24px", marginBottom: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
+            <div>
+              <div className="au-kicker" style={{ marginBottom: "0.2rem" }}>INTERACTIVE TEST BENCH</div>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: "700", margin: 0, color: "var(--text-primary)" }}>
+                Live Azure Resource Name Compliance Sandbox
+              </h3>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                Real-time Cloud Adoption Framework (CAF) regex & ARM platform constraint evaluator
+              </div>
+            </div>
+            <div>
+              <AuButton
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  const sample = toSampleName(currentTestPattern, customer, currentTestItem, { region: testRegion, purpose: effectivePurpose });
+                  setTestName(sample);
+                  onShowToast(`Populated sample: ${sample}`);
+                }}
+                icon={<Sparkles size={13} style={{ color: "var(--accent-mint)" }} />}
+              >
+                Auto-Generate Sample
+              </AuButton>
+            </div>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: isTestVm ? "220px 170px 170px 150px 1fr" : "220px 170px 150px 1fr", gap: "12px", alignItems: "flex-end" }}>
             <div>
               <AuSelect
@@ -1524,7 +1542,7 @@ export function NamingStudio({
               )}
             </div>
           )}
-        </AuHudCard>
+        </div>
 
         {/* 3. Subnet Allowlist Special Module */}
         <div className="glass-panel" style={{ padding: "20px 24px" }}>
@@ -1642,7 +1660,7 @@ export function NamingStudio({
               </div>
 
               {/* Quick Non-Compliant Filter Pill if violations exist */}
-              {platformViolations.length > 0 && (
+              {platformViolations.length > 0 ? (
                 <button
                   type="button"
                   id="naming-toolbar-filter-violations"
@@ -1657,12 +1675,29 @@ export function NamingStudio({
                     color: filterOnlyViolations ? "var(--status-danger-text)" : undefined
                   }}
                   onClick={() => setFilterOnlyViolations((prev) => !prev)}
-                  title="Filter catalog to show only non-compliant types"
+                  title={filterOnlyViolations ? "Show all resource types" : "Filter catalog to show only non-compliant types"}
                 >
-                  <Filter size={13} />
-                  <span>Violations ({platformViolations.length})</span>
+                  {filterOnlyViolations ? <X size={13} /> : <Filter size={13} />}
+                  <span>{filterOnlyViolations ? "Clear Filter" : `Violations (${platformViolations.length})`}</span>
                 </button>
-              )}
+              ) : filterOnlyViolations ? (
+                <button
+                  type="button"
+                  id="naming-toolbar-filter-violations"
+                  className="btn btn-sm btn-secondary"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "0.8rem"
+                  }}
+                  onClick={() => setFilterOnlyViolations(false)}
+                  title="Clear filter and show all resource types"
+                >
+                  <X size={13} />
+                  <span>Clear Filter (Show All)</span>
+                </button>
+              ) : null}
 
               {/* Category Filter */}
               <div style={{ minWidth: "220px" }}>
@@ -1686,7 +1721,19 @@ export function NamingStudio({
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {categoryNames.length === 0 ? (
               <div className="glass-panel" style={{ padding: "30px", textAlign: "center", color: "var(--text-dim)" }}>
-                No resource types matched your filter criteria.
+                <div>No resource types matched your filter criteria.</div>
+                {filterOnlyViolations && (
+                  <div style={{ marginTop: "12px" }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => setFilterOnlyViolations(false)}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <X size={14} /> Clear Violation Filter (Show All)
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               categoryNames.map((cat) => {

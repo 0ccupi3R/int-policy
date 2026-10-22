@@ -1,4 +1,4 @@
-# UI Design System Rules: Technical-Editorial Architecture (apisec|con Theme)
+# UI Design System Rules: Tactical UI Architecture (@0ccupi3r/tactical-ui)
 
 Whenever generating or styling UI components in this project, strictly adhere to the following aesthetic and structural rules:
 

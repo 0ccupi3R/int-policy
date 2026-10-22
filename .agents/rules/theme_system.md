@@ -1,29 +1,66 @@
-# System Directive: Apply & Maintain the Portable Theme Pack (`src/theme/`)
+# System Directive: Enforce & Maintain the Tactical UI Design System (@0ccupi3r/tactical-ui)
 
-This project uses the portable **apisec-theme-pack** located in `src/theme/` (Technical-Editorial Swiss Grid design system originally extracted from `conf.apisecuniversity.com`).
+This project strictly uses the **Tactical UI** design system (**`@0ccupi3r/tactical-ui`** v2.0.0), a high-craft fusion of the **Editorial Swiss Grid** and **HUD React Tactical Telemetry** architecture.
 
-Before writing or modifying any UI code, strictly enforce the following protocol:
+---
+
+## 0. Prerequisite Check & Dependency Verification
+Before generating or modifying any UI code, the agent MUST verify that the theme package is installed and present:
+1. **Primary Workspace Location**: `portal/src/theme/`
+2. **Standalone Package Directory**: `tactical-ui/`
+3. **Portable Archive File**: `tactical-ui.zip` (at repository root)
+4. **npm Package**: `@0ccupi3r/tactical-ui` (tarball: `0ccupi3r-tactical-ui-2.0.0.tgz`)
+
+> [!IMPORTANT]
+> **Action Required if Theme is Missing**:
+> If working in a new workspace, fresh laptop checkout, or external project where `portal/src/theme/` does not exist:
+> - **Prompt the user or run**: `unzip tactical-ui.zip -d ./portal/src/theme` (or `npm install ./tactical-ui` / `npm install ./0ccupi3r-tactical-ui-2.0.0.tgz`).
+> - Ensure peer dependency is installed: `npm install lucide-react`.
+> - Do NOT generate ad-hoc UI, Tailwind utilities, or Bootstrap/MUI styles from scratch.
+
+---
 
 ## 1. Single Source of Truth
-- **Design Tokens:** `src/theme/tokens.json` (Colors for Dark & Light modes, typography, spacing, border radiuses, snappy bezier transitions).
-- **Global Styles & CSS Custom Properties:** `src/theme/theme.css` (`--bg-canvas`, `--bg-surface`, `--text-primary`, `--accent-primary`, `--border-hairline`, etc.).
-- **Reusable React + TypeScript Primitives:** `src/theme/components.tsx` (`AuNavbar`, `AuSection`, `AuKeyValueGrid`, `AuShiftCardGrid`, `AuTierMatrix`, `AuAgendaTrack`, `AuStatStrip`).
-- **Context & Types:** `src/theme/ThemeProvider.tsx` and `src/theme/types.ts`.
-- **Root Entry Point:** Ensure `theme.css` is imported at the application entry root, and `tailwind.preset.js` is linked if Tailwind is configured.
+- **Design Tokens**: `portal/src/theme/tokens.json` (Deep Petrol Dark & Clean Light palettes, typography, border radius, animations).
+- **Global Styles & CSS Custom Properties**: `portal/src/theme/theme.css` (`--bg-canvas`, `--bg-surface`, `--text-primary`, `--accent-primary`, `--accent-mint`, `--accent-rose`, `--border-hairline`, etc.).
+- **Theme Provider**: `portal/src/theme/ThemeProvider.tsx` (React theme context with automatic dark/light persistence).
+- **Reusable React Primitives (`portal/src/theme/components.tsx`)**:
+  - `<AuHudCard>`: 4-corner hairline reticle HUD card with kicker, meta, and action slots.
+  - `<AuTabs>`: Tactical tab navigation strip.
+  - `<AuButton>`: Primary (`teal`), secondary, and danger button variants.
+  - `<AuBadge>`: Tactical status pills (`mint`, `rose`, `amber`, `azure`, `purple`).
+  - `<AuModal>`: Backdrop-blurred modal dialog.
+  - `<AuSelect>`: Custom dark dropdown selector with searchable filter and compact mode (`.au-select-compact`).
+  - `<AuValidatedInput>`: Real-time validated form input.
+  - `<AuCheckbox>`: Styled checkbox component.
+  - `<AuTokenChip>`: Quick-insert token chip with click-to-copy.
+  - `<AuCodeViewer>`: Zero-dependency syntax highlighter (Bicep, ARM, PowerShell, Bash, JSON).
+  - `<AuExpandCollapseButton>`: Accordion batch expand/collapse control.
+- **Validation Engine**: `portal/src/theme/inputValidators.ts` (`validateTagKey`, `validateTagAllowedValues`, `validateNamingPattern`, `validateCandidateName`).
+- **Tailwind Integration**: `portal/src/theme/tailwind.preset.js`.
 
-## 2. Core Aesthetic Mandate (Technical-Editorial Swiss Grid)
-1. **1px Hairline Grids Over Drop Shadows:**
-   - Never use heavy drop-shadows, blurry glow blobs, or generic floating cards.
-   - Group related cards, metrics, and key-value specs inside `.au-hairline-grid` with `.au-hairline-cell` children so items are separated by crisp `1px solid var(--border-hairline)` borders.
-2. **Typography & Dot-Separated Monospace Metadata:**
-   - Headlines use `--font-display` / `.au-hero-title` or `.au-section-title` (tight negative tracking `-0.025em` to `-0.035em`, sentence case, weight `600`).
-   - All metadata, index numbers, timestamps, categories, and tags MUST use `.au-mono-meta` (`var(--font-mono)`) with middle-dot separators (`·`), e.g., `01 · Overview` or `Status · Active`.
-3. **Strict Color & Surface Discipline:**
-   - Never hardcode hex values in UI views. Always use CSS custom properties (`var(--bg-canvas)`, `var(--bg-surface)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--accent-primary)`, `var(--border-hairline)`) so Dark and Light modes function automatically.
+---
 
-## 3. Evolving & Updating the Theme Pack Over Time
-- Whenever tweaking a color, adjusting spacing, or introducing a new reusable UI pattern (modal, data table, form input, sidebar, tabs bar, breadcrumbs):
-  1. **Do not create one-off local styles inside a page.**
-  2. Add any new tokens to `src/theme/tokens.json` & `src/theme/theme.css`.
-  3. Export the typed React component from `src/theme/components.tsx` (and `src/theme/types.ts`).
-  4. Document the addition in `src/theme/CHANGELOG.md` to ensure `src/theme/` remains 100% portable across future projects.
+## 2. Core Aesthetic Mandate
+1. **1px Hairline Grids & Reticles Over Drop Shadows**:
+   - Never use generic drop-shadows, blurry glow blobs, or floating Bootstrap/MUI cards.
+   - Use `.au-hud-card` or `.au-hairline-grid` with hairline borders (`1px solid var(--border-hairline)`).
+2. **Universal Dark Input Discipline**:
+   - Form inputs, search fields, textareas, and selects must use dark canvas backgrounds (`var(--bg-canvas)`) with crisp hairline borders (`var(--border-hairline)`). Zero white backgrounds.
+3. **Typography & Monospace Metadata**:
+   - Headlines use Spectral serif (`--font-display` / `.au-hero-title` or `.au-section-title`).
+   - Technical metadata, counts, and tags use IBM Plex Mono (`--font-mono` / `.au-mono-meta`) with middle-dot separators (`·`), e.g., `36 Types · 1 Failed` or `v2.0.0 · Active`.
+4. **Color Discipline**:
+   - Never hardcode hex values in component JSX. Always use CSS custom properties (`var(--bg-canvas)`, `--bg-surface`, `--text-primary`, `--accent-primary`, `--accent-mint`, `--accent-rose`, etc.).
+
+---
+
+## 3. Evolving & Rebuilding the Theme Pack
+- Whenever modifying design tokens, adjusting CSS rules, or building new primitives:
+  1. Update `portal/src/theme/tokens.json`, `portal/src/theme/theme.css`, and `portal/src/theme/components.tsx`.
+  2. Document changes in `portal/src/theme/CHANGELOG.md`.
+  3. Rebuild the portable archive with:
+     ```bash
+     npm run build:theme
+     ```
+     This automatically regenerates `tactical-ui/`, `tactical-ui.zip`, and `0ccupi3r-tactical-ui-2.0.0.tgz`.

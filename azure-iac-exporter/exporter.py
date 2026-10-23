@@ -67,13 +67,18 @@ def log_section(title):
 
 def run_az_command(cmd_args, capture_output=True, timeout=300):
     """Executes an Azure CLI command and returns parsed JSON or raw output."""
-    full_cmd = ["az"] + cmd_args
+    is_win = os.name == "nt"
+    az_bin = shutil.which("az") or shutil.which("az.cmd") or ("az.cmd" if is_win else "az")
+    full_cmd = [az_bin] + cmd_args
     try:
         res = subprocess.run(
             full_cmd,
             stdout=subprocess.PIPE if capture_output else None,
             stderr=subprocess.PIPE if capture_output else None,
             text=True,
+            encoding="utf-8",
+            errors="replace",
+            shell=is_win,
             timeout=timeout,
             check=False
         )
@@ -87,6 +92,7 @@ def run_az_command(cmd_args, capture_output=True, timeout=300):
         return False, f"Command timed out after {timeout} seconds."
     except Exception as ex:
         return False, str(ex)
+
 
 
 def run_az_json(cmd_args, timeout=120):
@@ -150,6 +156,8 @@ class AzureAuthManager:
             return True, data
 
         log_warn("No active Azure CLI session found. Attempting .env service principal login...")
+        if err:
+            log_warn(f"Details from 'az account show': {err}")
         env_vars = self.load_env_variables()
         app_id = env_vars.get("AZURE_APP_ID")
         secret = env_vars.get("AZURE_SECRET_ID")
@@ -255,8 +263,8 @@ class AzureIaCExporter:
             run_az_command(["extension", "add", "--name", "terraform", "-y"])
 
     def get_subscriptions(self):
-        """Retrieves all accessible Azure subscriptions, placing current default first."""
-        data, err = run_az_json(["account", "list"])
+        """Retrieves all accessible Azure subscriptions (including Azure Lighthouse delegated), placing current default first."""
+        data, err = run_az_json(["account", "list", "--all"])
         if not data:
             log_error(f"Failed to fetch subscriptions: {err}")
             return []
